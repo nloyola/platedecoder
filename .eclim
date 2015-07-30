@@ -1,0 +1,5 @@
+(((name . "Run PlateDecoder")
+  (main-class . "org.biobank.platedecoder.ui.PlateDecoder")
+  ;;(program-args . "")
+  ;;(vm-args . "")
+  ))

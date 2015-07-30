@@ -1,8 +1,18 @@
 apply plugin: 'java'
 apply plugin: 'application'
+apply plugin: 'eclipse'
+
+jar {
+   manifest.attributes "Main-Class": "org.biobank.platedecoder.ui.PlateDecoder"
+}
 
 repositories {
     mavenCentral()
+}
+
+dependencies {
+   compile 'org.slf4j:slf4j-api:1.7.1', 'org.slf4j:slf4j-log4j12:1.7.12'
+   compile 'org.controlsfx:controlsfx:8.40.9'
 }
 
 sourceCompatibility = 1.8
@@ -12,5 +22,17 @@ task wrapper(type: Wrapper) {
     gradleVersion = '2.5'
 }
 
-mainClassName = "org.biobank.platedecoder.PlateDecoder"
+allprojects {
+    gradle.projectsEvaluated {
+        tasks.withType(JavaCompile) {
+            options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+        }
+    }
+}
+
+task listJars << {
+    configurations.compile.each { File file -> println file.name }
+}
+
+mainClassName = "org.biobank.platedecoder.ui.PlateDecoder"
 

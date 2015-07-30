@@ -24,3 +24,6 @@ build/
 bin/
 gradlew
 gradlew.bat
+
+#Emacs
+*.xmi
