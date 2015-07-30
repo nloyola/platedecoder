@@ -9,3 +9,10 @@ code can be present on the top or bottoms of the tubes.
 
 It can also send the decoded bar codes to an [OpenSpecimen](http://openspecimen.org/) server to link
 tubes to patients or positions.
+
+
+## Development
+
+### Emacs
+
+To build from Emacs type: `TERM="dumb" gradle build`
