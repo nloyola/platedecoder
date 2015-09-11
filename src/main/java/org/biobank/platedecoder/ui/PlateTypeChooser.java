@@ -4,23 +4,27 @@ import org.biobank.platedecoder.model.PlateModel;
 import org.biobank.platedecoder.model.PlateTypes;
 
 import javafx.beans.value.ChangeListener;
+import javafx.geometry.Insets;
 import javafx.scene.control.ChoiceBox;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.GridPane;
 import javafx.scene.text.Text;
 
-public class PlateTypeChooser extends HBox {
+/**
+ * Uses a GridPane so that label and choice box are centered vertically.
+ */
+public class PlateTypeChooser extends GridPane {
 
     private final PlateModel model = PlateModel.getInstance();
 
     public PlateTypeChooser() {
-        super(8);
-
         Text plateTypeText = new Text();
         plateTypeText.setText("Plate type:");
 
         ChoiceBox<PlateTypes> plateTypeChoice = createPlateChoiceBox();
 
-        getChildren().addAll(plateTypeText, plateTypeChoice);
+        addRow(0, plateTypeText, plateTypeChoice);
+        setMargin(plateTypeText, new Insets(5));
+        setMargin(plateTypeChoice, new Insets(5));
 
         model.setPlateTypeSelectionModel(plateTypeChoice.getSelectionModel());
         plateTypeChoice.getSelectionModel().selectFirst();
@@ -29,7 +33,6 @@ public class PlateTypeChooser extends HBox {
     private ChoiceBox<PlateTypes> createPlateChoiceBox() {
         ChoiceBox<PlateTypes> result = new ChoiceBox<PlateTypes>();
         result.setItems(model.plateTypes);
-        //result.setStyle("-fx-font: 12px \"Verdana\"");
         return result;
     }
 

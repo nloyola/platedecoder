@@ -35,39 +35,49 @@ public class PlateDecoder extends Application {
         launch(args);
     }
 
-    @SuppressWarnings("unused")
     @Override
     public void start(Stage stage) {
         this.stage = stage;
         stage.setTitle("Plate decoder");
 
+        //setScene();
+        setSceneTest();
+
+        stage.show();
+    }
+
+
+    @SuppressWarnings("unused")
+    private void setSceneTest() {
+        ImageAndGrid imageAndGrid = new ImageAndGrid();
+        changeScene(imageAndGrid);
+        imageAndGrid.setImageFileURI("file:///home/nelson/Desktop/scanned_ice4_cropped.bmp");
+    }
+
+    @SuppressWarnings("unused")
+    private void setScene() {
         ImageSource imageSourceSelection = new ImageSource();
         FileChoose fileChoose = new FileChoose();
         ImageAndGrid imageAndGrid = new ImageAndGrid();
 
-        // imageSourceSelection.onFlatbedSelectedAction(e -> {
-        //         changeScene(fileChoose);
-        //     });
+        imageSourceSelection.onFlatbedSelectedAction(e -> {
+                changeScene(fileChoose);
+            });
 
-        // fileChoose.onBackAction(e -> {
-        //         changeScene(imageSourceSelection);
-        //     });
+        fileChoose.onBackAction(e -> {
+                changeScene(imageSourceSelection);
+            });
 
-        // fileChoose.onDecodeAction(e -> {
-        //         imageAndGrid.setImageFileURI(fileChoose.getSelectedFileURI());
-        //         changeScene(imageAndGrid);
-        //     });
+        fileChoose.onDecodeAction(e -> {
+                imageAndGrid.setImageFileURI(fileChoose.getSelectedFileURI());
+                changeScene(imageAndGrid);
+            });
 
-        // imageAndGrid.onBackAction(e -> {
-        //         changeScene(fileChoose);
-        //     });
+        imageAndGrid.onBackAction(e -> {
+                changeScene(fileChoose);
+            });
 
-        // changeScene(imageSourceSelection);
-
-        changeScene(imageAndGrid);
-        imageAndGrid.setImageFileURI("file:///home/nelson/Desktop/scanned_ice4_cropped.bmp");
-
-        stage.show();
+        changeScene(imageSourceSelection);
     }
 
     private <T extends AbstractSceneRoot> void changeScene(T sceneRoot) {

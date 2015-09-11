@@ -50,8 +50,8 @@ public class Plate {
     }
 
     public void wellSelected(PlateWell well,
-        boolean selectedRegionEnd,
-        boolean addToSelection) {
+                             boolean   selectedRegionEnd,
+                             boolean   addToSelection) {
         if (!selectedRegionEnd && !addToSelection) {
             // deselet all but the selected cell
             selectedWells.stream().filter(w -> w != well).forEach(w -> w.setSelected(false));

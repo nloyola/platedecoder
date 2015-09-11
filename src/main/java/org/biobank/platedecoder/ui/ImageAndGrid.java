@@ -3,34 +3,42 @@ package org.biobank.platedecoder.ui;
 import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Pane;
+
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// TODO: add instructions for user for how to use the "Decode" button
 public class ImageAndGrid extends AbstractSceneRoot {
 
     @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(ImageAndGrid.class);
 
-    private static final double IMAGE_FIT_WIDTH = 580;
-
     private PlateTypeChooser plateTypeChooser;
 
-    private Image image;
+    private Optional<Image> imageMaybe;
 
     private ImageView imageView;
 
-    private Group scrollGroup;
+    private Group imageGroup;
 
-    private ScrollPane scrollPane;
+    private ScrollPane imagePane;
 
     private BorderPane borderPane;
 
     private WellGrid wellGrid;
+
+    private Label filenameLabel;
 
     public ImageAndGrid() {
         super("Align grid with barcodes");
@@ -38,29 +46,82 @@ public class ImageAndGrid extends AbstractSceneRoot {
 
     @Override
     protected Node creatContents() {
-        borderPane = new BorderPane();
-        borderPane.setPadding(new Insets(20, 5, 5, 5));
+        Pane controls = createControlsPane();
+        Pane imagePane = createImagePane();
 
+        borderPane = new BorderPane();
+        borderPane.setPadding(new Insets(5, 5, 5, 5));
+        borderPane.setLeft(controls);
+        borderPane.setCenter(imagePane);
+        return borderPane;
+    }
+
+    private Pane createControlsPane() {
         plateTypeChooser = new PlateTypeChooser();
         plateTypeChooser.addListenerToPlateTypeSelectionModel((observable, oldValue, newValue) -> {
                 wellGrid.plateTypeSelectionChanged(newValue);
                 addWellGrid();
             });
 
+        Button decodeBtn = new Button("Decode");
+        decodeBtn.setOnAction(e -> decodeImage());
+
+        final AnchorPane anchorPane = new AnchorPane();
+        AnchorPane.setTopAnchor(decodeBtn, 0.0);
+        AnchorPane.setRightAnchor(decodeBtn, 0.0);
+        anchorPane.getChildren().add(decodeBtn);
+
+        GridPane grid = new GridPane();
+        grid.add(plateTypeChooser, 0, 0);
+        grid.add(anchorPane, 0, 1);
+
+        GridPane.setMargin(anchorPane, new Insets(5));
+
+        return grid;
+    }
+
+    private Pane createImagePane() {
         imageView = new ImageView();
         imageView.setPreserveRatio(true);
         imageView.setSmooth(true);
 
-        scrollGroup = new Group();
-        scrollGroup.getChildren().add(imageView);
-        scrollPane = new ScrollPane(scrollGroup);
+        imageGroup = new Group();
+        imageGroup.getChildren().add(imageView);
+        imagePane = new ScrollPane(imageGroup);
 
-        borderPane.setLeft(plateTypeChooser);
-        borderPane.setCenter(scrollPane);
+        filenameLabel = new Label("Filename:");
 
-        wellGrid = new WellGrid(scrollGroup, imageView, plateTypeChooser.getSelection(), 0, 0, 500, 300);
+        GridPane grid = new GridPane();
+        grid.add(imagePane, 0, 0);
+        grid.add(filenameLabel, 0, 1);
 
-        return borderPane;
+
+        // subtract a few pixels so that scroll bars are not displayed
+        imageView.fitWidthProperty().bind(grid.widthProperty().subtract(5));
+        imageView.fitHeightProperty().bind(grid.heightProperty()
+                                           .subtract(filenameLabel.heightProperty()).subtract(5));
+
+        imageView.fitWidthProperty().addListener((observable, oldValue, newValue) -> {
+                // the actual dimensions are in imageView.getLayoutBounds().getWidth()
+                Image image = imageView.getImage();
+                if (image != null) {
+                    double newScale = imageView.getLayoutBounds().getWidth() / image.getWidth();
+                    wellGrid.setScale(newScale);
+                }
+            });
+
+        imageView.fitHeightProperty().addListener((observable, oldValue, newValue) -> {
+                // the actual dimensions are in imageView.getLayoutBounds().getHeight()
+                Image image = imageView.getImage();
+                if (image != null) {
+                    double newScale = imageView.getLayoutBounds().getHeight() / image.getHeight();
+                    wellGrid.setScale(newScale);
+                }
+            });
+
+        wellGrid = new WellGrid(imageGroup, imageView, plateTypeChooser.getSelection(), 0, 0, 1500, 1300);
+
+        return grid;
     }
 
     @Override
@@ -68,23 +129,27 @@ public class ImageAndGrid extends AbstractSceneRoot {
     }
 
     public void setImageFileURI(String uri) {
-        image = new Image(uri);
+        Image image = new Image(uri);
         imageView.setImage(image);
         imageView.setCache(true);
-        imageView.setFitWidth(IMAGE_FIT_WIDTH);
-        double ratio = IMAGE_FIT_WIDTH / image.getWidth();
-        imageView.setFitHeight(image.getHeight() * ratio);
 
+        filenameLabel.setText("Filename: " + uri);
+
+        imageMaybe = Optional.of(image);
         addWellGrid();
     }
 
     private void addWellGrid() {
-        if (image == null) return;
+        imageMaybe.ifPresent(image -> {
+                imageGroup.getChildren().clear();
+                imageGroup.getChildren().add(imageView);
+                imageGroup.getChildren().addAll(wellGrid.getWellRectangles());
+                imageGroup.getChildren().addAll(wellGrid.getResizeControls());
+            });
+    }
 
-        scrollGroup.getChildren().clear();
-        scrollGroup.getChildren().add(imageView);
-        scrollGroup.getChildren().addAll(wellGrid.getWellRectangles());
-        scrollGroup.getChildren().addAll(wellGrid.getResizeControls());
+    private void decodeImage() {
+        LOG.debug("image grid dimensions: {}", wellGrid);
     }
 
 }
