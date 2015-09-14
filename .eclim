@@ -1,5 +1,6 @@
+;; -*- mode: emacs-lisp -*-
 (((name . "Run PlateDecoder")
   (main-class . "org.biobank.platedecoder.ui.PlateDecoder")
   ;;(program-args . "")
-  ;;(vm-args . "")
+  (vm-args . "-Djava.library.path=./lib")
   ))

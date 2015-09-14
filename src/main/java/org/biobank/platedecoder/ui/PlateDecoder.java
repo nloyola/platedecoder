@@ -25,6 +25,12 @@ public class PlateDecoder extends Application {
 
     // private final Color color = Color.color(0.66, 0.67, 0.69);
 
+    private static final boolean IS_MS_WINDOWS = System.getProperty("os.name").startsWith("Windows");
+
+    private static final boolean IS_LINUX = System.getProperty("os.name").startsWith("Linux");
+
+    private static final boolean IS_ARCH_64_BIT = System.getProperty("os.arch").equals("amd64");
+
     private Stage stage;
 
     private ScrollPane plateRegion;
@@ -32,6 +38,16 @@ public class PlateDecoder extends Application {
     private final PlateModel model = PlateModel.getInstance();
 
     public static void main(String[] args) {
+        if (IS_MS_WINDOWS) {
+            System.loadLibrary("OpenThreadsWin32");
+            System.loadLibrary("opencv_core248");
+            System.loadLibrary("opencv_highgui248");
+            System.loadLibrary("opencv_imgproc248");
+            System.loadLibrary("dmscanlib");
+        } else if (IS_LINUX && IS_ARCH_64_BIT) {
+            System.loadLibrary("dmscanlib64");
+        }
+
         launch(args);
     }
 

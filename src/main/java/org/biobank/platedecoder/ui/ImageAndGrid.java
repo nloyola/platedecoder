@@ -13,8 +13,19 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Optional;
+import java.util.Set;
 
+import org.biobank.platedecoder.dmscanlib.CellRectangle;
+import org.biobank.platedecoder.dmscanlib.DecodeOptions;
+import org.biobank.platedecoder.dmscanlib.DecodeResult;
+import org.biobank.platedecoder.dmscanlib.ScanLib;
+import org.biobank.platedecoder.model.BarcodePosition;
+import org.biobank.platedecoder.model.PlateOrientation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +50,8 @@ public class ImageAndGrid extends AbstractSceneRoot {
     private WellGrid wellGrid;
 
     private Label filenameLabel;
+
+    private URL imageUrl;
 
     public ImageAndGrid() {
         super("Align grid with barcodes");
@@ -95,7 +108,6 @@ public class ImageAndGrid extends AbstractSceneRoot {
         grid.add(imagePane, 0, 0);
         grid.add(filenameLabel, 0, 1);
 
-
         // subtract a few pixels so that scroll bars are not displayed
         imageView.fitWidthProperty().bind(grid.widthProperty().subtract(5));
         imageView.fitHeightProperty().bind(grid.heightProperty()
@@ -128,12 +140,21 @@ public class ImageAndGrid extends AbstractSceneRoot {
     protected void onDisplay() {
     }
 
-    public void setImageFileURI(String uri) {
-        Image image = new Image(uri);
+    public void setImageFileURI(String urlString) {
+        Image image = new Image(urlString);
         imageView.setImage(image);
         imageView.setCache(true);
 
-        filenameLabel.setText("Filename: " + uri);
+        try {
+            imageUrl = new URL(urlString);
+            File file = new File(imageUrl.toURI());
+
+            filenameLabel.setText("Filename: " + file.toString());
+        } catch (MalformedURLException | URISyntaxException ex) {
+            LOG.error(ex.getMessage());
+            filenameLabel.setText("");
+        } finally {
+        }
 
         imageMaybe = Optional.of(image);
         addWellGrid();
@@ -150,6 +171,28 @@ public class ImageAndGrid extends AbstractSceneRoot {
 
     private void decodeImage() {
         LOG.debug("image grid dimensions: {}", wellGrid);
+
+        Set<CellRectangle> cells = CellRectangle.getCellsForBoundingBox(
+            wellGrid,
+            PlateOrientation.LANDSCAPE,
+            plateTypeChooser.getSelection(),
+            BarcodePosition.TOP);
+
+        // for (CellRectangle cell : cells) {
+        //     LOG.debug("cell: {}", cell);
+        // }
+
+        try {
+            File file = new File(imageUrl.toURI());
+            DecodeResult result = ScanLib.getInstance().decodeImage(
+                1L,
+                file.toString(),
+                DecodeOptions.getDefaultDecodeOptions(),
+                cells.toArray(new CellRectangle[] {}));
+            LOG.debug("decode result: {}", result.getResultCode());
+        } catch (URISyntaxException ex) {
+            LOG.error(ex.getMessage());
+        }
     }
 
 }
