@@ -1,17 +1,22 @@
 package org.biobank.platedecoder.ui;
 
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -26,6 +31,7 @@ import org.biobank.platedecoder.dmscanlib.DecodeResult;
 import org.biobank.platedecoder.dmscanlib.ScanLib;
 import org.biobank.platedecoder.model.BarcodePosition;
 import org.biobank.platedecoder.model.PlateOrientation;
+import org.controlsfx.tools.Borders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,6 +59,8 @@ public class ImageAndGrid extends AbstractSceneRoot {
 
     private URL imageUrl;
 
+    private Button continueBtn;
+
     public ImageAndGrid() {
         super("Align grid with barcodes");
     }
@@ -76,21 +84,72 @@ public class ImageAndGrid extends AbstractSceneRoot {
                 addWellGrid();
             });
 
-        Button decodeBtn = new Button("Decode");
-        decodeBtn.setOnAction(e -> decodeImage());
-
-        final AnchorPane anchorPane = new AnchorPane();
-        AnchorPane.setTopAnchor(decodeBtn, 0.0);
-        AnchorPane.setRightAnchor(decodeBtn, 0.0);
-        anchorPane.getChildren().add(decodeBtn);
-
         GridPane grid = new GridPane();
         grid.add(plateTypeChooser, 0, 0);
-        grid.add(anchorPane, 0, 1);
+        grid.add(createOrientationControls(), 0, 1);
+        grid.add(createBarcodePisitionsControls(), 0, 2);
+        grid.add(createDecodeButton(), 0, 3);
+        grid.add(createContinueButton(), 0, 4);
+
+        return grid;
+    }
+
+    private Node createOrientationControls() {
+        final ToggleGroup toggleGroup = new ToggleGroup();
+
+        RadioButton landscape = new RadioButton("Landscape");
+        landscape.setToggleGroup(toggleGroup);
+        RadioButton portrait = new RadioButton("Portrait");
+        portrait.setToggleGroup(toggleGroup);
+
+        final VBox orientationBox = new VBox(5, landscape, portrait);
+
+        return Borders.wrap(orientationBox)
+            .etchedBorder().title("Orientation").build()
+            .build();
+    }
+
+    private Node createBarcodePisitionsControls() {
+        final ToggleGroup toggleGroup = new ToggleGroup();
+
+        RadioButton tubeTops = new RadioButton("Tube tops");
+        tubeTops.setToggleGroup(toggleGroup);
+        RadioButton tubeBottoms = new RadioButton("Tube bottoms");
+        tubeBottoms.setToggleGroup(toggleGroup);
+
+        final VBox orientationBox = new VBox(5, tubeTops, tubeBottoms);
+
+        return Borders.wrap(orientationBox)
+            .etchedBorder().title("Barcode Positions").build()
+            .build();
+    }
+
+    private Node createDecodeButton() {
+        Button button = new Button("Decode");
+        button.setOnAction(e -> decodeImage());
+
+        final AnchorPane anchorPane = new AnchorPane();
+        AnchorPane.setTopAnchor(button, 0.0);
+        AnchorPane.setRightAnchor(button, 0.0);
+        anchorPane.getChildren().add(button);
 
         GridPane.setMargin(anchorPane, new Insets(5));
 
-        return grid;
+        return anchorPane;
+    }
+
+    private Node createContinueButton() {
+        continueBtn = new Button("Continue");
+        continueBtn.setDisable(true);
+
+        final AnchorPane anchorPane = new AnchorPane();
+        AnchorPane.setTopAnchor(continueBtn, 0.0);
+        AnchorPane.setRightAnchor(continueBtn, 0.0);
+        anchorPane.getChildren().add(continueBtn);
+
+        GridPane.setMargin(anchorPane, new Insets(5));
+
+        return anchorPane;
     }
 
     private Pane createImagePane() {
@@ -190,9 +249,15 @@ public class ImageAndGrid extends AbstractSceneRoot {
                 DecodeOptions.getDefaultDecodeOptions(),
                 cells.toArray(new CellRectangle[] {}));
             LOG.debug("decode result: {}", result.getResultCode());
+
+            continueBtn.setDisable(false);
         } catch (URISyntaxException ex) {
             LOG.error(ex.getMessage());
         }
     }
 
+    public void onFlatbedSelectedAction(EventHandler<ActionEvent> flatbedSelectedHandler) {
+        continueBtn.setOnAction(flatbedSelectedHandler);
+    }
 }
+
