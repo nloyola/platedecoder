@@ -7,7 +7,7 @@ import java.util.Map;
 /**
  * The types of well plates this app supports.
  */
-public enum PlateTypes {
+public enum PlateType {
     PT_96_WELLS("96 wells (8x12)", 8, 12),
     PT_81_WELLS("81 wells (9x9)", 9, 9),
     PT_100_WELLS("100 wells (10x10)", 10, 10),
@@ -17,7 +17,7 @@ public enum PlateTypes {
     private final int rows;
     private final int cols;
 
-    private PlateTypes(String description, int rows, int cols) {
+    private PlateType(String description, int rows, int cols) {
         this.description = description;
         this.rows = rows;
         this.cols = cols;
@@ -35,19 +35,19 @@ public enum PlateTypes {
         return cols;
     }
 
-    private static Map<PlateTypes, String> VALUES_MAP;
+    private static Map<PlateType, String> VALUES_MAP;
 
     static {
-        Map<PlateTypes, String> map = new HashMap<>();
+        Map<PlateType, String> map = new HashMap<>();
 
-        for (PlateTypes plateType : values()) {
+        for (PlateType plateType : values()) {
             map.put(plateType, plateType.description);
         }
 
         VALUES_MAP = Collections.unmodifiableMap(map);
     }
 
-    public static Map<PlateTypes, String> getValuesMap() {
+    public static Map<PlateType, String> getValuesMap() {
         return VALUES_MAP;
     }
 

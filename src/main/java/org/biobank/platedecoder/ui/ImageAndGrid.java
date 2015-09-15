@@ -23,14 +23,9 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Optional;
-import java.util.Set;
 
-import org.biobank.platedecoder.dmscanlib.CellRectangle;
-import org.biobank.platedecoder.dmscanlib.DecodeOptions;
 import org.biobank.platedecoder.dmscanlib.DecodeResult;
-import org.biobank.platedecoder.dmscanlib.ScanLib;
-import org.biobank.platedecoder.model.BarcodePosition;
-import org.biobank.platedecoder.model.PlateOrientation;
+import org.biobank.platedecoder.dmscanlib.ScanLibResult;
 import org.controlsfx.tools.Borders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,8 +35,6 @@ public class ImageAndGrid extends AbstractSceneRoot {
 
     @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(ImageAndGrid.class);
-
-    private PlateTypeChooser plateTypeChooser;
 
     private Optional<Image> imageMaybe;
 
@@ -63,6 +56,11 @@ public class ImageAndGrid extends AbstractSceneRoot {
 
     public ImageAndGrid() {
         super("Align grid with barcodes");
+
+        model.getPlateTypeProperty().addListener((observable, oldValue, newValue) -> {
+                wellGrid.plateTypeSelectionChanged(newValue);
+                addWellGrid();
+            });
     }
 
     @Override
@@ -78,11 +76,7 @@ public class ImageAndGrid extends AbstractSceneRoot {
     }
 
     private Pane createControlsPane() {
-        plateTypeChooser = new PlateTypeChooser();
-        plateTypeChooser.addListenerToPlateTypeSelectionModel((observable, oldValue, newValue) -> {
-                wellGrid.plateTypeSelectionChanged(newValue);
-                addWellGrid();
-            });
+        PlateTypeChooser plateTypeChooser = new PlateTypeChooser();
 
         GridPane grid = new GridPane();
         grid.add(plateTypeChooser, 0, 0);
@@ -190,7 +184,7 @@ public class ImageAndGrid extends AbstractSceneRoot {
                 }
             });
 
-        wellGrid = new WellGrid(imageGroup, imageView, plateTypeChooser.getSelection(), 0, 0, 1500, 1300);
+        wellGrid = new WellGrid(imageGroup, imageView, model.getPlateType(), 0, 0, 1500, 1300);
 
         return grid;
     }
@@ -230,29 +224,11 @@ public class ImageAndGrid extends AbstractSceneRoot {
 
     private void decodeImage() {
         LOG.debug("image grid dimensions: {}", wellGrid);
+        LOG.debug("model plate: {}", model.getPlate());
 
-        Set<CellRectangle> cells = CellRectangle.getCellsForBoundingBox(
-            wellGrid,
-            PlateOrientation.LANDSCAPE,
-            plateTypeChooser.getSelection(),
-            BarcodePosition.TOP);
-
-        // for (CellRectangle cell : cells) {
-        //     LOG.debug("cell: {}", cell);
-        // }
-
-        try {
-            File file = new File(imageUrl.toURI());
-            DecodeResult result = ScanLib.getInstance().decodeImage(
-                1L,
-                file.toString(),
-                DecodeOptions.getDefaultDecodeOptions(),
-                cells.toArray(new CellRectangle[] {}));
-            LOG.debug("decode result: {}", result.getResultCode());
-
+        DecodeResult result = model.getPlate().decodeImage(imageUrl, wellGrid);
+        if (result.getResultCode().equals(ScanLibResult.Result.SUCCESS)) {
             continueBtn.setDisable(false);
-        } catch (URISyntaxException ex) {
-            LOG.error(ex.getMessage());
         }
     }
 

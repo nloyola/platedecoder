@@ -1,18 +1,22 @@
 package org.biobank.platedecoder.ui;
 
 import org.biobank.platedecoder.model.PlateModel;
-import org.biobank.platedecoder.model.PlateTypes;
+import org.biobank.platedecoder.model.PlateType;
 
-import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.layout.GridPane;
 import javafx.scene.text.Text;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Uses a GridPane so that label and choice box are centered vertically.
  */
 public class PlateTypeChooser extends GridPane {
+
+    @SuppressWarnings("unused")
+    private static final Logger LOG = LoggerFactory.getLogger(PlateTypeChooser.class);
 
     private final PlateModel model = PlateModel.getInstance();
 
@@ -20,29 +24,25 @@ public class PlateTypeChooser extends GridPane {
         Text plateTypeText = new Text();
         plateTypeText.setText("Plate type:");
 
-        ChoiceBox<PlateTypes> plateTypeChoice = createPlateChoiceBox();
+        ChoiceBox<PlateType> plateTypeChoice = createPlateChoiceBox();
 
         addRow(0, plateTypeText, plateTypeChoice);
         setMargin(plateTypeText, new Insets(5));
         setMargin(plateTypeChoice, new Insets(5));
 
-        model.setPlateTypeSelectionModel(plateTypeChoice.getSelectionModel());
         plateTypeChoice.getSelectionModel().selectFirst();
+
+        plateTypeChoice.getSelectionModel().selectedItemProperty()
+            .addListener((observable, oldValue, newValue) -> {
+                    LOG.debug("plate type changed: {}", newValue);
+                    model.setPlateType(newValue);
+                });
     }
 
-    private ChoiceBox<PlateTypes> createPlateChoiceBox() {
-        ChoiceBox<PlateTypes> result = new ChoiceBox<PlateTypes>();
-        result.setItems(model.plateTypes);
-        return result;
+    private ChoiceBox<PlateType> createPlateChoiceBox() {
+        ChoiceBox<PlateType> choiceBox = new ChoiceBox<PlateType>();
+        choiceBox.setItems(model.plateTypes);
+        return choiceBox;
     }
 
-    public void addListenerToPlateTypeSelectionModel(ChangeListener<PlateTypes> l) {
-        model.getPlateTypeSelectionModel()
-            .selectedItemProperty()
-            .addListener(l);
-    }
-
-    public PlateTypes getSelection() {
-        return model.getPlateTypeSelectionModel().selectedItemProperty().get();
-    }
 }

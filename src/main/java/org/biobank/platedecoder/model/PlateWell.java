@@ -22,7 +22,7 @@ public class PlateWell {
         this.row = row;
         this.col = col;
         this.inventoryId = null;
-        this.label = new String(String.valueOf((char) ('A' + row)) + String.valueOf(col));
+        this.label = SbsLabeling.fromRowCol(row, col);
     }
 
     public int getRow() {
@@ -59,5 +59,12 @@ public class PlateWell {
 
     public void userSelected(boolean selectedRegionEnd, boolean addToSelection) {
         parent.wellSelected(this, selectedRegionEnd, addToSelection);
+    }
+
+    @Override
+    public String toString()  {
+        StringBuffer sb = new StringBuffer();
+        sb.append(label).append(": ").append(inventoryId);
+        return sb.toString();
     }
 }

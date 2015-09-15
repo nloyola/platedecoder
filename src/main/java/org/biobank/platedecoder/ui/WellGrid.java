@@ -8,7 +8,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.shape.Rectangle;
 
-import org.biobank.platedecoder.model.PlateTypes;
+import org.biobank.platedecoder.model.PlateType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +24,7 @@ public class WellGrid extends Rectangle {
 
     private final ImageView imageView;
 
-    private PlateTypes plateType;
+    private PlateType plateType;
 
     private Point2D wellDimensions;
 
@@ -34,7 +34,7 @@ public class WellGrid extends Rectangle {
 
     public WellGrid(Node       parentNode,
                     ImageView  imageView,
-                    PlateTypes plateType,
+                    PlateType plateType,
                     double     x,
                     double     y,
                     double     width,
@@ -48,7 +48,7 @@ public class WellGrid extends Rectangle {
                                      getHeight() / plateType.getRows());
     }
 
-    public void plateTypeSelectionChanged(PlateTypes plateType) {
+    public void plateTypeSelectionChanged(PlateType plateType) {
         this.plateType = plateType;
         double displayScale = displayScaleProperty.getValue();
         wellDimensions = new Point2D(displayScale * getWidth() / plateType.getCols(),

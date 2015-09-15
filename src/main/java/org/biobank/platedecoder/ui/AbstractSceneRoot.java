@@ -1,5 +1,7 @@
 package org.biobank.platedecoder.ui;
 
+import org.biobank.platedecoder.model.PlateModel;
+
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -13,7 +15,10 @@ import javafx.scene.layout.VBox;
 
 public abstract class AbstractSceneRoot extends BorderPane {
 
+    protected final PlateModel model = PlateModel.getInstance();
+
     private final String title;
+
     private Button backBtn;
 
     public AbstractSceneRoot(String title, boolean hasBackButton) {

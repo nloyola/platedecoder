@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import org.biobank.platedecoder.model.SbsLabeling;
 import org.biobank.platedecoder.model.PlateOrientation;
-import org.biobank.platedecoder.model.PlateTypes;
+import org.biobank.platedecoder.model.PlateType;
 import org.biobank.platedecoder.model.BarcodePosition;
 
 /**
@@ -143,7 +143,7 @@ public final class CellRectangle implements Comparable<CellRectangle> {
      *
      * @param bbox The dimensions of the image the cells overlap onto.
      * @param orientation The orientation of the pallet: either landscape or portrait.
-     * @param dimensions The dimensions of the pallet in terms of number of tubes it holds.
+     * @param plateType The dimensions of the pallet in terms of number of tubes it holds.
      * @param barcodePosition Where the barcodes are placed on the tubes: either the top or bottom.
      * @return The grid cells.
      * @note The units are in inches.
@@ -152,19 +152,19 @@ public final class CellRectangle implements Comparable<CellRectangle> {
     public static Set<CellRectangle> getCellsForBoundingBox(
         final Rectangle bbox,
         final PlateOrientation orientation,
-        final PlateTypes dimensions,
+        final PlateType plateType,
         final BarcodePosition barcodePosition) {
 
         int rows, cols;
 
         switch (orientation) {
         case LANDSCAPE:
-            rows = dimensions.getRows();
-            cols = dimensions.getCols();
+            rows = plateType.getRows();
+            cols = plateType.getCols();
             break;
         case PORTRAIT:
-            rows = dimensions.getCols();
-            cols = dimensions.getRows();
+            rows = plateType.getCols();
+            cols = plateType.getRows();
             break;
         default:
             throw new IllegalArgumentException("invalid orientation value: " + orientation);
@@ -179,7 +179,7 @@ public final class CellRectangle implements Comparable<CellRectangle> {
         Set<CellRectangle> cells = new HashSet<CellRectangle>();
         for (int row = 0; row < rows; ++row) {
             for (int col = 0; col < cols; ++col) {
-                String label = getLabelForPosition(row, col, dimensions, orientation, barcodePosition);
+                String label = getLabelForPosition(row, col, plateType, orientation, barcodePosition);
                 cellRect.setX(col * cellWidth);
                 cellRect.setY(row * cellHeight);
                 CellRectangle cell = new CellRectangle(label, cellRect);
@@ -194,7 +194,7 @@ public final class CellRectangle implements Comparable<CellRectangle> {
     private static String getLabelForPosition(
         int row,
         int col,
-        PlateTypes plateType,
+        PlateType plateType,
         PlateOrientation orientation,
         BarcodePosition barcodePosition) {
         int maxCols;

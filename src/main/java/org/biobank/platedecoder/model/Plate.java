@@ -1,5 +1,10 @@
 package org.biobank.platedecoder.model;
 
+import javafx.scene.shape.Rectangle;
+
+import java.io.File;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -7,12 +12,28 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.biobank.platedecoder.dmscanlib.CellRectangle;
+import org.biobank.platedecoder.dmscanlib.DecodeOptions;
+import org.biobank.platedecoder.dmscanlib.DecodeResult;
+import org.biobank.platedecoder.dmscanlib.DecodedWell;
+import org.biobank.platedecoder.dmscanlib.ScanLib;
+import org.biobank.platedecoder.dmscanlib.ScanLibResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;
 
 public class Plate {
 
-    //private static final Logger LOG = LoggerFactory.getLogger(Plate.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Plate.class);
+
+    private final PlateType plateType;
+
+    private final PlateOrientation plateOrientation;
+
+    private final BarcodePosition barcodePosition;
 
     private final int rows;
 
@@ -26,7 +47,14 @@ public class Plate {
 
     private PlateWell regionStartWell;
 
-    public Plate(PlateTypes plateType) {
+    public Plate(PlateType plateType,
+                 PlateOrientation orientation,
+                 BarcodePosition barcodePosition) {
+
+        this.plateType = plateType;
+        this.plateOrientation = orientation;
+        this.barcodePosition = barcodePosition;
+
         rows = plateType.getRows();
         cols = plateType.getCols();
 
@@ -72,6 +100,43 @@ public class Plate {
             selectedWells.add(well);
             well.setSelected(!well.isSelected());
             regionStartWell = well;
+        }
+    }
+
+    public DecodeResult decodeImage(URL url, Rectangle wellRectangle) {
+        Set<CellRectangle> cells = CellRectangle.getCellsForBoundingBox(
+            wellRectangle,
+            plateOrientation,
+            plateType,
+            barcodePosition);
+
+        // for (CellRectangle cell : cells) {
+        //     LOG.debug("cell: {}", cell);
+        // }
+
+        try {
+            File file = new File(url.toURI());
+            DecodeResult result = ScanLib.getInstance().decodeImage(
+                1L,
+                file.toString(),
+                DecodeOptions.getDefaultDecodeOptions(),
+                cells.toArray(new CellRectangle[] {}));
+
+            LOG.debug("decode result: {}", result.getResultCode());
+
+            if (result.getResultCode() == ScanLibResult.Result.SUCCESS) {
+                for (DecodedWell well : result.getDecodedWells()) {
+                    SbsPosition position = new SbsPosition(well.getLabel());
+                    PlateWell plateWell = plateWells[position.getRow()][position.getCol()];
+                    plateWell.setInventoryId(well.getMessage());
+                    LOG.debug("decoded well: {}", plateWell);
+                }
+            }
+
+            return result;
+        } catch (URISyntaxException ex) {
+            LOG.error(ex.getMessage());
+            return new DecodeResult(ScanLib.SC_FAIL, 0, ex.getMessage());
         }
     }
 

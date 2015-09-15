@@ -14,7 +14,7 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import org.biobank.platedecoder.model.PlateModel;
-import org.biobank.platedecoder.model.PlateTypes;
+import org.biobank.platedecoder.model.PlateType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -127,30 +127,19 @@ public class PlateDecoder extends Application {
         plateTypeText.setText("Plate type:");
         plateTypeText.setFont(Font.font("Verdana", 12));
 
-        ChoiceBox<PlateTypes> plateTypeChoice = createPlateChoiceBox();
+        ChoiceBox<PlateType> plateTypeChoice = createPlateChoiceBox();
 
         HBox hbox = new HBox(8);
         hbox.getChildren().addAll(plateTypeText, plateTypeChoice);
 
-        model.setPlateTypeSelectionModel(plateTypeChoice.getSelectionModel());
-        addListenerToPlateTypeSelectionModel();
-        plateTypeChoice.getSelectionModel().selectFirst();
-
         return hbox;
     }
 
-    private ChoiceBox<PlateTypes> createPlateChoiceBox() {
-        ChoiceBox<PlateTypes> result = new ChoiceBox<PlateTypes>();
+    private ChoiceBox<PlateType> createPlateChoiceBox() {
+        ChoiceBox<PlateType> result = new ChoiceBox<PlateType>();
         result.setItems(model.plateTypes);
         result.setStyle("-fx-font: 12px \"Verdana\"");
         return result;
-    }
-
-    public void addListenerToPlateTypeSelectionModel() {
-        model.getPlateTypeSelectionModel().selectedItemProperty().addListener(o -> {
-                PlateTypes selection = model.getPlateTypeSelection();
-                plateRegion.setContent(new PlateRegion(selection));
-            });
     }
 
     // private BorderPane createImageSourceControl() {

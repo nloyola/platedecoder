@@ -7,18 +7,18 @@ import javafx.scene.layout.StackPane;
 
 import org.biobank.platedecoder.model.Plate;
 import org.biobank.platedecoder.model.PlateModel;
-import org.biobank.platedecoder.model.PlateTypes;
+import org.biobank.platedecoder.model.PlateType;
 import org.biobank.platedecoder.model.PlateWell;
 
 public class PlateRegion extends Region {
 
-    final PlateTypes plateType;
+    final PlateType plateType;
 
     private final StackPane platePane;
 
     private static final PlateModel model = PlateModel.getInstance();
 
-    public PlateRegion(PlateTypes plateType) {
+    public PlateRegion(PlateType plateType) {
         this.plateType = plateType;
         platePane = new StackPane();
         platePane.getChildren().addAll(createBackground(), createPlate());

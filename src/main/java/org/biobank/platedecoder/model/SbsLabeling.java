@@ -28,8 +28,8 @@ public class SbsLabeling {
     }
 
     /**
-     * Get the rowColPos corresponding to the given SBS standard 2 or 3 char string position. Could
-     * be A2 or F12.
+     * Get the row and column position corresponding to the given SBS standard 2 or 3 char string
+     * position. Eg. could be A2 or F12.
      */
     @SuppressWarnings("nls")
     public static Pair<Integer, Integer> toRowCol(String label) {
