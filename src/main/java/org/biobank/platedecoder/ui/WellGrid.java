@@ -2,23 +2,39 @@ package org.biobank.platedecoder.ui;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.biobank.platedecoder.model.BarcodePosition;
+import org.biobank.platedecoder.model.PlateModel;
+import org.biobank.platedecoder.model.PlateOrientation;
 import org.biobank.platedecoder.model.PlateType;
+import org.biobank.platedecoder.model.SbsLabeling;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 // for dragging and resizing see
 // http://stackoverflow.com/questions/26298873/resizable-and-movable-rectangle
 
+/**
+ * This class maintains the size of the grid and manages the rectangles corresponding to each
+ * well that may contain the image of a tube.
+ *
+ * The well grid can be resized and moved using the mouse.
+ */
 public class WellGrid extends Rectangle {
 
     @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(WellGrid.class);
+
+    private final PlateModel model = PlateModel.getInstance();
 
     private final Node parentNode;
 
@@ -26,48 +42,52 @@ public class WellGrid extends Rectangle {
 
     private PlateType plateType;
 
-    private Point2D wellDimensions;
+    private Map<String, WellCell> wellRectangleMap = new HashMap<>();
 
-    private WellCell [] wellRectangles;
+    private DoubleProperty displayScaleProperty;
 
-    private DoubleProperty displayScaleProperty = new SimpleDoubleProperty(1.0);
-
+    /**
+     * The well grid is superimposed on the image containinig the 2D barcodes. The image is scaled
+     * to fit into the window displayed to the user. The {@code scale} is the scaling factor used to
+     * display the image.
+     */
     public WellGrid(Node       parentNode,
                     ImageView  imageView,
                     PlateType plateType,
                     double     x,
                     double     y,
                     double     width,
-                    double     height) {
+                    double     height,
+                    double     scale) {
         super(x, y, width, height);
         this.parentNode = parentNode;
         this.imageView = imageView;
         this.plateType = plateType;
+        this.displayScaleProperty = new SimpleDoubleProperty(scale);
 
-        wellDimensions = new Point2D(getWidth() / plateType.getCols(),
-                                     getHeight() / plateType.getRows());
+        createWellCells();
     }
 
-    public void plateTypeSelectionChanged(PlateType plateType) {
-        this.plateType = plateType;
+    private void createWellCells() {
         double displayScale = displayScaleProperty.getValue();
-        wellDimensions = new Point2D(displayScale * getWidth() / plateType.getCols(),
-                                     displayScale * getHeight() / plateType.getRows());
-    }
+        int rows, cols;
 
-    public Rectangle [] getWellRectangles() {
-        int count = 0;
-        int rows = plateType.getRows();
-        int cols = plateType.getCols();
-        final double displayScale = displayScaleProperty.getValue();
-        double wellGridX = getX() * displayScale;
+        if (model.getPlateOrientation() == PlateOrientation.LANDSCAPE) {
+            rows = plateType.getRows();
+            cols = plateType.getCols();
+        } else {
+            rows = plateType.getCols();
+            cols = plateType.getRows();
+        }
+
+        double wellWidth = displayScale * getWidth() / cols;
+        double wellHeight = displayScale * getHeight() / rows;
+
+        double wellGridX = displayScale * getX();
         double offsetX = wellGridX;
-        double offsetY = getY() * displayScale;
-        double wellWidth = wellDimensions.getX();
-        double wellHeight = wellDimensions.getY();
+        double offsetY = displayScale * getY();
         double wellDisplayWidth = wellWidth - 2;
         double wellDisplayHeight = wellHeight - 2;
-        wellRectangles = new WellCell [rows * cols];
         WellCell cell;
 
         for (int row = 0; row < rows; ++row) {
@@ -97,16 +117,89 @@ public class WellGrid extends Rectangle {
 
                 cell.setTranslateX(offsetX);
                 cell.setTranslateY(offsetY);
-                wellRectangles[count] = cell;
+                String label = getLabelForGridPosition(row, col);
 
-                ++count;
+                if (label.equals("A1")) {
+                    cell.setFill(Color.rgb(213, 236, 199, .7));
+                }
+
+                Tooltip.install(cell, new Tooltip(label));
+                wellRectangleMap.put(label, cell);
+
                 offsetX += wellWidth;
             }
 
             offsetX = wellGridX;
             offsetY += wellHeight;
         }
-        return wellRectangles;
+    }
+
+    private void updateCells() {
+        double displayScale = displayScaleProperty.getValue();
+        int rows, cols;
+
+        if (model.getPlateOrientation() == PlateOrientation.LANDSCAPE) {
+            rows = plateType.getRows();
+            cols = plateType.getCols();
+        } else {
+            rows = plateType.getCols();
+            cols = plateType.getRows();
+        }
+
+        double wellWidth = displayScale * getWidth() / cols;
+        double wellHeight = displayScale * getHeight() / rows;
+
+        double xPosition = displayScale * getX();
+        double offsetX = xPosition;
+        double offsetY = displayScale * getY();
+
+        for (int row = 0; row < rows; ++row) {
+            for (int col = 0; col < cols; ++col) {
+                String label = getLabelForGridPosition(row, col);
+                Rectangle r = wellRectangleMap.get(label);
+                if (r != null) {
+                    r.setTranslateX(offsetX);
+                    r.setTranslateY(offsetY);
+                    r.setWidth(wellWidth);
+                    r.setHeight(wellHeight);
+                } else {
+                    throw new IllegalStateException(
+                        "updateCells: rectangle for label not found: " + label);
+                }
+
+                offsetX += wellWidth;
+            }
+
+            offsetX = xPosition;
+            offsetY += wellHeight;
+        }
+    }
+
+    public void plateTypeSelectionChanged(PlateType plateType) {
+        this.plateType = plateType;
+    }
+
+    public Rectangle [] getWellCells() {
+        return wellRectangleMap.values().toArray(new WellCell [] {});
+    }
+
+    private String getLabelForGridPosition(int row, int col) {
+        int plateTypeCols = plateType.getCols();
+        PlateOrientation plateOrientation = model.getPlateOrientation();
+        BarcodePosition barcodePosition = model.getBarcodePosition();
+
+        if (plateOrientation == PlateOrientation.LANDSCAPE) {
+            if (barcodePosition == BarcodePosition.TOP) {
+                return SbsLabeling.fromRowCol(row, col);
+            }
+            return SbsLabeling.fromRowCol(row, plateTypeCols - col - 1);
+        }
+
+        // orientation is PORTRAIT
+        if (barcodePosition == BarcodePosition.TOP) {
+            return SbsLabeling.fromRowCol(col, plateTypeCols - row - 1);
+        }
+        return SbsLabeling.fromRowCol(col, row);
     }
 
     public Rectangle [] getResizeControls() {
@@ -167,18 +260,10 @@ public class WellGrid extends Rectangle {
         return new Rectangle [] { resizeRectNW, resizeRectSE };
     }
 
-    public void setScale(double scale) {
-        displayScaleProperty.setValue(scale);
-        updateCells();
-    }
-
     private void resized(double x, double y, double width, double height) {
         if ((x < 0.0) || (y < 0.0) || (width < 0.0) || (height < 0.0)) {
             throw new IllegalArgumentException("invalid dimensions");
         }
-
-        // LOG.debug("resized: x: {}, y: {}", x, y);
-        // LOG.debug("resized: width: {}, height: {}", width, height);
 
         setX(x);
         setY(y);
@@ -187,34 +272,14 @@ public class WellGrid extends Rectangle {
         updateCells();
     }
 
-    private void updateCells() {
-        double displayScale = displayScaleProperty.getValue();
-        double wellWidth = displayScale * getWidth() / plateType.getCols();
-        double wellHeight = displayScale * getHeight() / plateType.getRows();
+    public void setScale(double scale) {
+        LOG.debug("setScale: {}", scale);
+        displayScaleProperty.setValue(scale);
+        updateCells();
+    }
 
-        int count = 0;
-        int rows = plateType.getRows();
-        int cols = plateType.getCols();
-
-        double xPosition = getX() * displayScale;
-        double offsetX = xPosition;
-        double offsetY = getY() * displayScale;
-
-        for (int row = 0; row < rows; ++row) {
-            for (int col = 0; col < cols; ++col) {
-                Rectangle r = wellRectangles[count];
-                r.setTranslateX(offsetX);
-                r.setTranslateY(offsetY);
-                r.setWidth(wellWidth);
-                r.setHeight(wellHeight);
-
-                ++count;
-                offsetX += wellWidth;
-            }
-
-            offsetX = xPosition;
-            offsetY += wellHeight;
-        }
+    public double getScale() {
+        return displayScaleProperty.getValue();
     }
 
 }

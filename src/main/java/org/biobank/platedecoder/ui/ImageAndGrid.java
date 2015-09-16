@@ -26,6 +26,8 @@ import java.util.Optional;
 
 import org.biobank.platedecoder.dmscanlib.DecodeResult;
 import org.biobank.platedecoder.dmscanlib.ScanLibResult;
+import org.biobank.platedecoder.model.BarcodePosition;
+import org.biobank.platedecoder.model.PlateOrientation;
 import org.controlsfx.tools.Borders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,9 +60,35 @@ public class ImageAndGrid extends AbstractSceneRoot {
         super("Align grid with barcodes");
 
         model.getPlateTypeProperty().addListener((observable, oldValue, newValue) -> {
-                wellGrid.plateTypeSelectionChanged(newValue);
-                addWellGrid();
+                createWellGrid();
             });
+
+        model.getPlateOrientationProperty().addListener((observable, oldValue, newValue) -> {
+                createWellGrid();
+            });
+
+        model.getBarcodePositionProperty().addListener((observable, oldValue, newValue) -> {
+                createWellGrid();
+            });
+    }
+
+    /**
+     * Creates a new well grid with the dimensions of the previous one.
+     */
+    private void createWellGrid() {
+        Image image = imageView.getImage();
+        if (image != null) {
+            wellGrid = new WellGrid(imageGroup,
+                                    imageView,
+                                    model.getPlateType(),
+                                    wellGrid.getX(),
+                                    wellGrid.getY(),
+                                    wellGrid.getWidth(),
+                                    wellGrid.getHeight(),
+                                    imageView.getLayoutBounds().getWidth() / image.getWidth());
+
+            addWellGrid();
+        }
     }
 
     @Override
@@ -98,6 +126,16 @@ public class ImageAndGrid extends AbstractSceneRoot {
 
         final VBox orientationBox = new VBox(5, landscape, portrait);
 
+        landscape.setSelected(
+            model.getPlateOrientation().equals(PlateOrientation.LANDSCAPE));
+        portrait.setSelected(
+            model.getPlateOrientation().equals(PlateOrientation.PORTRAIT));
+
+        toggleGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
+                model.setPlateOrientation(newValue == landscape
+                                          ? PlateOrientation.LANDSCAPE : PlateOrientation.PORTRAIT);
+            });
+
         return Borders.wrap(orientationBox)
             .etchedBorder().title("Orientation").build()
             .build();
@@ -112,6 +150,14 @@ public class ImageAndGrid extends AbstractSceneRoot {
         tubeBottoms.setToggleGroup(toggleGroup);
 
         final VBox orientationBox = new VBox(5, tubeTops, tubeBottoms);
+
+        tubeTops.setSelected(model.getBarcodePosition().equals(BarcodePosition.TOP));
+        tubeBottoms.setSelected(model.getBarcodePosition().equals(BarcodePosition.BOTTOM));
+
+        toggleGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
+                model.setBarcodePosition(newValue == tubeTops
+                                          ? BarcodePosition.TOP : BarcodePosition.BOTTOM);
+            });
 
         return Borders.wrap(orientationBox)
             .etchedBorder().title("Barcode Positions").build()
@@ -184,7 +230,12 @@ public class ImageAndGrid extends AbstractSceneRoot {
                 }
             });
 
-        wellGrid = new WellGrid(imageGroup, imageView, model.getPlateType(), 0, 0, 1500, 1300);
+        wellGrid = new WellGrid(imageGroup,
+                                imageView,
+                                model.getPlateType(),
+                                0, 0,
+                                1500, 1300,
+                                1.0);
 
         return grid;
     }
@@ -215,9 +266,11 @@ public class ImageAndGrid extends AbstractSceneRoot {
 
     private void addWellGrid() {
         imageMaybe.ifPresent(image -> {
+                wellGrid.setScale(imageView.getLayoutBounds().getWidth() / image.getWidth());
+
                 imageGroup.getChildren().clear();
                 imageGroup.getChildren().add(imageView);
-                imageGroup.getChildren().addAll(wellGrid.getWellRectangles());
+                imageGroup.getChildren().addAll(wellGrid.getWellCells());
                 imageGroup.getChildren().addAll(wellGrid.getResizeControls());
             });
     }
