@@ -11,6 +11,7 @@ import javafx.scene.shape.Rectangle;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.biobank.platedecoder.model.BarcodePosition;
 import org.biobank.platedecoder.model.PlateModel;
@@ -42,9 +43,13 @@ public class WellGrid extends Rectangle {
 
     private PlateType plateType;
 
-    private Map<String, WellCell> wellRectangleMap = new HashMap<>();
+    private Map<String, WellCell> wellCellMap = new HashMap<>();
+
+    private Map<String, ImageView> wellDecodedIconMap = new HashMap<>();
 
     private DoubleProperty displayScaleProperty;
+
+    private final Image wellDecodedImage;
 
     /**
      * The well grid is superimposed on the image containinig the 2D barcodes. The image is scaled
@@ -65,7 +70,10 @@ public class WellGrid extends Rectangle {
         this.plateType = plateType;
         this.displayScaleProperty = new SimpleDoubleProperty(scale);
 
+        wellDecodedImage = new Image(WellGrid.class.getResourceAsStream("accept.png"));
+
         createWellCells();
+        createWellDecodedIcons();
     }
 
     private void createWellCells() {
@@ -112,7 +120,7 @@ public class WellGrid extends Rectangle {
 
                         setX(newX);
                         setY(newY);
-                        updateCells();
+                        update();
                     });
 
                 cell.setTranslateX(offsetX);
@@ -124,14 +132,32 @@ public class WellGrid extends Rectangle {
                 }
 
                 Tooltip.install(cell, new Tooltip(label));
-                wellRectangleMap.put(label, cell);
 
+                wellCellMap.put(label, cell);
                 offsetX += wellWidth;
             }
 
             offsetX = wellGridX;
             offsetY += wellHeight;
         }
+    }
+
+    public void createWellDecodedIcons() {
+        for (Entry<String, WellCell> entry : wellCellMap.entrySet()) {
+            String label = entry.getKey();
+
+            ImageView iv = new ImageView();
+            iv.setImage(wellDecodedImage);
+            iv.setPreserveRatio(true);
+            iv.setSmooth(true);
+            iv.setVisible(false);
+            wellDecodedIconMap.put(label, iv);
+        }
+    }
+
+    public void update() {
+        updateCells();
+        updateWellDecodedIcons();
     }
 
     private void updateCells() {
@@ -156,12 +182,23 @@ public class WellGrid extends Rectangle {
         for (int row = 0; row < rows; ++row) {
             for (int col = 0; col < cols; ++col) {
                 String label = getLabelForGridPosition(row, col);
-                Rectangle r = wellRectangleMap.get(label);
-                if (r != null) {
-                    r.setTranslateX(offsetX);
-                    r.setTranslateY(offsetY);
-                    r.setWidth(wellWidth);
-                    r.setHeight(wellHeight);
+                WellCell cell = wellCellMap.get(label);
+                if (cell != null) {
+                    cell.setTranslateX(offsetX);
+                    cell.setTranslateY(offsetY);
+                    cell.setWidth(wellWidth);
+                    cell.setHeight(wellHeight);
+
+                    String inventoryId = cell.getInventoryId();
+
+                    StringBuffer labelBuf = new StringBuffer();
+                    labelBuf.append(label);
+
+                    if (!inventoryId.isEmpty()) {
+                        labelBuf.append(": ").append(inventoryId);
+                    }
+
+                    Tooltip.install(cell, new Tooltip(labelBuf.toString()));
                 } else {
                     throw new IllegalStateException(
                         "updateCells: rectangle for label not found: " + label);
@@ -175,12 +212,53 @@ public class WellGrid extends Rectangle {
         }
     }
 
+    private void updateWellDecodedIcons() {
+        double imageWidth = wellDecodedImage.getWidth();
+        double imageHeight = wellDecodedImage.getWidth();
+
+        for (Entry<String, WellCell> entry : wellCellMap.entrySet()) {
+            String label = entry.getKey();
+            WellCell cell = entry.getValue();
+
+            ImageView iv = wellDecodedIconMap.get(label);
+
+            double halfWidth = cell.getWidth() / 2;
+            double halfHeight = cell.getHeight() / 2;
+
+            double fitWidth = halfWidth < imageWidth ? halfWidth : imageWidth;
+            double fitHeight = halfHeight < imageHeight ? halfWidth : imageHeight;
+
+            iv.setX(cell.getX() + cell.getTranslateX());
+            iv.setY(cell.getY() + cell.getTranslateY() + cell.getHeight() - fitHeight);
+            iv.setFitWidth(fitWidth);
+            iv.setVisible(!cell.getInventoryId().isEmpty());
+        }
+    }
+
     public void plateTypeSelectionChanged(PlateType plateType) {
         this.plateType = plateType;
     }
 
     public Rectangle [] getWellCells() {
-        return wellRectangleMap.values().toArray(new WellCell [] {});
+        return wellCellMap.values().toArray(new WellCell [] {});
+    }
+
+    public ImageView [] getWellDecodedIcons() {
+        return wellDecodedIconMap.values().toArray(new ImageView [] {});
+    }
+
+    public void clearWellCellInventoryId() {
+        for (WellCell cell : wellCellMap.values()) {
+            cell.setInventoryId("");
+        }
+    }
+
+    public void setWellCellInventoryId(String label, String inventoryId) {
+        WellCell cell = wellCellMap.get(label);
+        if (cell == null) {
+            throw new IllegalArgumentException("label is invalid for grid: " + label);
+        }
+        cell.setInventoryId(inventoryId);
     }
 
     private String getLabelForGridPosition(int row, int col) {
@@ -269,13 +347,12 @@ public class WellGrid extends Rectangle {
         setY(y);
         setWidth(width);
         setHeight(height);
-        updateCells();
+        update();
     }
 
     public void setScale(double scale) {
-        LOG.debug("setScale: {}", scale);
         displayScaleProperty.setValue(scale);
-        updateCells();
+        update();
     }
 
     public double getScale() {

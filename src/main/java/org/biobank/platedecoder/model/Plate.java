@@ -1,45 +1,27 @@
 package org.biobank.platedecoder.model;
 
-import javafx.scene.shape.Rectangle;
-
-import java.io.File;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.biobank.platedecoder.dmscanlib.CellRectangle;
-import org.biobank.platedecoder.dmscanlib.DecodeOptions;
-import org.biobank.platedecoder.dmscanlib.DecodeResult;
-import org.biobank.platedecoder.dmscanlib.DecodedWell;
-import org.biobank.platedecoder.dmscanlib.ScanLib;
-import org.biobank.platedecoder.dmscanlib.ScanLibResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-// import org.slf4j.Logger;
-// import org.slf4j.LoggerFactory;
-
 public class Plate {
 
+    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(Plate.class);
-
-    private final PlateType plateType;
-
-    private final PlateOrientation plateOrientation;
-
-    private final BarcodePosition barcodePosition;
 
     private final int rows;
 
     private final int cols;
 
-    private final PlateWell[][] plateWells;
+    private final Map<String, PlateWell> plateWellMap = new HashMap<>();
 
     private final Stream<PlateWell> wellsStream;
 
@@ -47,30 +29,36 @@ public class Plate {
 
     private PlateWell regionStartWell;
 
-    public Plate(PlateType plateType,
-                 PlateOrientation orientation,
-                 BarcodePosition barcodePosition) {
-
-        this.plateType = plateType;
-        this.plateOrientation = orientation;
-        this.barcodePosition = barcodePosition;
-
+    public Plate(PlateType plateType) {
         rows = plateType.getRows();
         cols = plateType.getCols();
 
-        plateWells = new PlateWell[rows][cols];
         for (int r = 0; r < rows; ++r) {
             for (int c = 0; c < cols; ++c) {
-                plateWells[r][c] = new PlateWell(this, r, c);
+                SbsPosition position = new SbsPosition(r, c);
+                String label = position.getLabel();
+                plateWellMap.put(label, new PlateWell(this, r, c, label));
             }
         }
 
-        wellsStream = Arrays.stream(plateWells).flatMap(x -> Arrays.stream(x));
+        PlateWell [] plateWellsArray = plateWellMap.values().toArray(new PlateWell [] {});
+        wellsStream = Arrays.stream(plateWellsArray);
     }
 
-    public PlateWell getWell(int row, int col) {
-        checkRowAndCol(row, col);
-        return plateWells[row][col];
+    public PlateWell getWell(String label) {
+        PlateWell well = plateWellMap.get(label);
+        if (well == null) {
+            throw new IllegalArgumentException("well with label not found: " + label);
+        }
+        return well;
+    }
+
+    public void setWellInventoryId(String label, String inventoryId) {
+        PlateWell well = plateWellMap.get(label);
+        if (well == null) {
+            throw new IllegalArgumentException("could not find well with label: " + label);
+        }
+        well.setInventoryId(inventoryId);
     }
 
     public List<PlateWell> getSelected() {
@@ -89,7 +77,10 @@ public class Plate {
             regionStartWell = well;
         } else if (selectedRegionEnd) {
             if (regionStartWell != null) {
-                int startRow = regionStartWell.getRow(), startCol = regionStartWell.getCol(), endRow = well.getRow(), endCol = well.getCol();
+                int startRow = regionStartWell.getRow(),
+                    startCol = regionStartWell.getCol(),
+                    endRow = well.getRow(),
+                    endCol = well.getCol();
 
                 int minRow = Math.min(startRow, endRow), minCol = Math.min(startCol, endCol), maxRow = Math.max(startRow, endRow), maxCol = Math.max(startCol, endCol);
 
@@ -103,55 +94,6 @@ public class Plate {
         }
     }
 
-    public DecodeResult decodeImage(URL url, Rectangle wellRectangle) {
-        Set<CellRectangle> cells = CellRectangle.getCellsForBoundingBox(
-            wellRectangle,
-            plateOrientation,
-            plateType,
-            barcodePosition);
-
-        // for (CellRectangle cell : cells) {
-        //     LOG.debug("cell: {}", cell);
-        // }
-
-        try {
-            File file = new File(url.toURI());
-            DecodeResult result = ScanLib.getInstance().decodeImage(
-                1L,
-                file.toString(),
-                DecodeOptions.getDefaultDecodeOptions(),
-                cells.toArray(new CellRectangle[] {}));
-
-            LOG.debug("decode result: {}", result.getResultCode());
-
-            if (result.getResultCode() == ScanLibResult.Result.SUCCESS) {
-                for (DecodedWell well : result.getDecodedWells()) {
-                    SbsPosition position = new SbsPosition(well.getLabel());
-                    PlateWell plateWell = plateWells[position.getRow()][position.getCol()];
-                    plateWell.setInventoryId(well.getMessage());
-                    LOG.debug("decoded well: {}", plateWell);
-                }
-            }
-
-            return result;
-        } catch (URISyntaxException ex) {
-            LOG.error(ex.getMessage());
-            return new DecodeResult(ScanLib.SC_FAIL, 0, ex.getMessage());
-        }
-    }
-
-    private void checkRowAndCol(int row, int col) {
-        if (row >= rows) {
-            throw new IllegalArgumentException("row exceeds maximum: rows: " + row
-                + ", maxRows: " + rows);
-        }
-
-        if (col >= cols) {
-            throw new IllegalArgumentException("col exceeds maximum: cols: " + col
-                + ", maxRows: " + cols);
-        }
-    }
-
     private Set<PlateWell> selectWellRange(int startRow,
         int startCol,
         int endRow,
@@ -159,7 +101,8 @@ public class Plate {
         Set<PlateWell> result = new HashSet<>();
         for (int row = startRow; row <= endRow; ++row) {
             for (int col = startCol; col <= endCol; ++col) {
-                result.add(plateWells[row][col]);
+                SbsPosition position = new SbsPosition(row, col);
+                result.add(plateWellMap.get(position.getLabel()));
             }
         }
         return result;

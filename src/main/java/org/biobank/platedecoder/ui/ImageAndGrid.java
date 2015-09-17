@@ -1,11 +1,15 @@
 package org.biobank.platedecoder.ui;
 
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.Node;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.ScrollPane;
@@ -23,11 +27,17 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Optional;
+import java.util.Set;
 
+import org.biobank.platedecoder.dmscanlib.CellRectangle;
+import org.biobank.platedecoder.dmscanlib.DecodeOptions;
 import org.biobank.platedecoder.dmscanlib.DecodeResult;
+import org.biobank.platedecoder.dmscanlib.DecodedWell;
+import org.biobank.platedecoder.dmscanlib.ScanLib;
 import org.biobank.platedecoder.dmscanlib.ScanLibResult;
 import org.biobank.platedecoder.model.BarcodePosition;
 import org.biobank.platedecoder.model.PlateOrientation;
+import org.controlsfx.dialog.ProgressDialog;
 import org.controlsfx.tools.Borders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +50,11 @@ public class ImageAndGrid extends AbstractSceneRoot {
 
     private Optional<Image> imageMaybe;
 
+    private URL imageUrl;
+
     private ImageView imageView;
+
+    private String imageFilename;
 
     private Group imageGroup;
 
@@ -52,9 +66,9 @@ public class ImageAndGrid extends AbstractSceneRoot {
 
     private Label filenameLabel;
 
-    private URL imageUrl;
-
     private Button continueBtn;
+
+    private Optional<Set<DecodedWell>> decodedWellsMaybe = Optional.empty();
 
     public ImageAndGrid() {
         super("Align grid with barcodes");
@@ -252,8 +266,9 @@ public class ImageAndGrid extends AbstractSceneRoot {
         try {
             imageUrl = new URL(urlString);
             File file = new File(imageUrl.toURI());
+            imageFilename = file.toString();
 
-            filenameLabel.setText("Filename: " + file.toString());
+            filenameLabel.setText("Filename: " + imageFilename);
         } catch (MalformedURLException | URISyntaxException ex) {
             LOG.error(ex.getMessage());
             filenameLabel.setText("");
@@ -271,22 +286,136 @@ public class ImageAndGrid extends AbstractSceneRoot {
                 imageGroup.getChildren().clear();
                 imageGroup.getChildren().add(imageView);
                 imageGroup.getChildren().addAll(wellGrid.getWellCells());
+                imageGroup.getChildren().addAll(wellGrid.getWellDecodedIcons());
                 imageGroup.getChildren().addAll(wellGrid.getResizeControls());
             });
     }
 
-    private void decodeImage() {
-        LOG.debug("image grid dimensions: {}", wellGrid);
-        LOG.debug("model plate: {}", model.getPlate());
-
-        DecodeResult result = model.getPlate().decodeImage(imageUrl, wellGrid);
-        if (result.getResultCode().equals(ScanLibResult.Result.SUCCESS)) {
-            continueBtn.setDisable(false);
+    private String getFilenameFromImageUrl(URL url) {
+        try {
+            File file = new File(url.toURI());
+            return file.toString();
+        } catch (URISyntaxException ex) {
+            throw new IllegalStateException("could not convert iamge URL to a filename");
         }
+    }
+
+    private void decodeImage() {
+        Task<DecodeResult> worker = new Task<DecodeResult>() {
+                @Override
+                protected DecodeResult call() throws Exception {
+                    LOG.debug("decodeImage: wellGrid: {}", wellGrid);
+
+                    Set<CellRectangle> cells = CellRectangle.getCellsForBoundingBox(
+                        wellGrid,
+                        model.getPlateOrientation(),
+                        model.getPlateType(),
+                        model.getBarcodePosition());
+
+                    DecodeResult result = ScanLib.getInstance().decodeImage(
+                        3L,
+                        getFilenameFromImageUrl(imageUrl),
+                        DecodeOptions.getDefaultDecodeOptions(),
+                        cells.toArray(new CellRectangle[] {}));
+
+                    LOG.debug("decode result: {}", result.getResultCode());
+
+
+                    return result;
+                }
+            };
+
+        ProgressDialog dlg = new ProgressDialog(worker);
+        dlg.setTitle("Decoding image");
+        dlg.setHeaderText("Decoding image");
+
+        worker.setOnSucceeded(event -> {
+                DecodeResult result = worker.getValue();
+
+                LOG.debug("The task succeeded: {}", result);
+
+                if (result.getResultCode() == ScanLibResult.Result.SUCCESS) {
+                    if (decodedWellsMaybe.isPresent()) {
+                        Set<DecodedWell> prevDecodedWells = decodedWellsMaybe.get();
+                        Set<DecodedWell> currentDecodedWells = result.getDecodedWells();
+
+                        // compare this new result with the previous one
+                        if (DecodeResult.compareDecodeResults(prevDecodedWells,
+                                                              currentDecodedWells)) {
+                            // merge the two results
+                            prevDecodedWells.addAll(currentDecodedWells);
+                            updateDecodedWells(prevDecodedWells);
+                            decodedWellsMaybe = Optional.of(prevDecodedWells);
+
+                        } else {
+                            if (decodeMismatchErrorDialog()) {
+                                decodedWellsMaybe = Optional.of(currentDecodedWells);
+                                updateDecodedWells(currentDecodedWells);
+                                wellGrid.clearWellCellInventoryId();
+                            }
+                        }
+                    } else {
+                        Set<DecodedWell> decodedWells = result.getDecodedWells();
+                        decodedWellsMaybe = Optional.of(decodedWells);
+                        updateDecodedWells(decodedWells);
+                    }
+
+                    decodedWellsMaybe.ifPresent(decodedWells -> {
+                            for (DecodedWell well: decodedWells) {
+                                wellGrid.setWellCellInventoryId(well.getLabel(), well.getMessage());
+                            }
+                            wellGrid.update();
+                        });
+
+                    continueBtn.setDisable(false);
+                }
+            });
+
+        worker.setOnFailed(event -> {
+                LOG.error("The task failed.");
+            });
+
+        Thread th = new Thread(worker);
+        th.setDaemon(true);
+        th.start();
     }
 
     public void onFlatbedSelectedAction(EventHandler<ActionEvent> flatbedSelectedHandler) {
         continueBtn.setOnAction(flatbedSelectedHandler);
     }
+
+    private void updateDecodedWells(Set<DecodedWell> decodedWells) {
+        StringBuffer buf = new StringBuffer();
+        buf.append(imageFilename);
+        buf.append(", tubes decoded: ");
+        buf.append(decodedWells.size());
+        filenameLabel.setText(buf.toString());
+    }
+
+    /**
+     *
+     * See http://code.makery.ch/blog/javafx-dialogs-official/ for dialog examples.
+     *
+     * @return TRUE if these results should be used instead. FALSE if they should be discarded.
+     */
+    private boolean decodeMismatchErrorDialog() {
+        ButtonType buttonTypeUseResult = new ButtonType("Use this result instead");
+        ButtonType buttonTypeDiscardResult = new ButtonType("Discard this result");
+
+        // display error message to user
+        Alert dlg = new Alert(AlertType.CONFIRMATION);
+        dlg.setTitle("Decode Mismatch");
+        dlg.getDialogPane().setHeaderText("The results from this decode do not match the previous results.");
+        dlg.getDialogPane().setContentText("What would you like to do?");
+        dlg.getButtonTypes().setAll(buttonTypeUseResult, buttonTypeDiscardResult);
+
+        Optional<ButtonType> result = dlg.showAndWait();
+
+        LOG.debug("Result is: {}", result.get());
+
+        return (result.get() == buttonTypeUseResult);
+    }
+
 }
+
 

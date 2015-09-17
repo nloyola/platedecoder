@@ -9,6 +9,7 @@ import org.biobank.platedecoder.model.Plate;
 import org.biobank.platedecoder.model.PlateModel;
 import org.biobank.platedecoder.model.PlateType;
 import org.biobank.platedecoder.model.PlateWell;
+import org.biobank.platedecoder.model.SbsPosition;
 
 public class PlateRegion extends Region {
 
@@ -49,7 +50,8 @@ public class PlateRegion extends Region {
                 }
 
                 if ((i > 0) && (j > 0)) {
-                    PlateWell well = plateModel.getWell(i - 1, j - 1);
+                    SbsPosition position = new SbsPosition(i - 1, j - 1);
+                    PlateWell well = plateModel.getWell(position.getLabel());
                     PlateWellRegion wellRegion = new PlateWellRegion(well, i - 1, j - 1);
                     plate.add(new StackPane(wellRegion), j, i);
                 }

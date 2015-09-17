@@ -7,22 +7,23 @@ public class PlateWell {
 
     private final Plate parent;
 
+    private String inventoryId;
+
+    private final String label;
+
     private final int row;
 
     private final int col;
 
-    private String inventoryId;
-
-    private String label;
-
     private BooleanProperty selectedProperty = new SimpleBooleanProperty(false);
 
-    public PlateWell(Plate parent, int row, int col) {
+    public PlateWell(Plate parent, int row, int col, String label) {
         this.parent = parent;
+        this.inventoryId = null;
+        this.label = label;
         this.row = row;
         this.col = col;
-        this.inventoryId = null;
-        this.label = SbsLabeling.fromRowCol(row, col);
+        this.inventoryId = "";
     }
 
     public int getRow() {

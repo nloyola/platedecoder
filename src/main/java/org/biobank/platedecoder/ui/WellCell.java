@@ -25,7 +25,9 @@ public class WellCell extends Rectangle {
 
     private static final Paint STROKE_COLOR = Color.GREEN;
 
-    protected Optional<Point2D> mouseLocationMaybe;
+    protected Optional<Point2D> mouseLocationMaybe = Optional.empty();
+
+    private String inventoryId = "";
 
     public WellCell(final Node         parentNode,
                     double             x,
@@ -40,8 +42,6 @@ public class WellCell extends Rectangle {
         setFill(Color.TRANSPARENT);
         setStroke(STROKE_COLOR);
         setStrokeWidth(STROKE_WIDTH);
-
-        mouseLocationMaybe = Optional.empty();
 
         setOnMouseEntered(event -> {
                 parentNode.setCursor(Cursor.CLOSED_HAND);
@@ -74,6 +74,14 @@ public class WellCell extends Rectangle {
                         event.consume();
                     });
             });
+    }
+
+    public String getInventoryId() {
+        return inventoryId;
+    }
+
+    public void setInventoryId(String id) {
+        inventoryId = id;
     }
 
 }

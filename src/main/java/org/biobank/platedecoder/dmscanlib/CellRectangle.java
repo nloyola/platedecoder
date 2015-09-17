@@ -176,15 +176,24 @@ public final class CellRectangle implements Comparable<CellRectangle> {
 
         Rectangle cellRect = new Rectangle(bbox.getX(), bbox.getY(), cellWidth, cellHeight);
 
+        double bboxX = bbox.getX();
+        double xOffset = bbox.getX();
+        double yOffset = bbox.getY();
+
         Set<CellRectangle> cells = new HashSet<CellRectangle>();
         for (int row = 0; row < rows; ++row) {
             for (int col = 0; col < cols; ++col) {
                 String label = getLabelForPosition(row, col, plateType, orientation, barcodePosition);
-                cellRect.setX(col * cellWidth);
-                cellRect.setY(row * cellHeight);
+                cellRect.setX(xOffset);
+                cellRect.setY(yOffset);
                 CellRectangle cell = new CellRectangle(label, cellRect);
                 cells.add(cell);
+
+                xOffset += cellWidth;
             }
+
+            yOffset += cellHeight;
+            xOffset = bboxX;
         }
 
         return cells;

@@ -84,9 +84,7 @@ public class PlateModel {
     }
 
     private void createNewPlate() {
-        plate = new Plate(plateTypeProperty.getValue(),
-                          plateOrientationProperty.getValue(),
-                          barcodePositionProperty.getValue());
+        plate = new Plate(plateTypeProperty.getValue());
     }
 
     public Plate getPlate() {
