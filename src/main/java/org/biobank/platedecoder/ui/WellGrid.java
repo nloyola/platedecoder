@@ -13,11 +13,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.biobank.platedecoder.model.BarcodePosition;
+import static org.biobank.platedecoder.dmscanlib.CellRectangle.*;
 import org.biobank.platedecoder.model.PlateModel;
 import org.biobank.platedecoder.model.PlateOrientation;
 import org.biobank.platedecoder.model.PlateType;
-import org.biobank.platedecoder.model.SbsLabeling;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -262,22 +261,11 @@ public class WellGrid extends Rectangle {
     }
 
     private String getLabelForGridPosition(int row, int col) {
-        int plateTypeCols = plateType.getCols();
-        PlateOrientation plateOrientation = model.getPlateOrientation();
-        BarcodePosition barcodePosition = model.getBarcodePosition();
-
-        if (plateOrientation == PlateOrientation.LANDSCAPE) {
-            if (barcodePosition == BarcodePosition.TOP) {
-                return SbsLabeling.fromRowCol(row, col);
-            }
-            return SbsLabeling.fromRowCol(row, plateTypeCols - col - 1);
-        }
-
-        // orientation is PORTRAIT
-        if (barcodePosition == BarcodePosition.TOP) {
-            return SbsLabeling.fromRowCol(col, plateTypeCols - row - 1);
-        }
-        return SbsLabeling.fromRowCol(col, row);
+        return getLabelForPosition(row,
+                                   col,
+                                   model.getPlateOrientation(),
+                                   plateType,
+                                   model.getBarcodePosition());
     }
 
     public Rectangle [] getResizeControls() {

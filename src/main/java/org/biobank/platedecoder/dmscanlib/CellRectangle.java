@@ -96,7 +96,6 @@ public final class CellRectangle implements Comparable<CellRectangle> {
         return new Rectangle(b.getMinX(), b.getMinY(), b.getWidth(), b.getHeight());
     }
 
-    @SuppressWarnings("nls")
     private Point2D getPoint(int pointId) {
         Point2D point = points.get(pointId);
         if (point == null) {
@@ -125,7 +124,6 @@ public final class CellRectangle implements Comparable<CellRectangle> {
         return getPoint(cornerId).getY();
     }
 
-    @SuppressWarnings("nls")
     @Override
     public String toString() {
         StringBuffer sb = new StringBuffer();
@@ -148,12 +146,10 @@ public final class CellRectangle implements Comparable<CellRectangle> {
      * @return The grid cells.
      * @note The units are in inches.
      */
-    @SuppressWarnings("nls")
-    public static Set<CellRectangle> getCellsForBoundingBox(
-        final Rectangle bbox,
-        final PlateOrientation orientation,
-        final PlateType plateType,
-        final BarcodePosition barcodePosition) {
+    public static Set<CellRectangle> getCellsForBoundingBox(Rectangle bbox,
+                                                            PlateOrientation orientation,
+                                                            PlateType plateType,
+                                                            BarcodePosition barcodePosition) {
 
         int rows, cols;
 
@@ -170,20 +166,20 @@ public final class CellRectangle implements Comparable<CellRectangle> {
             throw new IllegalArgumentException("invalid orientation value: " + orientation);
         }
 
+        double bboxX = bbox.getX();
+        double xOffset = bbox.getX();
+        double yOffset = bbox.getY();
+
         // make cells slightly smaller so that they all fit within the image
         double cellWidth = 0.9999 * Math.floor(bbox.getWidth()) / cols;
         double cellHeight = 0.9999 * Math.floor(bbox.getHeight()) / rows;
 
         Rectangle cellRect = new Rectangle(bbox.getX(), bbox.getY(), cellWidth, cellHeight);
 
-        double bboxX = bbox.getX();
-        double xOffset = bbox.getX();
-        double yOffset = bbox.getY();
-
         Set<CellRectangle> cells = new HashSet<CellRectangle>();
         for (int row = 0; row < rows; ++row) {
             for (int col = 0; col < cols; ++col) {
-                String label = getLabelForPosition(row, col, plateType, orientation, barcodePosition);
+                String label = getLabelForPosition(row, col, orientation, plateType, barcodePosition);
                 cellRect.setX(xOffset);
                 cellRect.setY(yOffset);
                 CellRectangle cell = new CellRectangle(label, cellRect);
@@ -199,23 +195,18 @@ public final class CellRectangle implements Comparable<CellRectangle> {
         return cells;
     }
 
-    @SuppressWarnings("nls")
-    private static String getLabelForPosition(
-        int row,
-        int col,
-        PlateType plateType,
-        PlateOrientation orientation,
-        BarcodePosition barcodePosition) {
-        int maxCols;
-
+    public static String getLabelForPosition(int row,
+                                             int col,
+                                             PlateOrientation orientation,
+                                             PlateType plateType,
+                                             BarcodePosition barcodePosition) {
         switch (barcodePosition) {
         case TOP:
             switch (orientation) {
             case LANDSCAPE:
                 return SbsLabeling.fromRowCol(row, col);
             case PORTRAIT:
-                maxCols = plateType.getRows();
-                return SbsLabeling.fromRowCol(maxCols - 1 - col, row);
+                return SbsLabeling.fromRowCol(plateType.getRows() - 1 - col, row);
 
             default:
                 throw new IllegalStateException("invalid value for orientation: " + orientation);
@@ -224,8 +215,7 @@ public final class CellRectangle implements Comparable<CellRectangle> {
         case BOTTOM:
             switch (orientation) {
             case LANDSCAPE:
-                maxCols = plateType.getCols();
-                return SbsLabeling.fromRowCol(row, maxCols - 1 - col);
+                return SbsLabeling.fromRowCol(row, plateType.getCols() - 1 - col);
             case PORTRAIT:
                 return SbsLabeling.fromRowCol(col, row);
 

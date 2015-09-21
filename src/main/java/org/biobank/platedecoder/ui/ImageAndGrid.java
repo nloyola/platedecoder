@@ -36,6 +36,7 @@ import org.biobank.platedecoder.dmscanlib.DecodedWell;
 import org.biobank.platedecoder.dmscanlib.ScanLib;
 import org.biobank.platedecoder.dmscanlib.ScanLibResult;
 import org.biobank.platedecoder.model.BarcodePosition;
+import org.biobank.platedecoder.model.Plate;
 import org.biobank.platedecoder.model.PlateOrientation;
 import org.controlsfx.dialog.ProgressDialog;
 import org.controlsfx.tools.Borders;
@@ -70,6 +71,8 @@ public class ImageAndGrid extends AbstractSceneRoot {
 
     private Optional<Set<DecodedWell>> decodedWellsMaybe = Optional.empty();
 
+    private Optional<EventHandler<ActionEvent>> continueHandlerMaybe = Optional.empty();
+
     public ImageAndGrid() {
         super("Align grid with barcodes");
 
@@ -92,6 +95,8 @@ public class ImageAndGrid extends AbstractSceneRoot {
     private void createWellGrid() {
         Image image = imageView.getImage();
         if (image != null) {
+            decodedWellsMaybe = Optional.empty();
+
             wellGrid = new WellGrid(imageGroup,
                                     imageView,
                                     model.getPlateType(),
@@ -203,6 +208,23 @@ public class ImageAndGrid extends AbstractSceneRoot {
 
         GridPane.setMargin(anchorPane, new Insets(5));
 
+        continueBtn.setOnAction(e -> {
+                if (!decodedWellsMaybe.isPresent()) {
+                    throw new IllegalStateException("missing decoded wells");
+                }
+
+                // copy data to model
+                Plate plate = model.getPlate();
+                decodedWellsMaybe.ifPresent(decodedWells -> {
+                        for (DecodedWell well: decodedWells) {
+                            plate.setWellInventoryId(well.getLabel(), well.getMessage());
+                            LOG.debug("cell {}: {}", well.getLabel(), well.getMessage());
+                        }
+                    });
+
+                continueHandlerMaybe.ifPresent(handler -> handler.handle(e));
+            });
+
         return anchorPane;
     }
 
@@ -304,8 +326,6 @@ public class ImageAndGrid extends AbstractSceneRoot {
         Task<DecodeResult> worker = new Task<DecodeResult>() {
                 @Override
                 protected DecodeResult call() throws Exception {
-                    LOG.debug("decodeImage: wellGrid: {}", wellGrid);
-
                     Set<CellRectangle> cells = CellRectangle.getCellsForBoundingBox(
                         wellGrid,
                         model.getPlateOrientation(),
@@ -313,14 +333,10 @@ public class ImageAndGrid extends AbstractSceneRoot {
                         model.getBarcodePosition());
 
                     DecodeResult result = ScanLib.getInstance().decodeImage(
-                        3L,
+                        0L,
                         getFilenameFromImageUrl(imageUrl),
                         DecodeOptions.getDefaultDecodeOptions(),
                         cells.toArray(new CellRectangle[] {}));
-
-                    LOG.debug("decode result: {}", result.getResultCode());
-
-
                     return result;
                 }
             };
@@ -332,8 +348,6 @@ public class ImageAndGrid extends AbstractSceneRoot {
         worker.setOnSucceeded(event -> {
                 DecodeResult result = worker.getValue();
 
-                LOG.debug("The task succeeded: {}", result);
-
                 if (result.getResultCode() == ScanLibResult.Result.SUCCESS) {
                     if (decodedWellsMaybe.isPresent()) {
                         Set<DecodedWell> prevDecodedWells = decodedWellsMaybe.get();
@@ -344,20 +358,20 @@ public class ImageAndGrid extends AbstractSceneRoot {
                                                               currentDecodedWells)) {
                             // merge the two results
                             prevDecodedWells.addAll(currentDecodedWells);
-                            updateDecodedWells(prevDecodedWells);
+                            updateDecodedWellCount(prevDecodedWells);
                             decodedWellsMaybe = Optional.of(prevDecodedWells);
 
                         } else {
                             if (decodeMismatchErrorDialog()) {
                                 decodedWellsMaybe = Optional.of(currentDecodedWells);
-                                updateDecodedWells(currentDecodedWells);
+                                updateDecodedWellCount(currentDecodedWells);
                                 wellGrid.clearWellCellInventoryId();
                             }
                         }
                     } else {
                         Set<DecodedWell> decodedWells = result.getDecodedWells();
                         decodedWellsMaybe = Optional.of(decodedWells);
-                        updateDecodedWells(decodedWells);
+                        updateDecodedWellCount(decodedWells);
                     }
 
                     decodedWellsMaybe.ifPresent(decodedWells -> {
@@ -380,11 +394,11 @@ public class ImageAndGrid extends AbstractSceneRoot {
         th.start();
     }
 
-    public void onFlatbedSelectedAction(EventHandler<ActionEvent> flatbedSelectedHandler) {
-        continueBtn.setOnAction(flatbedSelectedHandler);
+    public void onContinueAction(EventHandler<ActionEvent> continueHandler) {
+        continueHandlerMaybe = Optional.of(continueHandler);
     }
 
-    private void updateDecodedWells(Set<DecodedWell> decodedWells) {
+    private void updateDecodedWellCount(Set<DecodedWell> decodedWells) {
         StringBuffer buf = new StringBuffer();
         buf.append(imageFilename);
         buf.append(", tubes decoded: ");
@@ -410,8 +424,6 @@ public class ImageAndGrid extends AbstractSceneRoot {
         dlg.getButtonTypes().setAll(buttonTypeUseResult, buttonTypeDiscardResult);
 
         Optional<ButtonType> result = dlg.showAndWait();
-
-        LOG.debug("Result is: {}", result.get());
 
         return (result.get() == buttonTypeUseResult);
     }
