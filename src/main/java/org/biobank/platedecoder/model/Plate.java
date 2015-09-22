@@ -1,6 +1,7 @@
 package org.biobank.platedecoder.model;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -43,6 +44,10 @@ public class Plate {
 
         PlateWell [] plateWellsArray = plateWellMap.values().toArray(new PlateWell [] {});
         wellsStream = Arrays.stream(plateWellsArray);
+    }
+
+    public Collection<PlateWell> getWells() {
+        return plateWellMap.values();
     }
 
     public PlateWell getWell(String label) {
@@ -95,9 +100,9 @@ public class Plate {
     }
 
     private Set<PlateWell> selectWellRange(int startRow,
-        int startCol,
-        int endRow,
-        int endCol) {
+                                           int startCol,
+                                           int endRow,
+                                           int endCol) {
         Set<PlateWell> result = new HashSet<>();
         for (int row = startRow; row <= endRow; ++row) {
             for (int col = startCol; col <= endCol; ++col) {

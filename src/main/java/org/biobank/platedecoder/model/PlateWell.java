@@ -2,28 +2,31 @@ package org.biobank.platedecoder.model;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.util.Pair;
 
-public class PlateWell {
+public class PlateWell implements Comparable<PlateWell> {
 
     private final Plate parent;
-
-    private String inventoryId;
-
-    private final String label;
 
     private final int row;
 
     private final int col;
+
+    private final StringProperty label;
+
+    private StringProperty inventoryId;
 
     private BooleanProperty selectedProperty = new SimpleBooleanProperty(false);
 
     public PlateWell(Plate parent, int row, int col, String label) {
         this.parent = parent;
         this.inventoryId = null;
-        this.label = label;
+        this.label = new SimpleStringProperty(label);
         this.row = row;
         this.col = col;
-        this.inventoryId = "";
+        this.inventoryId = new SimpleStringProperty("");
     }
 
     public int getRow() {
@@ -34,16 +37,24 @@ public class PlateWell {
         return col;
     }
 
+    public String getLabel() {
+        return label.getValue();
+    }
+
+    public StringProperty getLabelProperty() {
+        return label;
+    }
+
     public String getInventoryId() {
-        return inventoryId;
+        return inventoryId.getValue();
     }
 
     public void setInventoryId(String inventoryId) {
-        this.inventoryId = inventoryId;
+        this.inventoryId.setValue(inventoryId);
     }
 
-    public String getLabel() {
-        return label;
+    public StringProperty getInventoryIdProperty() {
+        return inventoryId;
     }
 
     public boolean isSelected() {
@@ -67,5 +78,15 @@ public class PlateWell {
         StringBuffer sb = new StringBuffer();
         sb.append(label).append(": ").append(inventoryId);
         return sb.toString();
+    }
+
+    @Override
+    public int compareTo(PlateWell that) {
+        Pair<Integer, Integer> thisPos = SbsLabeling.toRowCol(this.getLabel());
+        Pair<Integer, Integer> thatPos = SbsLabeling.toRowCol(that.getLabel());
+        if (thisPos.getKey().equals(thatPos.getKey())) {
+            return thisPos.getValue().compareTo(thatPos.getValue());
+        }
+        return thisPos.getKey().compareTo(thatPos.getKey());
     }
 }

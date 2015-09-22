@@ -29,6 +29,7 @@ import java.net.URL;
 import java.util.Optional;
 import java.util.Set;
 import java.util.prefs.Preferences;
+import java.util.Collections;
 
 import org.biobank.platedecoder.dmscanlib.CellRectangle;
 import org.biobank.platedecoder.dmscanlib.DecodeOptions;
@@ -103,6 +104,20 @@ public class ImageAndGrid extends AbstractSceneRoot {
     @Override
     protected void init() {
         prefs = Preferences.userNodeForPackage(ImageAndGrid.class);
+    }
+
+    @Override
+    protected void onDisplay() {
+        // since this is called when the user presses the "Back" button, it clears previous decode
+        // information if present
+        decodedWellsMaybe.ifPresent(decodedWells -> {
+                decodedWellsMaybe = Optional.empty();
+                model.createNewPlate();
+                wellGrid.clearWellCellInventoryId();
+                wellGrid.update();
+                updateDecodedWellCount(Collections.emptySet());
+                continueBtn.setDisable(true);
+            });
     }
 
     /**
@@ -234,7 +249,6 @@ public class ImageAndGrid extends AbstractSceneRoot {
                 decodedWellsMaybe.ifPresent(decodedWells -> {
                         for (DecodedWell well: decodedWells) {
                             plate.setWellInventoryId(well.getLabel(), well.getMessage());
-                            LOG.debug("cell {}: {}", well.getLabel(), well.getMessage());
                         }
                     });
 
@@ -304,10 +318,6 @@ public class ImageAndGrid extends AbstractSceneRoot {
         return grid;
     }
 
-    @Override
-    protected void onDisplay() {
-    }
-
     public void setImageFileURI(String urlString) {
         Image image = new Image(urlString);
         imageView.setImage(image);
@@ -317,8 +327,6 @@ public class ImageAndGrid extends AbstractSceneRoot {
             imageUrl = new URL(urlString);
             File file = new File(imageUrl.toURI());
             imageFilename = file.toString();
-
-            filenameLabel.setText("Filename: " + imageFilename);
         } catch (MalformedURLException | URISyntaxException ex) {
             LOG.error(ex.getMessage());
             filenameLabel.setText("");
@@ -338,6 +346,8 @@ public class ImageAndGrid extends AbstractSceneRoot {
                 imageGroup.getChildren().addAll(wellGrid.getWellCells());
                 imageGroup.getChildren().addAll(wellGrid.getWellDecodedIcons());
                 imageGroup.getChildren().addAll(wellGrid.getResizeControls());
+
+                updateDecodedWellCount(Collections.emptySet());
             });
     }
 
@@ -429,8 +439,10 @@ public class ImageAndGrid extends AbstractSceneRoot {
     private void updateDecodedWellCount(Set<DecodedWell> decodedWells) {
         StringBuffer buf = new StringBuffer();
         buf.append(imageFilename);
-        buf.append(", tubes decoded: ");
-        buf.append(decodedWells.size());
+        if (!decodedWells.isEmpty()) {
+            buf.append(", tubes decoded: ");
+            buf.append(decodedWells.size());
+        }
         filenameLabel.setText(buf.toString());
     }
 

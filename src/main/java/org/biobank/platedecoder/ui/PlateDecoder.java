@@ -71,8 +71,8 @@ public class PlateDecoder extends Application {
         sceneWidth  = Double.parseDouble(prefs.get(PREFS_APP_WINDOW_WIDTH,  "1000"));
         sceneHeight = Double.parseDouble(prefs.get(PREFS_APP_WINDOW_HEIGHT, "500"));
 
-        //setScene();
-        setSceneTest();
+        setScene();
+        //setSceneTestDecode();
 
         stage.setOnCloseRequest(e -> {
                 Scene scene = stage.getScene();
@@ -87,10 +87,22 @@ public class PlateDecoder extends Application {
 
 
     @SuppressWarnings("unused")
-    private void setSceneTest() {
+    private void setSceneTestDecode() {
         ImageAndGrid imageAndGrid = new ImageAndGrid();
+
+        DecodedTubes decodedTubes = new DecodedTubes();
+
+        imageAndGrid.onContinueAction(e -> {
+                changeScene(decodedTubes);
+            });
+
+        decodedTubes.onBackAction(e -> {
+                changeScene(imageAndGrid);
+            });
+
         changeScene(imageAndGrid);
-        imageAndGrid.setImageFileURI("file:///home/nelson/Desktop/scanned_ice4_cropped.bmp");
+        //imageAndGrid.setImageFileURI("file:///home/nelson/Desktop/scanned_ice4_cropped.bmp");
+        imageAndGrid.setImageFileURI("file:///home/nelson/Dropbox/CBSR/scanlib/testImages/12x12/stanford_12x12_1.jpg");
     }
 
     @SuppressWarnings("unused")
@@ -98,6 +110,7 @@ public class PlateDecoder extends Application {
         ImageSource imageSourceSelection = new ImageSource();
         FileChoose fileChoose = new FileChoose();
         ImageAndGrid imageAndGrid = new ImageAndGrid();
+        DecodedTubes decodedTubes = new DecodedTubes();
 
         imageSourceSelection.onFlatbedSelectedAction(e -> {
                 changeScene(fileChoose);
@@ -114,6 +127,14 @@ public class PlateDecoder extends Application {
 
         imageAndGrid.onBackAction(e -> {
                 changeScene(fileChoose);
+            });
+
+        imageAndGrid.onContinueAction(e -> {
+                changeScene(decodedTubes);
+            });
+
+        decodedTubes.onBackAction(e -> {
+                changeScene(imageAndGrid);
             });
 
         changeScene(imageSourceSelection);

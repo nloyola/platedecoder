@@ -114,7 +114,7 @@ public class PlateModel {
         return barcodePositionProperty;
     }
 
-    private void createNewPlate() {
+    public void createNewPlate() {
         plate = new Plate(plateTypeProperty.getValue());
     }
 
