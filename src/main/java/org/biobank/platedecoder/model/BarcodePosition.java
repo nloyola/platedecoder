@@ -1,9 +1,5 @@
 package org.biobank.platedecoder.model;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 /**
  * Images of pallets saved to disk can be decoded, rather than being scanned with a flatbed scanner.
  * Also, the 2D barcodes can be present on the top or bottoms of the tubes. This enumeration is used
@@ -14,55 +10,19 @@ import java.util.Map;
  *
  */
 public enum BarcodePosition {
-    TOP("BARCODE_POSITION_ABOVE", "Tube tops"),
-    BOTTOM("BARCODE_POSITION_BELOW", "Tube bottoms");
+    TOP("Tube tops"),
+    BOTTOM("Tube bottoms");
 
     public static final int size = values().length;
 
-    private final String id;
     private final String displayLabel;
 
-    private static final Map<String, BarcodePosition> ID_MAP;
-
-    static {
-        Map<String, BarcodePosition> map = new LinkedHashMap<String, BarcodePosition>();
-
-        for (BarcodePosition enumValue : values()) {
-            BarcodePosition check = map.get(enumValue.getId());
-            if (check != null) {
-                throw new IllegalStateException("scan plate value "
-                    + enumValue.getId() + " used multiple times");
-            }
-
-            map.put(enumValue.getId(), enumValue);
-        }
-
-        ID_MAP = Collections.unmodifiableMap(map);
-    }
-
-    private BarcodePosition(String id, String displayString) {
-        this.id = id;
+    private BarcodePosition(String displayString) {
         this.displayLabel = displayString;
-    }
-
-    public String getId() {
-        return id;
     }
 
     public String getDisplayLabel() {
         return displayLabel;
-    }
-
-    public static Map<String, BarcodePosition> valuesMap() {
-        return ID_MAP;
-    }
-
-    public static BarcodePosition getFromIdString(String id) {
-        BarcodePosition result = valuesMap().get(id);
-        if (result == null) {
-            throw new IllegalStateException("invalid barcode position: " + id);
-        }
-        return result;
     }
 
 }

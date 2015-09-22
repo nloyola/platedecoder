@@ -27,6 +27,9 @@ public class FileChoose extends AbstractSceneRoot {
     }
 
     @Override
+    protected void init() {}
+
+    @Override
     protected Node creatContents() {
         GridPane grid = new GridPane();
         grid.setVgap(10);

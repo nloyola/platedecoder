@@ -28,6 +28,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Optional;
 import java.util.Set;
+import java.util.prefs.Preferences;
 
 import org.biobank.platedecoder.dmscanlib.CellRectangle;
 import org.biobank.platedecoder.dmscanlib.DecodeOptions;
@@ -48,6 +49,16 @@ public class ImageAndGrid extends AbstractSceneRoot {
 
     @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(ImageAndGrid.class);
+
+    private Preferences prefs;
+
+    private static final String PREFS_WELL_GRID_X = "PREFS_WELL_GRID_X";
+
+    private static final String PREFS_WELL_GRID_Y = "PREFS_WELL_GRID_Y_";
+
+    private static final String PREFS_WELL_GRID_WIDTH = "PREFS_WELL_GRID_WIDTH";
+
+    private static final String PREFS_WELL_GRID_HEIGHT = "PREFS_WELL_GRID_HEIGHT";
 
     private Optional<Image> imageMaybe;
 
@@ -87,6 +98,11 @@ public class ImageAndGrid extends AbstractSceneRoot {
         model.getBarcodePositionProperty().addListener((observable, oldValue, newValue) -> {
                 createWellGrid();
             });
+    }
+
+    @Override
+    protected void init() {
+        prefs = Preferences.userNodeForPackage(ImageAndGrid.class);
     }
 
     /**
@@ -222,6 +238,11 @@ public class ImageAndGrid extends AbstractSceneRoot {
                         }
                     });
 
+                prefs.put(PREFS_WELL_GRID_X,      String.valueOf(wellGrid.getX()));
+                prefs.put(PREFS_WELL_GRID_Y,      String.valueOf(wellGrid.getY()));
+                prefs.put(PREFS_WELL_GRID_WIDTH,  String.valueOf(wellGrid.getWidth()));
+                prefs.put(PREFS_WELL_GRID_HEIGHT, String.valueOf(wellGrid.getHeight()));
+
                 continueHandlerMaybe.ifPresent(handler -> handler.handle(e));
             });
 
@@ -266,11 +287,18 @@ public class ImageAndGrid extends AbstractSceneRoot {
                 }
             });
 
+        double wellGridX      = Double.parseDouble(prefs.get(PREFS_WELL_GRID_X,      "0"));
+        double wellGridY      = Double.parseDouble(prefs.get(PREFS_WELL_GRID_Y,      "0"));
+        double wellGridWidth  = Double.parseDouble(prefs.get(PREFS_WELL_GRID_WIDTH,  "1500"));
+        double wellGridHeight = Double.parseDouble(prefs.get(PREFS_WELL_GRID_HEIGHT, "1000"));
+
         wellGrid = new WellGrid(imageGroup,
                                 imageView,
                                 model.getPlateType(),
-                                0, 0,
-                                1500, 1300,
+                                wellGridX,
+                                wellGridY,
+                                wellGridWidth,
+                                wellGridHeight,
                                 1.0);
 
         return grid;

@@ -13,6 +13,8 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
+import java.util.prefs.Preferences;
+
 import org.biobank.platedecoder.model.PlateModel;
 import org.biobank.platedecoder.model.PlateType;
 import org.slf4j.Logger;
@@ -25,6 +27,12 @@ public class PlateDecoder extends Application {
 
     // private final Color color = Color.color(0.66, 0.67, 0.69);
 
+    private Preferences prefs = Preferences.userNodeForPackage(PlateDecoder.class);
+
+    private static final String PREFS_APP_WINDOW_WIDTH = "PREFS_APP_WINDOW_WIDTH";
+
+    private static final String PREFS_APP_WINDOW_HEIGHT = "PREFS_APP_WINDOW_HEIGHT";
+
     private static final boolean IS_MS_WINDOWS = System.getProperty("os.name").startsWith("Windows");
 
     private static final boolean IS_LINUX = System.getProperty("os.name").startsWith("Linux");
@@ -36,6 +44,10 @@ public class PlateDecoder extends Application {
     private ScrollPane plateRegion;
 
     private final PlateModel model = PlateModel.getInstance();
+
+    private double sceneWidth;
+
+    private double sceneHeight;
 
     public static void main(String[] args) {
         if (IS_MS_WINDOWS) {
@@ -56,8 +68,19 @@ public class PlateDecoder extends Application {
         this.stage = stage;
         stage.setTitle("Plate decoder");
 
+        sceneWidth  = Double.parseDouble(prefs.get(PREFS_APP_WINDOW_WIDTH,  "1000"));
+        sceneHeight = Double.parseDouble(prefs.get(PREFS_APP_WINDOW_HEIGHT, "500"));
+
         //setScene();
         setSceneTest();
+
+        stage.setOnCloseRequest(e -> {
+                Scene scene = stage.getScene();
+                if (scene != null) {
+                    prefs.put(PREFS_APP_WINDOW_WIDTH,  String.valueOf(scene.getWidth()));
+                    prefs.put(PREFS_APP_WINDOW_HEIGHT, String.valueOf(scene.getHeight()));
+                }
+            });
 
         stage.show();
     }
@@ -104,7 +127,7 @@ public class PlateDecoder extends Application {
             scene.setRoot(new Region());
         }
         sceneRoot.onDisplay();
-        stage.setScene(new Scene(sceneRoot, 1000, 500));
+        stage.setScene(new Scene(sceneRoot, sceneWidth, sceneHeight));
     }
 
     @SuppressWarnings("unused")

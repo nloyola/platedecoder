@@ -23,6 +23,7 @@ public abstract class AbstractSceneRoot extends BorderPane {
 
     public AbstractSceneRoot(String title, boolean hasBackButton) {
         this.title = title;
+        init();
         setTop(createTitle());
         setCenter(createContentsArea());
         if (hasBackButton) {
@@ -57,6 +58,8 @@ public abstract class AbstractSceneRoot extends BorderPane {
     }
 
     protected abstract void onDisplay();
+
+    protected abstract void init();
 
     protected abstract Node creatContents();
 

@@ -29,8 +29,7 @@ public class PlateTypeChooser extends GridPane {
         addRow(0, plateTypeText, plateTypeChoice);
         setMargin(plateTypeText, new Insets(5));
         setMargin(plateTypeChoice, new Insets(5));
-
-        plateTypeChoice.getSelectionModel().selectFirst();
+        plateTypeChoice.setValue(model.getPlateType());
 
         plateTypeChoice.getSelectionModel().selectedItemProperty()
             .addListener((observable, oldValue, newValue) -> {
@@ -41,7 +40,7 @@ public class PlateTypeChooser extends GridPane {
 
     private ChoiceBox<PlateType> createPlateChoiceBox() {
         ChoiceBox<PlateType> choiceBox = new ChoiceBox<PlateType>();
-        choiceBox.setItems(model.plateTypes);
+        choiceBox.getItems().setAll(model.plateTypes);
         return choiceBox;
     }
 

@@ -1,9 +1,5 @@
 package org.biobank.platedecoder.model;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * The types of well plates this app supports.
  */
@@ -35,24 +31,9 @@ public enum PlateType {
         return cols;
     }
 
-    private static Map<PlateType, String> VALUES_MAP;
-
-    static {
-        Map<PlateType, String> map = new HashMap<>();
-
-        for (PlateType plateType : values()) {
-            map.put(plateType, plateType.description);
-        }
-
-        VALUES_MAP = Collections.unmodifiableMap(map);
-    }
-
-    public static Map<PlateType, String> getValuesMap() {
-        return VALUES_MAP;
-    }
-
     @Override
     public String toString() {
         return description;
     }
+
 }

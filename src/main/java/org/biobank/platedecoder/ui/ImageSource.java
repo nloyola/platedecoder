@@ -19,6 +19,9 @@ class ImageSource extends AbstractSceneRoot {
     }
 
     @Override
+    protected void init() {}
+
+    @Override
     protected Node creatContents() {
         final GridPane grid = new GridPane();
         grid.setVgap(10);

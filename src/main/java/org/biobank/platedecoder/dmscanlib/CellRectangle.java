@@ -22,7 +22,7 @@ import org.biobank.platedecoder.model.PlateType;
 import org.biobank.platedecoder.model.BarcodePosition;
 
 /**
- * Defines rectangular coordinates, in inches, for a region of image that contains a single 2D
+ * Defines rectangular coordinates, in pixels, for a region of image that contains a single 2D
  * barcode. The region also contains a label used to refer to it. This region of the image will then
  * be examined and if it contains a valid 2D barcode it will be decoded.
  *
@@ -139,12 +139,12 @@ public final class CellRectangle implements Comparable<CellRectangle> {
     /**
      * Generates each cell of the grid based on the parameters passed in.
      *
-     * @param bbox The dimensions of the image the cells overlap onto.
+     * @param bbox The dimensions of the image the cells overlap onto (in pixels).
      * @param orientation The orientation of the pallet: either landscape or portrait.
      * @param plateType The dimensions of the pallet in terms of number of tubes it holds.
      * @param barcodePosition Where the barcodes are placed on the tubes: either the top or bottom.
      * @return The grid cells.
-     * @note The units are in inches.
+     * @note The units are in pixels.
      */
     public static Set<CellRectangle> getCellsForBoundingBox(Rectangle bbox,
                                                             PlateOrientation orientation,
