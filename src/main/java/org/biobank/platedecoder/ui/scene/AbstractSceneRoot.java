@@ -1,6 +1,8 @@
-package org.biobank.platedecoder.ui;
+package org.biobank.platedecoder.ui.scene;
 
 import org.biobank.platedecoder.model.PlateModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -11,9 +13,13 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 public abstract class AbstractSceneRoot extends BorderPane {
+
+    @SuppressWarnings("unused")
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractSceneRoot.class);
 
     protected final PlateModel model = PlateModel.getInstance();
 
@@ -21,18 +27,14 @@ public abstract class AbstractSceneRoot extends BorderPane {
 
     private Button backBtn;
 
-    public AbstractSceneRoot(String title, boolean hasBackButton) {
+    private Button finishBtn;
+
+    public AbstractSceneRoot(String title) {
         this.title = title;
         init();
         setTop(createTitle());
         setCenter(createContentsArea());
-        if (hasBackButton) {
-            setBottom(createBottomArea());
-        }
-    }
-
-    public AbstractSceneRoot(String title) {
-        this(title, true);
+        setBottom(createBottomArea());
     }
 
     private Node createTitle() {
@@ -57,7 +59,7 @@ public abstract class AbstractSceneRoot extends BorderPane {
         return node;
     }
 
-    protected abstract void onDisplay();
+    public abstract void onDisplay();
 
     protected abstract void init();
 
@@ -68,11 +70,20 @@ public abstract class AbstractSceneRoot extends BorderPane {
         pane.setPadding(new Insets(5, 5, 5, 5));
 
         backBtn = new Button("Back");
-        backBtn.setDisable(true);
+        backBtn.managedProperty().bind(backBtn.visibleProperty());
+        backBtn.setVisible(false);
 
-        AnchorPane.setTopAnchor(backBtn, 0.0);
-        AnchorPane.setRightAnchor(backBtn, 0.0);
-        pane.getChildren().add(backBtn);
+        finishBtn = new Button("Finish");
+        finishBtn.managedProperty().bind(finishBtn.visibleProperty());
+        finishBtn.setVisible(false);
+
+        HBox hbox = new HBox(5);
+        hbox.getChildren().addAll(backBtn, finishBtn);
+
+        AnchorPane.setTopAnchor(hbox, 0.0);
+        AnchorPane.setRightAnchor(hbox, 0.0);
+
+        pane.getChildren().add(hbox);
 
         final ScrollPane scrollPane = new ScrollPane(pane);
         scrollPane.setMaxHeight(Double.MAX_VALUE);
@@ -81,9 +92,14 @@ public abstract class AbstractSceneRoot extends BorderPane {
         return scrollPane;
     }
 
-    public void onBackAction(EventHandler<ActionEvent> backActionHandler) {
-        backBtn.setDisable(false);
-        backBtn.setOnAction(backActionHandler);
+    public void enableBackAction(EventHandler<ActionEvent> actionHandler) {
+        backBtn.setVisible(true);
+        backBtn.setOnAction(actionHandler);
+    }
+
+    public void enableFinishAction(EventHandler<ActionEvent> actionHandler) {
+        finishBtn.setVisible(true);
+        finishBtn.setOnAction(actionHandler);
     }
 
 }

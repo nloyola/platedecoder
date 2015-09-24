@@ -1,4 +1,4 @@
-package org.biobank.platedecoder.ui;
+package org.biobank.platedecoder.ui.wellgrid;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;

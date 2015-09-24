@@ -1,4 +1,4 @@
-package org.biobank.platedecoder.ui;
+package org.biobank.platedecoder.ui.scene;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -8,14 +8,14 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.GridPane;
 
-class ImageSource extends AbstractSceneRoot {
+public class ImageSource extends AbstractSceneRoot {
 
     private RadioButton filesystemBtn;
 
     private RadioButton flatbedBtn;
 
     public ImageSource() {
-        super("Select the image source", false);
+        super("Select the image source");
     }
 
     @Override
@@ -45,7 +45,7 @@ class ImageSource extends AbstractSceneRoot {
     }
 
     @Override
-    protected void onDisplay() {
+    public void onDisplay() {
         unselectAll();
     }
 

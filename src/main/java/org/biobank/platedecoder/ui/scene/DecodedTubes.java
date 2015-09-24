@@ -1,18 +1,23 @@
-package org.biobank.platedecoder.ui;
+package org.biobank.platedecoder.ui.scene;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.biobank.platedecoder.model.PlateWell;
+import org.biobank.platedecoder.model.PlateWellCsvWriter;
 import org.biobank.platedecoder.model.SbsPosition;
+import org.biobank.platedecoder.ui.PlateDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -22,6 +27,7 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 
 public class DecodedTubes extends AbstractSceneRoot {
 
@@ -34,6 +40,8 @@ public class DecodedTubes extends AbstractSceneRoot {
 
     private List<PlateWell> sortedList;
 
+    private Optional<EventHandler<ActionEvent>> specimenLinkHandlerMaybe = Optional.empty();
+
     public DecodedTubes() {
         super("Decoded tubes");
     }
@@ -45,7 +53,7 @@ public class DecodedTubes extends AbstractSceneRoot {
     }
 
     @Override
-    protected void onDisplay() {
+    public void onDisplay() {
         ObservableList<PlateWell> plateWells = FXCollections.observableArrayList(sortedList);
         table.setItems(plateWells);
         table.getSortOrder().add(labelColumn);
@@ -112,11 +120,6 @@ public class DecodedTubes extends AbstractSceneRoot {
     }
 
     @SuppressWarnings("unused")
-    private void exportToCsvAction(ActionEvent e) {
-        LOG.debug("exportToCsv");
-    }
-
-    @SuppressWarnings("unused")
     private void copyToClipboardAction(ActionEvent e) {
         String text = sortedList.stream()
             .map(w -> w.getLabel() + "," + w.getInventoryId())
@@ -139,11 +142,33 @@ public class DecodedTubes extends AbstractSceneRoot {
     }
 
     @SuppressWarnings("unused")
-    private void specimenLinkAction(ActionEvent e) {
+    private void exportToCsvAction(ActionEvent e) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Export to CSV");
+        File file = fileChooser.showSaveDialog(this.getScene().getWindow());
+        if (file != null) {
+            try {
+                PlateWellCsvWriter.write(file.toString(), sortedList);
+            } catch (Exception ex) {
+                LOG.error(ex.getMessage());
+                PlateDecoder.errorDialog("Could not save file: " + ex.getMessage(),
+                                         "File save error",
+                                         null);
+            }
+        }
+    }
+
+    public void onSpecimenLinkAction(EventHandler<ActionEvent> handler) {
+        specimenLinkHandlerMaybe = Optional.of(handler);
+    }
+
+    private void specimenLinkAction(ActionEvent event) {
+        specimenLinkHandlerMaybe.ifPresent(handler -> handler.handle(event));
     }
 
     @SuppressWarnings("unused")
     private void specimenAssignAction(ActionEvent e) {
+        PlateDecoder.infoDialog("To be completed", "Under construction");
     }
 }
 

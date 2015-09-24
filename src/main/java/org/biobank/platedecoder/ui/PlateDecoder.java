@@ -1,24 +1,23 @@
 package org.biobank.platedecoder.ui;
 
-import javafx.application.Application;
-import javafx.scene.Node;
-import javafx.scene.Scene;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.SplitPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
-import javafx.scene.text.Font;
-import javafx.scene.text.Text;
-import javafx.stage.Stage;
-
-import java.util.prefs.Preferences;
-
-import org.biobank.platedecoder.model.PlateModel;
-import org.biobank.platedecoder.model.PlateType;
+import org.biobank.platedecoder.model.PlateDecoderPreferences;
+import org.biobank.platedecoder.ui.scene.AbstractSceneRoot;
+import org.biobank.platedecoder.ui.scene.DecodedTubes;
+import org.biobank.platedecoder.ui.scene.FileChoose;
+import org.biobank.platedecoder.ui.scene.ImageAndGrid;
+import org.biobank.platedecoder.ui.scene.ImageSource;
+import org.biobank.platedecoder.ui.scene.SpecimenLink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.geometry.Point2D;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.layout.Region;
+import javafx.stage.Stage;
 
 public class PlateDecoder extends Application {
 
@@ -27,12 +26,6 @@ public class PlateDecoder extends Application {
 
     // private final Color color = Color.color(0.66, 0.67, 0.69);
 
-    private Preferences prefs = Preferences.userNodeForPackage(PlateDecoder.class);
-
-    private static final String PREFS_APP_WINDOW_WIDTH = "PREFS_APP_WINDOW_WIDTH";
-
-    private static final String PREFS_APP_WINDOW_HEIGHT = "PREFS_APP_WINDOW_HEIGHT";
-
     private static final boolean IS_MS_WINDOWS = System.getProperty("os.name").startsWith("Windows");
 
     private static final boolean IS_LINUX = System.getProperty("os.name").startsWith("Linux");
@@ -40,10 +33,6 @@ public class PlateDecoder extends Application {
     private static final boolean IS_ARCH_64_BIT = System.getProperty("os.arch").equals("amd64");
 
     private Stage stage;
-
-    private ScrollPane plateRegion;
-
-    private final PlateModel model = PlateModel.getInstance();
 
     private double sceneWidth;
 
@@ -68,8 +57,10 @@ public class PlateDecoder extends Application {
         this.stage = stage;
         stage.setTitle("Plate decoder");
 
-        sceneWidth  = Double.parseDouble(prefs.get(PREFS_APP_WINDOW_WIDTH,  "1000"));
-        sceneHeight = Double.parseDouble(prefs.get(PREFS_APP_WINDOW_HEIGHT, "500"));
+        Point2D dimensions = PlateDecoderPreferences.getInstance().getAppWindowSize();
+
+        sceneWidth  = dimensions.getX();
+        sceneHeight = dimensions.getY();
 
         //setScene();
         setSceneTestDecode();
@@ -77,27 +68,34 @@ public class PlateDecoder extends Application {
         stage.setOnCloseRequest(e -> {
                 Scene scene = stage.getScene();
                 if (scene != null) {
-                    prefs.put(PREFS_APP_WINDOW_WIDTH,  String.valueOf(scene.getWidth()));
-                    prefs.put(PREFS_APP_WINDOW_HEIGHT, String.valueOf(scene.getHeight()));
+                    PlateDecoderPreferences.getInstance().setAppWindowSize(
+                        scene.getWidth(), scene.getHeight());
                 }
             });
 
         stage.show();
     }
 
-
     @SuppressWarnings("unused")
     private void setSceneTestDecode() {
         ImageAndGrid imageAndGrid = new ImageAndGrid();
-
         DecodedTubes decodedTubes = new DecodedTubes();
+        SpecimenLink specimenLink = new SpecimenLink();
 
         imageAndGrid.onContinueAction(e -> {
                 changeScene(decodedTubes);
             });
 
-        decodedTubes.onBackAction(e -> {
+        decodedTubes.enableBackAction(e -> {
                 changeScene(imageAndGrid);
+            });
+
+        decodedTubes.enableFinishAction(e -> {
+                Platform.exit();
+            });
+
+        decodedTubes.onSpecimenLinkAction(e -> {
+                changeScene(specimenLink);
             });
 
         changeScene(imageAndGrid);
@@ -116,7 +114,7 @@ public class PlateDecoder extends Application {
                 changeScene(fileChoose);
             });
 
-        fileChoose.onBackAction(e -> {
+        fileChoose.enableBackAction(e -> {
                 changeScene(imageSourceSelection);
             });
 
@@ -125,7 +123,7 @@ public class PlateDecoder extends Application {
                 changeScene(imageAndGrid);
             });
 
-        imageAndGrid.onBackAction(e -> {
+        imageAndGrid.enableBackAction(e -> {
                 changeScene(fileChoose);
             });
 
@@ -133,8 +131,12 @@ public class PlateDecoder extends Application {
                 changeScene(decodedTubes);
             });
 
-        decodedTubes.onBackAction(e -> {
+        decodedTubes.enableBackAction(e -> {
                 changeScene(imageAndGrid);
+            });
+
+        decodedTubes.enableFinishAction(e -> {
+                Platform.exit();
             });
 
         changeScene(imageSourceSelection);
@@ -151,40 +153,31 @@ public class PlateDecoder extends Application {
         stage.setScene(new Scene(sceneRoot, sceneWidth, sceneHeight));
     }
 
-    @SuppressWarnings("unused")
-    private Scene plateTypeScene() {
-        SplitPane sp = new SplitPane();
-        final VBox leftPane = new VBox(8);
-        plateRegion = new ScrollPane();
-
-        leftPane.getChildren().add(createPlateTypeControl());
-
-        sp.getItems().addAll(leftPane, plateRegion);
-        sp.setDividerPositions(0.20f, 0.80f);
-
-        SplitPane.setResizableWithParent(leftPane, Boolean.FALSE);
-        return new Scene(sp);
+     public static void infoDialog(String infoMessage, String titleBar) {
+        // By specifying a null headerMessage String, we cause the dialog to not have a header
+        infoDialog(infoMessage, titleBar, null);
     }
 
-    private Node createPlateTypeControl() {
-        Text plateTypeText = new Text();
-        plateTypeText.setText("Plate type:");
-        plateTypeText.setFont(Font.font("Verdana", 12));
-
-        ChoiceBox<PlateType> plateTypeChoice = createPlateChoiceBox();
-
-        HBox hbox = new HBox(8);
-        hbox.getChildren().addAll(plateTypeText, plateTypeChoice);
-
-        return hbox;
+    public static void infoDialog(String infoMessage,
+                               String titleBar,
+                               String headerMessage) {
+        Alert alert = new Alert(AlertType.INFORMATION);
+        alert.setTitle(titleBar);
+        alert.setHeaderText(headerMessage);
+        alert.setContentText(infoMessage);
+        alert.showAndWait();
     }
 
-    private ChoiceBox<PlateType> createPlateChoiceBox() {
-        ChoiceBox<PlateType> result = new ChoiceBox<PlateType>();
-        result.setItems(model.plateTypes);
-        result.setStyle("-fx-font: 12px \"Verdana\"");
-        return result;
+    public static void errorDialog(String infoMessage,
+                                   String titleBar,
+                                   String headerMessage) {
+        Alert alert = new Alert(AlertType.ERROR);
+        alert.setTitle(titleBar);
+        alert.setHeaderText(headerMessage);
+        alert.setContentText(infoMessage);
+        alert.showAndWait();
     }
+
 
     // private BorderPane createImageSourceControl() {
     // final ToggleGroup toggleGroup = new ToggleGroup();

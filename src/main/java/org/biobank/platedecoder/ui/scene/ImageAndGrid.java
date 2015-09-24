@@ -1,4 +1,29 @@
-package org.biobank.platedecoder.ui;
+package org.biobank.platedecoder.ui.scene;
+
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.Set;
+
+import org.biobank.platedecoder.dmscanlib.CellRectangle;
+import org.biobank.platedecoder.dmscanlib.DecodeOptions;
+import org.biobank.platedecoder.dmscanlib.DecodeResult;
+import org.biobank.platedecoder.dmscanlib.DecodedWell;
+import org.biobank.platedecoder.dmscanlib.ScanLib;
+import org.biobank.platedecoder.dmscanlib.ScanLibResult;
+import org.biobank.platedecoder.model.BarcodePosition;
+import org.biobank.platedecoder.model.Plate;
+import org.biobank.platedecoder.model.PlateDecoderPreferences;
+import org.biobank.platedecoder.model.PlateOrientation;
+import org.biobank.platedecoder.ui.PlateTypeChooser;
+import org.biobank.platedecoder.ui.wellgrid.WellGrid;
+import org.controlsfx.dialog.ProgressDialog;
+import org.controlsfx.tools.Borders;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
@@ -21,45 +46,13 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
-
-import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.Optional;
-import java.util.Set;
-import java.util.prefs.Preferences;
-import java.util.Collections;
-
-import org.biobank.platedecoder.dmscanlib.CellRectangle;
-import org.biobank.platedecoder.dmscanlib.DecodeOptions;
-import org.biobank.platedecoder.dmscanlib.DecodeResult;
-import org.biobank.platedecoder.dmscanlib.DecodedWell;
-import org.biobank.platedecoder.dmscanlib.ScanLib;
-import org.biobank.platedecoder.dmscanlib.ScanLibResult;
-import org.biobank.platedecoder.model.BarcodePosition;
-import org.biobank.platedecoder.model.Plate;
-import org.biobank.platedecoder.model.PlateOrientation;
-import org.controlsfx.dialog.ProgressDialog;
-import org.controlsfx.tools.Borders;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import javafx.scene.shape.Rectangle;
 
 // TODO: add instructions for user for how to use the "Decode" button
 public class ImageAndGrid extends AbstractSceneRoot {
 
     //@SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(ImageAndGrid.class);
-
-    private Preferences prefs;
-
-    private static final String PREFS_WELL_GRID_X = "PREFS_WELL_GRID_X";
-
-    private static final String PREFS_WELL_GRID_Y = "PREFS_WELL_GRID_Y_";
-
-    private static final String PREFS_WELL_GRID_WIDTH = "PREFS_WELL_GRID_WIDTH";
-
-    private static final String PREFS_WELL_GRID_HEIGHT = "PREFS_WELL_GRID_HEIGHT";
 
     private Optional<Image> imageMaybe;
 
@@ -103,11 +96,10 @@ public class ImageAndGrid extends AbstractSceneRoot {
 
     @Override
     protected void init() {
-        prefs = Preferences.userNodeForPackage(ImageAndGrid.class);
     }
 
     @Override
-    protected void onDisplay() {
+    public void onDisplay() {
         // since this method is also called when the user presses the "Back" button, it clears
         // previous decode information if present
         decodedWellsMaybe.ifPresent(decodedWells -> {
@@ -258,11 +250,8 @@ public class ImageAndGrid extends AbstractSceneRoot {
                 }
             });
 
-        prefs.put(PREFS_WELL_GRID_X,      String.valueOf(wellGrid.getX()));
-        prefs.put(PREFS_WELL_GRID_Y,      String.valueOf(wellGrid.getY()));
-        prefs.put(PREFS_WELL_GRID_WIDTH,  String.valueOf(wellGrid.getWidth()));
-        prefs.put(PREFS_WELL_GRID_HEIGHT, String.valueOf(wellGrid.getHeight()));
-
+        PlateDecoderPreferences.getInstance().setWellRectangle(
+            model.getPlateType(), wellGrid);
         continueHandlerMaybe.ifPresent(handler -> handler.handle(event));
     }
 
@@ -304,18 +293,15 @@ public class ImageAndGrid extends AbstractSceneRoot {
                 }
             });
 
-        double wellGridX      = Double.parseDouble(prefs.get(PREFS_WELL_GRID_X,      "0"));
-        double wellGridY      = Double.parseDouble(prefs.get(PREFS_WELL_GRID_Y,      "0"));
-        double wellGridWidth  = Double.parseDouble(prefs.get(PREFS_WELL_GRID_WIDTH,  "1500"));
-        double wellGridHeight = Double.parseDouble(prefs.get(PREFS_WELL_GRID_HEIGHT, "1000"));
+        Rectangle r = PlateDecoderPreferences.getInstance().getWellRectangle(model.getPlateType());
 
         wellGrid = new WellGrid(imageGroup,
                                 imageView,
                                 model.getPlateType(),
-                                wellGridX,
-                                wellGridY,
-                                wellGridWidth,
-                                wellGridHeight,
+                                r.getX(),
+                                r.getY(),
+                                r.getWidth(),
+                                r.getHeight(),
                                 1.0);
 
         return grid;

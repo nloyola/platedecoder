@@ -2,9 +2,9 @@ package org.biobank.platedecoder.dmscanlib;
 
 /**
  * Used to configure the DataMatrix 2D barcode decoder.
- * 
+ *
  * @author Nelson Loyola
- * 
+ *
  */
 public class DecodeOptions {
     public static final double DEFAULT_MIN_EDGE_FACTOR = 0.15;
@@ -46,7 +46,7 @@ public class DecodeOptions {
 
     /**
      * Used to configure the DataMatrix 2D barcode decoder.
-     * 
+     *
      * @param scanGapFactor The number of pixels to use for scan grid gap. This is a libdmtx
      *            parameter. See {@link DEFAULT_SCAN_GAP}.
      * @param squareDev Maximum deviation (degrees) from squareness between adjacent barcode sides.
@@ -113,7 +113,7 @@ public class DecodeOptions {
 
     /**
      * Factory method with default settings.
-     * 
+     *
      * @return Returns a DecodeOptions object with default values.
      */
     public static DecodeOptions getDefaultDecodeOptions() {

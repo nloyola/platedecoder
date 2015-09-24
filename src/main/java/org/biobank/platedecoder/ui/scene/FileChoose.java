@@ -1,4 +1,4 @@
-package org.biobank.platedecoder.ui;
+package org.biobank.platedecoder.ui.scene;
 
 import java.io.File;
 import java.util.Optional;
@@ -79,7 +79,7 @@ public class FileChoose extends AbstractSceneRoot {
     }
 
     @Override
-    protected void onDisplay() {
+    public void onDisplay() {
         unselectAll();
     }
 

@@ -1,4 +1,4 @@
-package org.biobank.platedecoder.ui;
+package org.biobank.platedecoder.ui.wellgrid;
 
 import java.util.Optional;
 
