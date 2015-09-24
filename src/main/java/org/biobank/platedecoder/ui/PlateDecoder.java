@@ -71,8 +71,8 @@ public class PlateDecoder extends Application {
         sceneWidth  = Double.parseDouble(prefs.get(PREFS_APP_WINDOW_WIDTH,  "1000"));
         sceneHeight = Double.parseDouble(prefs.get(PREFS_APP_WINDOW_HEIGHT, "500"));
 
-        setScene();
-        //setSceneTestDecode();
+        //setScene();
+        setSceneTestDecode();
 
         stage.setOnCloseRequest(e -> {
                 Scene scene = stage.getScene();
@@ -101,8 +101,8 @@ public class PlateDecoder extends Application {
             });
 
         changeScene(imageAndGrid);
-        //imageAndGrid.setImageFileURI("file:///home/nelson/Desktop/scanned_ice4_cropped.bmp");
-        imageAndGrid.setImageFileURI("file:///home/nelson/Dropbox/CBSR/scanlib/testImages/12x12/stanford_12x12_1.jpg");
+        imageAndGrid.setImageFileURI("file:///home/nelson/Desktop/scanned_ice4_cropped.bmp");
+        //imageAndGrid.setImageFileURI("file:///home/nelson/Dropbox/CBSR/scanlib/testImages/12x12/stanford_12x12_1.jpg");
     }
 
     @SuppressWarnings("unused")

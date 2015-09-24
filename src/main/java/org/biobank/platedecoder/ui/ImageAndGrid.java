@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
 // TODO: add instructions for user for how to use the "Decode" button
 public class ImageAndGrid extends AbstractSceneRoot {
 
-    @SuppressWarnings("unused")
+    //@SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(ImageAndGrid.class);
 
     private Preferences prefs;
@@ -108,16 +108,17 @@ public class ImageAndGrid extends AbstractSceneRoot {
 
     @Override
     protected void onDisplay() {
-        // since this is called when the user presses the "Back" button, it clears previous decode
-        // information if present
+        // since this method is also called when the user presses the "Back" button, it clears
+        // previous decode information if present
         decodedWellsMaybe.ifPresent(decodedWells -> {
                 decodedWellsMaybe = Optional.empty();
                 model.createNewPlate();
-                wellGrid.clearWellCellInventoryId();
-                wellGrid.update();
-                updateDecodedWellCount(Collections.emptySet());
-                continueBtn.setDisable(true);
             });
+
+        wellGrid.clearWellCellInventoryId();
+        wellGrid.update();
+        updateDecodedWellCount(Collections.emptySet());
+        continueBtn.setDisable(true);
     }
 
     /**
@@ -216,7 +217,7 @@ public class ImageAndGrid extends AbstractSceneRoot {
 
     private Node createDecodeButton() {
         Button button = new Button("Decode");
-        button.setOnAction(e -> decodeImage());
+        button.setOnAction(this::decodeImageAction);
 
         final AnchorPane anchorPane = new AnchorPane();
         AnchorPane.setTopAnchor(button, 0.0);
@@ -239,28 +240,30 @@ public class ImageAndGrid extends AbstractSceneRoot {
 
         GridPane.setMargin(anchorPane, new Insets(5));
 
-        continueBtn.setOnAction(e -> {
-                if (!decodedWellsMaybe.isPresent()) {
-                    throw new IllegalStateException("missing decoded wells");
-                }
-
-                // copy data to model
-                Plate plate = model.getPlate();
-                decodedWellsMaybe.ifPresent(decodedWells -> {
-                        for (DecodedWell well: decodedWells) {
-                            plate.setWellInventoryId(well.getLabel(), well.getMessage());
-                        }
-                    });
-
-                prefs.put(PREFS_WELL_GRID_X,      String.valueOf(wellGrid.getX()));
-                prefs.put(PREFS_WELL_GRID_Y,      String.valueOf(wellGrid.getY()));
-                prefs.put(PREFS_WELL_GRID_WIDTH,  String.valueOf(wellGrid.getWidth()));
-                prefs.put(PREFS_WELL_GRID_HEIGHT, String.valueOf(wellGrid.getHeight()));
-
-                continueHandlerMaybe.ifPresent(handler -> handler.handle(e));
-            });
+        continueBtn.setOnAction(this::continueButtonAction);
 
         return anchorPane;
+    }
+
+    private void continueButtonAction(ActionEvent event) {
+        if (!decodedWellsMaybe.isPresent()) {
+            throw new IllegalStateException("missing decoded wells");
+        }
+
+        // copy data to model
+        Plate plate = model.getPlate();
+        decodedWellsMaybe.ifPresent(decodedWells -> {
+                for (DecodedWell well: decodedWells) {
+                    plate.setWellInventoryId(well.getLabel(), well.getMessage());
+                }
+            });
+
+        prefs.put(PREFS_WELL_GRID_X,      String.valueOf(wellGrid.getX()));
+        prefs.put(PREFS_WELL_GRID_Y,      String.valueOf(wellGrid.getY()));
+        prefs.put(PREFS_WELL_GRID_WIDTH,  String.valueOf(wellGrid.getWidth()));
+        prefs.put(PREFS_WELL_GRID_HEIGHT, String.valueOf(wellGrid.getHeight()));
+
+        continueHandlerMaybe.ifPresent(handler -> handler.handle(event));
     }
 
     private Pane createImagePane() {
@@ -360,7 +363,8 @@ public class ImageAndGrid extends AbstractSceneRoot {
         }
     }
 
-    private void decodeImage() {
+    @SuppressWarnings("unused")
+    private void decodeImageAction(ActionEvent e) {
         Task<DecodeResult> worker = new Task<DecodeResult>() {
                 @Override
                 protected DecodeResult call() throws Exception {

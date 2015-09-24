@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
  */
 public class PlateTypeChooser extends GridPane {
 
-    @SuppressWarnings("unused")
+    //@SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(PlateTypeChooser.class);
 
     private final PlateModel model = PlateModel.getInstance();

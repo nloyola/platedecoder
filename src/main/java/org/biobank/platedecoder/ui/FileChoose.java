@@ -46,18 +46,7 @@ public class FileChoose extends AbstractSceneRoot {
         grid.add(filenameField, 1, 0);
 
         final Button browseFileBtn = new Button("Browse");
-        browseFileBtn.setOnAction( (ActionEvent e) -> {
-                FileChooser fileChooser = new FileChooser();
-                fileChooser.setTitle("Open image file");
-                fileChooser.getExtensionFilters().addAll(
-                    new ExtensionFilter("Image Files", "*.png", "*.jpg", "*.gif", "*.bmp"));
-                File file = fileChooser.showOpenDialog(this.getScene().getWindow());
-                if (file != null) {
-                    selectedFile = Optional.of(file);
-                    filenameField.setText(file.getName());
-                    decodeBtn.setDisable(false);
-                }
-            });
+        browseFileBtn.setOnAction(this::browseFileBtnAction);
         browseFileBtn.setMaxWidth(Double.MAX_VALUE);
         browseFileBtn.requestFocus();
 
@@ -73,6 +62,20 @@ public class FileChoose extends AbstractSceneRoot {
 
         grid.add(box, 1, 1);
         return grid;
+    }
+
+    @SuppressWarnings("unused")
+    private void browseFileBtnAction(ActionEvent e) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Open image file");
+        fileChooser.getExtensionFilters().addAll(
+            new ExtensionFilter("Image Files", "*.png", "*.jpg", "*.gif", "*.bmp"));
+        File file = fileChooser.showOpenDialog(this.getScene().getWindow());
+        if (file != null) {
+            selectedFile = Optional.of(file);
+            filenameField.setText(file.getName());
+            decodeBtn.setDisable(false);
+        }
     }
 
     @Override
