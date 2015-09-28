@@ -21,7 +21,7 @@ public abstract class AbstractSceneRoot extends BorderPane {
     @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(AbstractSceneRoot.class);
 
-    protected final PlateModel model = PlateModel.getInstance();
+    protected PlateModel model;
 
     private final String title;
 
@@ -59,9 +59,11 @@ public abstract class AbstractSceneRoot extends BorderPane {
         return node;
     }
 
-    public abstract void onDisplay();
+    protected void init() {
+        model = PlateModel.getInstance();
+    }
 
-    protected abstract void init();
+    public abstract void onDisplay();
 
     protected abstract Node creatContents();
 

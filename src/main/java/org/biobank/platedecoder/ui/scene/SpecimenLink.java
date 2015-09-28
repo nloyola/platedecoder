@@ -27,11 +27,6 @@ public class SpecimenLink extends AbstractSceneRoot {
     }
 
     @Override
-    protected void init() {
-        // do nothing
-    }
-
-    @Override
     protected Node creatContents() {
         SplitPane sp = new SplitPane();
         final VBox leftPane = new VBox(5);

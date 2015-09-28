@@ -82,6 +82,7 @@ public class ImageAndGrid extends AbstractSceneRoot {
         super("Align grid with barcodes");
 
         model.getPlateTypeProperty().addListener((observable, oldValue, newValue) -> {
+                LOG.debug("plate type changed: {}", newValue);
                 createWellGrid();
             });
 
@@ -92,10 +93,6 @@ public class ImageAndGrid extends AbstractSceneRoot {
         model.getBarcodePositionProperty().addListener((observable, oldValue, newValue) -> {
                 createWellGrid();
             });
-    }
-
-    @Override
-    protected void init() {
     }
 
     @Override
@@ -130,6 +127,7 @@ public class ImageAndGrid extends AbstractSceneRoot {
                                     wellGrid.getHeight(),
                                     imageView.getLayoutBounds().getWidth() / image.getWidth());
 
+            LOG.debug("new well grid created: decoded Wells: {}", decodedWellsMaybe);
             addWellGrid();
         }
     }
@@ -248,8 +246,11 @@ public class ImageAndGrid extends AbstractSceneRoot {
                 for (DecodedWell well: decodedWells) {
                     plate.setWellInventoryId(well.getLabel(), well.getMessage());
                 }
+
+                LOG.debug("copying to model: plate wells: {}", plate.getWells().size());
             });
 
+        // save current dimensions of plate to preferences so they are used next time
         PlateDecoderPreferences.getInstance().setWellRectangle(
             model.getPlateType(), wellGrid);
         continueHandlerMaybe.ifPresent(handler -> handler.handle(event));
@@ -409,6 +410,7 @@ public class ImageAndGrid extends AbstractSceneRoot {
                             wellGrid.update();
                         });
 
+                    LOG.debug("image decoded: decoded wells: {}", decodedWellsMaybe);
                     continueBtn.setDisable(false);
                 }
             });
