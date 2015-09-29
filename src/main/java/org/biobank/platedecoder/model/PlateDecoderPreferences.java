@@ -46,6 +46,9 @@ public class PlateDecoderPreferences {
 
     private static final String PREFS_BARCODE_POSITION = "PREFS_BARCODE_POSITION";
 
+    private static final String PREFS_SPECIMEN_LINK_DIVIDER_POSITION =
+        "PREFS_SPECIMEN_LINK_DIVIDER_POSITION";
+
     public static PlateDecoderPreferences getInstance() {
         return PlateDecoderPreferencesHolder.INSTANCE;
     }
@@ -117,7 +120,18 @@ public class PlateDecoderPreferences {
         prefs.put(PREFS_BARCODE_POSITION, newValue.name());
     }
 
-     private static class PlateDecoderPreferencesHolder {
+    public double getSpecimenLinkDividerPosition() {
+        return prefs.getDouble(PREFS_SPECIMEN_LINK_DIVIDER_POSITION,
+                               DEFAULT_SPECIMEN_LINK_DIVIDER_POSITION);
+    }
+
+    public void setSpecimenLinkDividerPosition(double position) {
+        prefs.putDouble(PREFS_SPECIMEN_LINK_DIVIDER_POSITION, position);
+    }
+
+    //--
+
+    private static class PlateDecoderPreferencesHolder {
         private static final PlateDecoderPreferences INSTANCE = new PlateDecoderPreferences();
     }
 
@@ -136,5 +150,7 @@ public class PlateDecoderPreferences {
         public static final String DEFAULT_PLATE_ORIENTATION = PlateOrientation.LANDSCAPE.name();
 
         public static final String DEFAULT_BARCODE_POSITION = BarcodePosition.BOTTOM.name();
+
+        public static final double DEFAULT_SPECIMEN_LINK_DIVIDER_POSITION = 0.3;
     }
 }

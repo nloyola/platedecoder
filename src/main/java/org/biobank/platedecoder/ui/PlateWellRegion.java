@@ -44,6 +44,11 @@ public class PlateWellRegion extends Region {
             .then("-fx-background-color: #2EFE64")
             .otherwise("-fx-background-color: #FBF8EF"));
 
+        styleProperty().bind(
+            Bindings.when(well.getFilledProperty())
+            .then("-fx-background-color: #2EFE64")
+            .otherwise("-fx-background-color: #FBF800"));
+
         Light.Distant light = new Light.Distant();
         light.setAzimuth(-135);
         light.setElevation(30);

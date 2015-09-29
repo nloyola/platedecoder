@@ -20,6 +20,8 @@ public class PlateWell implements Comparable<PlateWell> {
 
     private BooleanProperty selectedProperty = new SimpleBooleanProperty(false);
 
+    private BooleanProperty filledProperty = new SimpleBooleanProperty(false);
+
     public PlateWell(Plate parent, int row, int col, String label) {
         this.parent = parent;
         this.inventoryId = null;
@@ -27,6 +29,7 @@ public class PlateWell implements Comparable<PlateWell> {
         this.row = row;
         this.col = col;
         this.inventoryId = new SimpleStringProperty("");
+        filledProperty.setValue(false);
     }
 
     public int getRow() {
@@ -51,6 +54,7 @@ public class PlateWell implements Comparable<PlateWell> {
 
     public void setInventoryId(String inventoryId) {
         this.inventoryId.setValue(inventoryId);
+        filledProperty.setValue(!inventoryId.isEmpty());
     }
 
     public StringProperty getInventoryIdProperty() {
@@ -63,6 +67,10 @@ public class PlateWell implements Comparable<PlateWell> {
 
     public BooleanProperty getSelectedProperty() {
         return selectedProperty;
+    }
+
+    public BooleanProperty getFilledProperty() {
+        return filledProperty;
     }
 
     public void setSelected(boolean selected) {

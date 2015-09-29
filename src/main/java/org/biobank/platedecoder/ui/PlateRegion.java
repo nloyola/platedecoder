@@ -36,28 +36,28 @@ public class PlateRegion extends Region {
         int rows = plateType.getRows() + 1;
         int cols = plateType.getCols() + 1;
 
-        Plate plateModel = model.getPlate();
+        Plate plate = model.getPlate();
 
-        GridPane plate = new GridPane();
+        GridPane grid = new GridPane();
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
                 if ((i == 0) && (j > 0)) {
-                    plate.add(new StackPane(new PlateLabel(Integer.toString(j))), j, i);
+                    grid.add(new StackPane(new PlateLabel(Integer.toString(j))), j, i);
                 }
 
                 if ((i > 0) && (j == 0)) {
-                    plate.add(new StackPane(new PlateLabel((char) ('A' + i - 1))), j, i);
+                    grid.add(new StackPane(new PlateLabel((char) ('A' + i - 1))), j, i);
                 }
 
                 if ((i > 0) && (j > 0)) {
                     SbsPosition position = new SbsPosition(i - 1, j - 1);
-                    PlateWell well = plateModel.getWell(position.getLabel());
+                    PlateWell well = plate.getWell(position.getLabel());
                     PlateWellRegion wellRegion = new PlateWellRegion(well, i - 1, j - 1);
-                    plate.add(new StackPane(wellRegion), j, i);
+                    grid.add(new StackPane(wellRegion), j, i);
                 }
             }
         }
-        return plate;
+        return grid;
     }
 
 }

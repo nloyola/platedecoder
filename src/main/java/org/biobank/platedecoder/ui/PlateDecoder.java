@@ -62,18 +62,23 @@ public class PlateDecoder extends Application {
         sceneWidth  = dimensions.getX();
         sceneHeight = dimensions.getY();
 
-        //setScene();
-        setSceneTestDecode();
-
-        stage.setOnCloseRequest(e -> {
-                Scene scene = stage.getScene();
-                if (scene != null) {
-                    PlateDecoderPreferences.getInstance().setAppWindowSize(
-                        scene.getWidth(), scene.getHeight());
-                }
-            });
-
+        setScene();
+        //setSceneTestDecode();
+        //setSceneTestSpecimenLink();
+        sceneOnClose();
         stage.show();
+    }
+
+    @SuppressWarnings("unused")
+    private void setSceneTestSpecimenLink() {
+        SpecimenLink.setTestData();
+
+        SpecimenLink specimenLink = new SpecimenLink();
+        changeScene(specimenLink);
+
+        specimenLink.enableFinishAction(e -> {
+                Platform.exit();
+            });
     }
 
     @SuppressWarnings("unused")
@@ -145,7 +150,7 @@ public class PlateDecoder extends Application {
     private <T extends AbstractSceneRoot> void changeScene(T sceneRoot) {
         Scene scene = stage.getScene();
         if (scene != null) {
-            // the previous scene's root has to be cleared so we dont get an exception when user
+            // theprevious scene's root has to be cleared so we dont get an exception when user
             // enters the scene again
             scene.setRoot(new Region());
         }
@@ -153,14 +158,24 @@ public class PlateDecoder extends Application {
         stage.setScene(new Scene(sceneRoot, sceneWidth, sceneHeight));
     }
 
-     public static void infoDialog(String infoMessage, String titleBar) {
+    private void sceneOnClose() {
+        stage.setOnCloseRequest(e -> {
+                Scene scene = stage.getScene();
+                if (scene != null) {
+                    PlateDecoderPreferences.getInstance().setAppWindowSize(
+                        scene.getWidth(), scene.getHeight());
+                }
+            });
+    }
+
+    public static void infoDialog(String infoMessage, String titleBar) {
         // By specifying a null headerMessage String, we cause the dialog to not have a header
         infoDialog(infoMessage, titleBar, null);
     }
 
     public static void infoDialog(String infoMessage,
-                               String titleBar,
-                               String headerMessage) {
+                                  String titleBar,
+                                  String headerMessage) {
         Alert alert = new Alert(AlertType.INFORMATION);
         alert.setTitle(titleBar);
         alert.setHeaderText(headerMessage);
@@ -182,22 +197,22 @@ public class PlateDecoder extends Application {
     // private BorderPane createImageSourceControl() {
     // final ToggleGroup toggleGroup = new ToggleGroup();
 
-    // RadioButton flatbedRegion = new RadioButton("Flatbed Region 1");
+// RadioButtonflatbedRegion = new RadioButton("Flatbed Region 1");
     // flatbedRegion.setToggleGroup(toggleGroup);
 
-    // RadioButton filesystem = new RadioButton("Filesystem");
+// RadioButtonfilesystem = new RadioButton("Filesystem");
     // filesystem.setToggleGroup(toggleGroup);
 
-    // VBox vbox = new VBox(8, flatbedRegion, filesystem);
+// VBox vbox =new VBox(8, flatbedRegion, filesystem);
     // vbox.getStyleClass().add("bordered-titled-border");
 
     // toggleGroup.selectToggle(toggleGroup.getToggles().get(0));
     // toggleGroup.selectedToggleProperty().addListener((ov, oldValue, newValue) -> {
-    // RadioButton rb = ((RadioButton) toggleGroup.getSelectedToggle());
+// RadioButtonrb = ((RadioButton) toggleGroup.getSelectedToggle());
     // if (rb != null) {
     // System.out.println(rb.getText() + " selected");
-    // }
-    // });
+// }
+// });
 
     // BorderPane result = new BorderPane();
     // Text topText = new Text("Image source");
@@ -205,6 +220,6 @@ public class PlateDecoder extends Application {
     // result.setTop(topText);
     // result.setCenter(vbox);
     // return result;
-    // }
+// }
 
 }
