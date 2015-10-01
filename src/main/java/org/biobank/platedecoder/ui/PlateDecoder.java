@@ -108,7 +108,7 @@ public class PlateDecoder extends Application {
         //imageAndGrid.setImageFileURI("file:///home/nelson/Dropbox/CBSR/scanlib/testImages/12x12/stanford_12x12_1.jpg");
     }
 
-    @SuppressWarnings("unused")
+    //@SuppressWarnings("unused")
     private void setScene() {
         ImageSource imageSourceSelection = new ImageSource();
         FileChoose fileChoose = new FileChoose();

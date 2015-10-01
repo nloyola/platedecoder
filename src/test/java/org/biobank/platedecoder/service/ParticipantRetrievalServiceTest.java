@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.biobank.platedecoder.model.Participant;
 import org.biobank.platedecoder.service.ParticipantRetrievalService;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -20,6 +21,7 @@ import javafx.concurrent.Worker;
 /**
  * See http://blog.buildpath.de/javafx-testrunner/ for the mechanism used to run these tests.
  */
+@Ignore
 @RunWith(JfxRunner.class)
 public class ParticipantRetrievalServiceTest {
 

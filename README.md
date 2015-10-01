@@ -13,6 +13,21 @@ tubes to patients or positions.
 
 ## Development
 
+This project use [Gradle](https://gradle.org/) as the build tool. You will need to intsall it to
+build this application.
+
+To build the project type the following at the project's root directory:
+
+```bash
+gradle  build
+```
+
+To run the application, type:
+
+```bash
+gradle  run
+```
+
 ### Emacs
 
 To build from Emacs type: `TERM="dumb" gradle build`
