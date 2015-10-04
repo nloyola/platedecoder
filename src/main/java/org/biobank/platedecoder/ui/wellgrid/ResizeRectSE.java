@@ -1,16 +1,15 @@
 package org.biobank.platedecoder.ui.wellgrid;
 
 import javafx.scene.Cursor;
-import javafx.scene.Node;
 
 public class ResizeRectSE extends ResizeRect {
 
     protected static final Cursor MOUSE_ENTERED_CURSOR = Cursor.SE_RESIZE;
 
 
-    public ResizeRectSE(Node          parentNode,
-                        double        size,
-                        ResizeHandler resizeHandler) {
-        super(parentNode, size, MOUSE_ENTERED_CURSOR, resizeHandler);
+    public ResizeRectSE(WellGridHandler wellGridHandler,
+                        double          size,
+                        ResizeHandler   resizeHandler) {
+        super(wellGridHandler, size, MOUSE_ENTERED_CURSOR, resizeHandler);
     }
 }

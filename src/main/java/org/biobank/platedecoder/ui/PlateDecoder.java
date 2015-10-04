@@ -1,5 +1,8 @@
 package org.biobank.platedecoder.ui;
 
+import java.util.Map;
+
+import org.biobank.platedecoder.dmscanlib.LibraryLoader;
 import org.biobank.platedecoder.model.PlateDecoderPreferences;
 import org.biobank.platedecoder.ui.scene.AbstractSceneRoot;
 import org.biobank.platedecoder.ui.scene.DecodedTubes;
@@ -24,13 +27,7 @@ public class PlateDecoder extends Application {
     @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(PlateDecoder.class);
 
-    // private final Color color = Color.color(0.66, 0.67, 0.69);
-
-    private static final boolean IS_MS_WINDOWS = System.getProperty("os.name").startsWith("Windows");
-
-    private static final boolean IS_LINUX = System.getProperty("os.name").startsWith("Linux");
-
-    private static final boolean IS_ARCH_64_BIT = System.getProperty("os.arch").equals("amd64");
+    public static final boolean IS_DEBUG_MODE = (System.getProperty("debug") != null);
 
     private Stage stage;
 
@@ -39,16 +36,7 @@ public class PlateDecoder extends Application {
     private double sceneHeight;
 
     public static void main(String[] args) {
-        if (IS_MS_WINDOWS) {
-            System.loadLibrary("OpenThreadsWin32");
-            System.loadLibrary("opencv_core248");
-            System.loadLibrary("opencv_highgui248");
-            System.loadLibrary("opencv_imgproc248");
-            System.loadLibrary("dmscanlib");
-        } else if (IS_LINUX && IS_ARCH_64_BIT) {
-            System.loadLibrary("dmscanlib64");
-        }
-
+        LibraryLoader.load();
         launch(args);
     }
 
@@ -62,14 +50,37 @@ public class PlateDecoder extends Application {
         sceneWidth  = dimensions.getX();
         sceneHeight = dimensions.getY();
 
-        setScene();
-        //setSceneTestDecode();
-        //setSceneTestSpecimenLink();
+        setStartScene();
         sceneOnClose();
         stage.show();
     }
 
-    @SuppressWarnings("unused")
+    /**
+     * Start scene can be set when DEBUB mode is on.
+     */
+    private void setStartScene() {
+        Map<String, String> namedArgs = getParameters().getNamed();
+        String startScene = null;
+
+        if (IS_DEBUG_MODE) {
+            startScene = namedArgs.get("scene");
+        }
+
+        if (startScene == null) {
+            setScene();
+        } else {
+            switch (startScene) {
+                case "testdecode":
+                    setSceneTestDecode();
+                    break;
+
+                case "specimenlink":
+                    setSceneTestSpecimenLink();
+                    break;
+            }
+        }
+    }
+
     private void setSceneTestSpecimenLink() {
         SpecimenLink.setTestData();
 
@@ -81,7 +92,6 @@ public class PlateDecoder extends Application {
             });
     }
 
-    @SuppressWarnings("unused")
     private void setSceneTestDecode() {
         ImageAndGrid imageAndGrid = new ImageAndGrid();
         DecodedTubes decodedTubes = new DecodedTubes();
@@ -104,11 +114,11 @@ public class PlateDecoder extends Application {
             });
 
         changeScene(imageAndGrid);
-        imageAndGrid.setImageFileURI("file:///home/nelson/Desktop/scanned_ice4_cropped.bmp");
+        //imageAndGrid.setImageFileURI("file:///home/nelson/Desktop/scanned_ice4_cropped.bmp");
+        imageAndGrid.setImageFileURI("file:///home/nelson/Desktop/testImages/8x12/FrozenPalletImages/HP_L1985A/scanned4.bmp");
         //imageAndGrid.setImageFileURI("file:///home/nelson/Dropbox/CBSR/scanlib/testImages/12x12/stanford_12x12_1.jpg");
     }
 
-    //@SuppressWarnings("unused")
     private void setScene() {
         ImageSource imageSourceSelection = new ImageSource();
         FileChoose fileChoose = new FileChoose();
@@ -192,34 +202,5 @@ public class PlateDecoder extends Application {
         alert.setContentText(infoMessage);
         alert.showAndWait();
     }
-
-
-    // private BorderPane createImageSourceControl() {
-    // final ToggleGroup toggleGroup = new ToggleGroup();
-
-// RadioButtonflatbedRegion = new RadioButton("Flatbed Region 1");
-    // flatbedRegion.setToggleGroup(toggleGroup);
-
-// RadioButtonfilesystem = new RadioButton("Filesystem");
-    // filesystem.setToggleGroup(toggleGroup);
-
-// VBox vbox =new VBox(8, flatbedRegion, filesystem);
-    // vbox.getStyleClass().add("bordered-titled-border");
-
-    // toggleGroup.selectToggle(toggleGroup.getToggles().get(0));
-    // toggleGroup.selectedToggleProperty().addListener((ov, oldValue, newValue) -> {
-// RadioButtonrb = ((RadioButton) toggleGroup.getSelectedToggle());
-    // if (rb != null) {
-    // System.out.println(rb.getText() + " selected");
-// }
-// });
-
-    // BorderPane result = new BorderPane();
-    // Text topText = new Text("Image source");
-    // topText.setFont(Font.font("Arial", FontWeight.BOLD, 12));
-    // result.setTop(topText);
-    // result.setCenter(vbox);
-    // return result;
-// }
 
 }

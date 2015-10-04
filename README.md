@@ -10,24 +10,80 @@ code can be present on the top or bottoms of the tubes.
 It can also send the decoded bar codes to an [OpenSpecimen](http://openspecimen.org/) server to link
 tubes to patients or positions.
 
+## Run
+
+To run a fat jar, use the following command:
+
+```bash
+java -Djava.library.path=./lib -cp platedecoder-all-0.1-SNAPSHOT.jar org.biobank.platedecoder.ui.PlateDecoder
+```
+
+Note that the `lib` folder must contain the scanning library DLL (or shared library for Linux).
+These libraries can be downloaded from
+[here](http://aicml-med.cs.ualberta.ca/CBSR/plate_decoders_libs/).
 
 ## Development
 
-This project use [Gradle](https://gradle.org/) as the build tool. You will need to intsall it to
+### Build Environment
+
+This project uses [Gradle](https://gradle.org/) as the build tool. You will need to intsall it to
 build this application.
 
 To build the project type the following at the project's root directory:
 
 ```bash
-gradle  build
+gradle build
 ```
 
 To run the application, type:
 
 ```bash
-gradle  run
+gradle run
 ```
+
+To build an installation, type:
+
+```bash
+gradle installDist
+```
+
+Then copy the DLLs (or Linux shared libraries) to `build/install/platedecoder/lib`.
+The `build/install/platedecoder` .
+
+The fat jar is placed in the `build/libs` directory.
+
+See also `gradle distZip`.
+
+### Windows executable
+
+Use `gradle installDist` to create an installation. The `dmscanlib.dll` file goes in the `lib`
+folder. The other DLLs go in the root folder. Required DLLs are:
+
+* libglog.dll
+* opencv_core248.dll
+* opencv_highgui248.dll
+* opencv_imgproc248.dll
+* OpenThreadsWin32.dll
+
+#### Future
+
+See [launch4j](http://launch4j.sourceforge.net/docs.html) for how to generate a Windows EXE file.
 
 ### Emacs
 
-To build from Emacs type: `TERM="dumb" gradle build`
+To build from Emacs type: `TERM="dumb" gradle build` or `gradle --console=plain build`.
+
+#### Eclim
+
+Use the [Graphical Installer](http://eclim.org/install.html#installer) to install Eclim.
+
+For tests to run the native library folder has to be added to the JVM parameters as follows:
+
+```
+<path_to_eclim>/eclim -command project_setting -p platedecoder -s org.eclim.java.junit.jvmargs -v \[\"-Djava.library.path=./lib\"\]
+```
+
+The path to Eclim for me is:
+```
+/home/nelson/.eclipse/org.eclipse.platform_4.5.0_1473617060_linux_gtk_x86_64
+```

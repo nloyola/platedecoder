@@ -1,18 +1,15 @@
 package org.biobank.platedecoder.dmscanlib;
 
-import javafx.scene.shape.LineTo;
-import javafx.scene.shape.MoveTo;
-import javafx.scene.shape.Path;
 import javafx.scene.shape.Rectangle;
 import javafx.geometry.Bounds;
-import javafx.geometry.Point2D;
 import javafx.util.Pair;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.util.List;
 import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,109 +28,94 @@ import org.biobank.platedecoder.model.BarcodePosition;
  */
 public final class CellRectangle implements Comparable<CellRectangle> {
 
-    @SuppressWarnings("unused")
+    //@SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(CellRectangle.class);
 
     private final String label;
 
-    private final Path polygon;
-
-    private final Map<Integer, Point2D> points;
+    private final Rectangle rectangle;
 
     public CellRectangle(String label, Rectangle rectangle) {
         this.label = label;
-        this.polygon = rectToPoly(rectangle);
-        this.points = rectToPoints(rectangle);
-    }
-
-    /*
-     * Corner one is where X and Y are minimum then the following corners go in a counter clockwise
-     * direction.
-     */
-    private Path rectToPoly(Rectangle rectangle) {
-        Double maxX = rectangle.getX() + rectangle.getWidth();
-        Double maxY = rectangle.getY() + rectangle.getHeight();
-
-        Path polygon = new Path();
-        polygon.getElements().add(new MoveTo(rectangle.getX(), rectangle.getY()));
-        polygon.getElements().add(new LineTo(rectangle.getX(), maxY));
-        polygon.getElements().add(new LineTo(maxX, maxY));
-        polygon.getElements().add(new LineTo(maxX, rectangle.getY()));
-        return polygon;
-    }
-
-    /*
-     * Corner one is where X and Y are minimum then the following corners go in a counter clockwise
-     * direction.
-     */
-    private Map<Integer, Point2D> rectToPoints(Rectangle rectangle) {
-        Map<Integer, Point2D> result = new HashMap<Integer, Point2D>(4);
-
-        Double maxX = rectangle.getX() + rectangle.getWidth();
-        Double maxY = rectangle.getY() + rectangle.getHeight();
-
-        result.put(0, new Point2D(rectangle.getX(), rectangle.getY()));
-        result.put(1, new Point2D(rectangle.getX(), maxY));
-        result.put(2, new Point2D(maxX, maxY));
-        result.put(3, new Point2D(maxX, rectangle.getY()));
-        return result;
+        this.rectangle = new Rectangle(rectangle.getX(),
+                                       rectangle.getY(),
+                                       rectangle.getWidth(),
+                                       rectangle.getHeight());
     }
 
     public String getLabel() {
         return label;
     }
 
-    public Path getPolygon() {
-        return polygon;
+    public final double getX() {
+        return rectangle.getX();
+    }
+
+    public final double getY() {
+        return rectangle.getY();
+    }
+
+    public final double getWidth() {
+        return rectangle.getWidth();
+    }
+
+    public final double getHeight() {
+        return rectangle.getHeight();
     }
 
     public boolean containsPoint(double x, double y) {
-        return polygon.contains(x, y);
+        return rectangle.contains(x, y);
     }
 
-    public Rectangle getBoundsRectangle() {
-        Bounds b = polygon.getBoundsInLocal();
-        return new Rectangle(b.getMinX(), b.getMinY(), b.getWidth(), b.getHeight());
-    }
-
-    private Point2D getPoint(int pointId) {
-        Point2D point = points.get(pointId);
-        if (point == null) {
-            throw new IllegalArgumentException("invalid value for corner: " + pointId);
-        }
-        return point;
+    public Bounds getBoundsRectangle() {
+        return rectangle.getBoundsInParent();
     }
 
     /**
+     * Called by JNI.
      *
      * @param cornerId Corner one is where X and Y are minimum then the following corners go in a
      *            counter clockwise direction.
      * @return
      */
     public double getCornerX(int cornerId) {
-        return getPoint(cornerId).getX();
+        switch (cornerId) {
+            case 0:
+            case 1:
+                return getX();
+            case 2:
+            case 3:
+                return getX() + getWidth();
+        }
+        throw new IllegalArgumentException("invalid value for corner: " + cornerId);
     }
 
     /**
+     * Called by JNI.
      *
      * @param cornerId Corner one is where X and Y are minimum then the following corners go in a
      *            counter clockwise direction.
      * @return
      */
     public double getCornerY(int cornerId) {
-        return getPoint(cornerId).getY();
+        switch (cornerId) {
+            case 0:
+            case 3:
+                return getY();
+            case 1:
+            case 2:
+                return getY() + getHeight();
+        }
+        throw new IllegalArgumentException("invalid value for corner: " + cornerId);
     }
 
     @Override
     public String toString() {
-        StringBuffer sb = new StringBuffer();
-        sb.append(label).append(" ");
-        for (Entry<Integer, Point2D> entry : points.entrySet()) {
-            sb.append(entry.getKey()).append(": ");
-            sb.append("(").append(entry.getValue().getX()).append(", ");
-            sb.append(entry.getValue().getY()).append("), ");
-        }
-        return sb.toString();
+        StringBuffer buf = new StringBuffer();
+        buf.append(label);
+        buf.append(": ");
+        buf.append(rectangle.toString());
+        return buf.toString();
     }
 
     /**
@@ -171,17 +153,28 @@ public final class CellRectangle implements Comparable<CellRectangle> {
         double yOffset = bbox.getY();
 
         // make cells slightly smaller so that they all fit within the image
-        double cellWidth = 0.9999 * Math.floor(bbox.getWidth()) / cols;
-        double cellHeight = 0.9999 * Math.floor(bbox.getHeight()) / rows;
+        double cellWidth  = bbox.getWidth() / cols;
+        double cellHeight = bbox.getHeight() / rows;
 
-        Rectangle cellRect = new Rectangle(bbox.getX(), bbox.getY(), cellWidth, cellHeight);
+        double xInset = 0.0001 * cellWidth;
+        double yInset = 0.0001 * cellHeight;
+
+        double cellWidthInset = cellWidth - 2 * xInset;
+        double cellHeightInset = cellHeight - 2 * yInset;
+
+        // LOG.debug("getCellsForBoundingBox: {}, {}, {}, {}",
+        //           new Object [] {
+        //               xInset, yInset,  cellWidthInset, cellHeightInset
+        //           });
+
+        Rectangle cellRect = new Rectangle(bbox.getX(), bbox.getY(), cellWidthInset, cellHeightInset);
 
         Set<CellRectangle> cells = new HashSet<CellRectangle>();
         for (int row = 0; row < rows; ++row) {
             for (int col = 0; col < cols; ++col) {
                 String label = getLabelForPosition(row, col, orientation, plateType, barcodePosition);
-                cellRect.setX(xOffset);
-                cellRect.setY(yOffset);
+                cellRect.setX(xOffset + xInset);
+                cellRect.setY(yOffset + yInset);
                 CellRectangle cell = new CellRectangle(label, cellRect);
                 cells.add(cell);
 
@@ -193,6 +186,16 @@ public final class CellRectangle implements Comparable<CellRectangle> {
         }
 
         return cells;
+    }
+
+    @Override
+    public int compareTo(CellRectangle that) {
+        Pair<Integer, Integer> thisPos = SbsLabeling.toRowCol(this.label);
+        Pair<Integer, Integer> thatPos = SbsLabeling.toRowCol(that.label);
+        if (thisPos.getKey().equals(thatPos.getKey())) {
+            return thisPos.getValue().compareTo(thatPos.getValue());
+        }
+        return thisPos.getKey().compareTo(thatPos.getKey());
     }
 
     public static String getLabelForPosition(int row,
@@ -229,13 +232,27 @@ public final class CellRectangle implements Comparable<CellRectangle> {
         }
     }
 
-    @Override
-    public int compareTo(CellRectangle that) {
-        Pair<Integer, Integer> thisPos = SbsLabeling.toRowCol(this.label);
-        Pair<Integer, Integer> thatPos = SbsLabeling.toRowCol(that.label);
-        if (thisPos.getKey().equals(thatPos.getKey())) {
-            return thisPos.getValue().compareTo(thatPos.getValue());
-        }
-        return thisPos.getKey().compareTo(thatPos.getKey());
+    public static List<CellRectangle> sortCells(Set<CellRectangle> cells) {
+        List<CellRectangle> sorted = new ArrayList<CellRectangle>(cells);
+        Collections.sort(sorted);
+        return sorted;
     }
+
+    public static void debugCells(Set<CellRectangle> cells) {
+        for (CellRectangle cell : sortCells(cells)) {
+            debugCell(cell);
+        }
+    }
+
+    public static void debugCell(CellRectangle cell) {
+        LOG.debug("cell: {}, {}, {}, {}, {} ",
+                  new Object [] {
+                      cell.getLabel(),
+                      cell.getX(),
+                      cell.getY(),
+                      cell.getX() + cell.getWidth(),
+                          cell.getY() + cell.getHeight()
+                  });
+    }
+
 }

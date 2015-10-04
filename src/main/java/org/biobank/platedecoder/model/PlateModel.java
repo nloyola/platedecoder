@@ -2,13 +2,13 @@ package org.biobank.platedecoder.model;
 
 import java.util.Arrays;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class PlateModel {
 

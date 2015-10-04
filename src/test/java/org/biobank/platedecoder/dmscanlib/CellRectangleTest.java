@@ -1,18 +1,20 @@
 package org.biobank.platedecoder.dmscanlib;
 
-import org.biobank.platedecoder.dmscanlib.CellRectangle;
+import static org.junit.Assert.*;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+
 import org.biobank.platedecoder.model.BarcodePosition;
 import org.biobank.platedecoder.model.PlateOrientation;
 import org.biobank.platedecoder.model.PlateType;
-
-import static org.junit.Assert.*;
-
-import java.util.Set;
-
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javafx.geometry.Bounds;
 import javafx.scene.shape.Rectangle;
 
 public class CellRectangleTest {
@@ -22,7 +24,7 @@ public class CellRectangleTest {
 
     @Test
     public void validCellsForBoundingBox() {
-        Rectangle boundingBox = new Rectangle(100, 100, 200, 200);
+        Rectangle boundingBox = new Rectangle(1000, 1000, 3000, 3000);
 
         for (PlateOrientation orientation : PlateOrientation.values()) {
             for (PlateType plateType : PlateType.values()) {
@@ -34,10 +36,16 @@ public class CellRectangleTest {
                                                              plateType,
                                                              barcodePosition);
 
-                    for (CellRectangle cell : cells) {
-                        for (int i = 0; i < 4; ++i) {
-                            assertTrue(boundingBox.contains(cell.getCornerX(i), cell.getCornerY(i)));
-                        }
+                    List<CellRectangle> rectsSorted = sortCells(cells);
+
+                    for (CellRectangle cell : rectsSorted) {
+                        assertTrue(boundingBox.contains(cell.getX(), cell.getY()));
+                        assertTrue(boundingBox.contains(cell.getX() + cell.getWidth(),
+                                                        cell.getY()));
+                        assertTrue(boundingBox.contains(cell.getX() + cell.getWidth(),
+                                                        cell.getY() + cell.getHeight()));
+                        assertTrue(boundingBox.contains(cell.getX(),
+                                                        cell.getY() + cell.getHeight()));
                     }
                 }
             }
@@ -91,6 +99,175 @@ public class CellRectangleTest {
         assertEquals(-1, cell1.compareTo(cell2));
         assertEquals(1, cell2.compareTo(cell1));
         assertEquals(0, cell1.compareTo(cell3));
+    }
+
+    @SuppressWarnings("unused")
+    private void logWellRectangle(Set<CellRectangle> cells) {
+        CellRectangle.debugCells(cells);
+    }
+
+    /**
+     * If the bounds are offset from the origin, so should the first well
+     */
+    @Test
+    public void boundsOffsetFromOrigin() {
+        Rectangle bounds = new Rectangle(50, 50, 1000, 1000);
+
+        Set<CellRectangle> cellSet = CellRectangle.getCellsForBoundingBox(
+            bounds,
+            PlateOrientation.LANDSCAPE,
+            PlateType.PT_96_WELLS,
+            BarcodePosition.TOP);
+
+        List<CellRectangle> cellsSorted = sortCells(cellSet);
+
+        //logWellRectangle(cellSet);
+
+        Bounds firstRect = cellsSorted.get(0).getBoundsRectangle();
+        assertEquals(bounds.getX(), firstRect.getMinX(), 0.1);
+    }
+
+    @Test
+    public void landscape8x12Top() {
+        Rectangle bounds = new Rectangle(0, 0, 1000, 1000);
+
+        Set<CellRectangle> cellSet = CellRectangle.getCellsForBoundingBox(
+            bounds,
+            PlateOrientation.LANDSCAPE,
+            PlateType.PT_96_WELLS,
+            BarcodePosition.TOP);
+
+        List<CellRectangle> cellsSorted = sortCells(cellSet);
+
+        // logWellRectangle(cellsSorted);
+
+        assertEquals("A1", cellsSorted.get(0).getLabel());
+        assertEquals("H12", cellsSorted.get(cellsSorted.size() - 1).getLabel());
+
+        // check that rectangles do not not intersect
+        for (int i = 0, n = cellsSorted.size(); i < n - 1; ++i) {
+            CellRectangle cell1 = cellsSorted.get(i);
+            Bounds boundsRect1 = cell1.getBoundsRectangle();
+
+            assertTrue(bounds.getBoundsInParent().contains(boundsRect1));
+
+            for (int j = i + 1; j < n; ++j) {
+                CellRectangle cell2 = cellsSorted.get(j);
+                Bounds boundsRect2 = cell2.getBoundsRectangle();
+                assertFalse(
+                    String.format("r1: %s, r2: %s", cell1, cell2),
+                    boundsRect1.intersects(boundsRect2));
+            }
+        }
+    }
+
+    @Test
+    public void portrait8x12Top() {
+        Rectangle bounds = new Rectangle(0, 0, 1000, 1000);
+
+        Set<CellRectangle> cellSet = CellRectangle.getCellsForBoundingBox(
+            bounds,
+            PlateOrientation.PORTRAIT,
+            PlateType.PT_96_WELLS,
+            BarcodePosition.TOP);
+
+        List<CellRectangle> cellsSorted = new ArrayList<CellRectangle>(cellSet);
+        Collections.sort(cellsSorted);
+
+        //logWellRectangle(cellSet);
+
+        assertEquals("A1", cellsSorted.get(0).getLabel());
+        assertEquals("H12", cellsSorted.get(cellsSorted.size() - 1).getLabel());
+
+        // check that rectangles do not not intersect
+        for (int i = 0, n = cellsSorted.size(); i < n - 1; ++i) {
+            CellRectangle cell1 = cellsSorted.get(i);
+            Bounds boundsRect1 = cell1.getBoundsRectangle();
+
+            assertTrue(bounds.getBoundsInParent().contains(boundsRect1));
+
+            for (int j = i + 1; j < n; ++j) {
+                CellRectangle cell2 = cellsSorted.get(j);
+                Bounds boundsRect2 = cell2.getBoundsRectangle();
+                assertFalse(
+                    String.format("r1: %s, r2: %s", cell1, cell2),
+                    boundsRect1.intersects(boundsRect2));
+            }
+        }
+    }
+
+    @Test
+    public void landscape8x12Bottom() {
+        Rectangle bounds = new Rectangle(0, 0, 1000, 1000);
+
+        Set<CellRectangle> cellSet = CellRectangle.getCellsForBoundingBox(
+            bounds,
+            PlateOrientation.LANDSCAPE,
+            PlateType.PT_96_WELLS,
+            BarcodePosition.BOTTOM);
+
+        List<CellRectangle> cellsSorted = sortCells(cellSet);
+
+        // logWellRectangle(cellsSorted);
+
+        assertEquals("A1", cellsSorted.get(0).getLabel());
+        assertEquals("H12", cellsSorted.get(cellsSorted.size() - 1).getLabel());
+
+        // check that rectangles do not not intersect
+        for (int i = 0, n = cellsSorted.size(); i < n - 1; ++i) {
+            CellRectangle cell1 = cellsSorted.get(i);
+            Bounds boundsRect1 = cell1.getBoundsRectangle();
+
+            assertTrue(bounds.getBoundsInParent().contains(boundsRect1));
+
+            for (int j = i + 1; j < n; ++j) {
+                CellRectangle cell2 = cellsSorted.get(j);
+                Bounds boundsRect2 = cell2.getBoundsRectangle();
+                assertFalse(
+                    String.format("r1: %s, r2: %s", cell1, cell2),
+                    boundsRect1.intersects(boundsRect2));
+            }
+        }
+    }
+
+    @Test
+    public void portrait8x12Bottom() {
+        Rectangle bounds = new Rectangle(0, 0, 1000, 1000);
+
+        Set<CellRectangle> cellSet = CellRectangle.getCellsForBoundingBox(
+            bounds,
+            PlateOrientation.PORTRAIT,
+            PlateType.PT_96_WELLS,
+            BarcodePosition.BOTTOM);
+
+        List<CellRectangle> cellsSorted = sortCells(cellSet);
+
+        // logWellRectangle(cellsSorted);
+
+        assertEquals("A1", cellsSorted.get(0).getLabel());
+        assertEquals("H12", cellsSorted.get(cellsSorted.size() - 1).getLabel());
+
+        // check that rectangles do not not intersect
+        for (int i = 0, n = cellsSorted.size(); i < n - 1; ++i) {
+            CellRectangle cell1 = cellsSorted.get(i);
+            Bounds boundsRect1 = cell1.getBoundsRectangle();
+
+            assertTrue(bounds.getBoundsInParent().contains(boundsRect1));
+
+            for (int j = i + 1; j < n; ++j) {
+                CellRectangle cell2 = cellsSorted.get(j);
+                Bounds boundsRect2 = cell2.getBoundsRectangle();
+                assertFalse(
+                    String.format("r1: %s, r2: %s", cell1, cell2),
+                    boundsRect1.intersects(boundsRect2));
+            }
+        }
+    }
+
+    private List<CellRectangle> sortCells(Set<CellRectangle> cells) {
+        assertNotNull(cells);
+        assertFalse(cells.isEmpty());
+        return CellRectangle.sortCells(cells);
     }
 
 }

@@ -48,23 +48,17 @@ public class ScanLib {
 
     private static ScanLib instance = null;
 
-    protected ScanLib() {
+    public static ScanLib getInstance() {
+        return ScanLibHolder.INSTANCE;
     }
 
-    public static ScanLib getInstance() {
-        if (instance != null) return instance;
-
-        instance = new ScanLib();
-
-        if (instance == null) {
-            throw new NullPointerException("scanlib not supported on your operating system"); //$NON-NLS-1$
-        }
-        return instance;
+    private static class ScanLibHolder {
+        private static final ScanLib INSTANCE = new ScanLib();
     }
 
     /**
      * Creates a dialog box to allow the user to select the scanner to use by default.
-     * 
+     *
      * @return SC_SUCCESS when selected by the user, and SC_INVALID_VALUE if the user cancelled the
      *         selection dialog.
      */
@@ -72,7 +66,7 @@ public class ScanLib {
 
     /**
      * Queries the selected scanner for the driver type and supported dpi.
-     * 
+     *
      * @return The bits in ScanLibResult.getValue() correspond to:
      *         <dl>
      *         <dt>Bit 1 (LSB)</dt>
@@ -91,7 +85,7 @@ public class ScanLib {
 
     /**
      * Scans an image for the specified dimensions. The image is in Windows BMP format.
-     * 
+     *
      * @param verbose The amount of logging information to generate. 1 is minimal and 9 is very
      *            detailed. Logging information is appended to file scanlib.log.
      * @param dpi The dots per inch for the image. Function slGetScannerCapability() returns the
@@ -103,7 +97,7 @@ public class ScanLib {
      * @param width The width in inches.
      * @param height The height in inches.
      * @param filename The file name to save the bitmap to.
-     * 
+     *
      * @return SC_SUCCESS if valid. SC_FAIL unable to scan an image.
      */
     public native ScanLibResult scanImage(
@@ -119,7 +113,7 @@ public class ScanLib {
 
     /**
      * Scans the whole flatbed region. The image is in Windows BMP format.
-     * 
+     *
      * @param verbose The amount of logging information to generate. 1 is minimal and 9 is very
      *            detailed. Logging information is appended to file dmscanlib.log.
      * @param dpi The dots per inch for the image. Function slGetScannerCapability() returns the
@@ -127,7 +121,7 @@ public class ScanLib {
      * @param brightness a value between -1000 and 1000. Only used when using the TWAIN driver.
      * @param contrast a value between -1000 and 1000. Only used when using the TWAIN driver.
      * @param filename The file name to save the bitmap to.
-     * 
+     *
      * @return SC_SUCCESS if valid. SC_FAIL unable to scan an image.
      */
     public native ScanLibResult scanFlatbed(
@@ -140,7 +134,7 @@ public class ScanLib {
     /**
      * Used to scan a region of the flatbed containing an 2d barcodes and decode individual
      * rectangles within the image.
-     * 
+     *
      * @param verbose set this to non-zero to see debugging output.
      * @param dpi the dots per inch setting to scan the image. Valid values are 300, 400, 600.
      * @param brightness a value between -1000 and 1000. Only used when using the TWAIN driver.
@@ -168,14 +162,14 @@ public class ScanLib {
 
     /**
      * Used to decode individual rectangles within the image containing 2D barcodes.
-     * 
+     *
      * @param verbose set this to non-zero to see debugging output.
      * @param filename the filename containing an image with 2D barcodes.
      * @param decodeOptions See the constructor for {@link DecodeOptions} for a description of these
      *            settings.
      * @param wells An array of {@link CellRectangle} objects defining the well regions containing
      *            2D barcode tubes.
-     * 
+     *
      */
     public native DecodeResult decodeImage(
         long verbose,

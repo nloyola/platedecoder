@@ -8,7 +8,7 @@ import javafx.util.Pair;
 
 public class PlateWell implements Comparable<PlateWell> {
 
-    private final Plate parent;
+    private final PlateWellHandler plateWellHandler;
 
     private final int row;
 
@@ -22,8 +22,8 @@ public class PlateWell implements Comparable<PlateWell> {
 
     private BooleanProperty filledProperty = new SimpleBooleanProperty(false);
 
-    public PlateWell(Plate parent, int row, int col, String label) {
-        this.parent = parent;
+    public PlateWell(PlateWellHandler plateWellHandler, int row, int col, String label) {
+        this.plateWellHandler = plateWellHandler;
         this.inventoryId = null;
         this.label = new SimpleStringProperty(label);
         this.row = row;
@@ -78,14 +78,17 @@ public class PlateWell implements Comparable<PlateWell> {
     }
 
     public void userSelected(boolean selectedRegionEnd, boolean addToSelection) {
-        parent.wellSelected(this, selectedRegionEnd, addToSelection);
+        plateWellHandler.wellSelected(this, selectedRegionEnd, addToSelection);
     }
 
     @Override
     public String toString()  {
-        StringBuffer sb = new StringBuffer();
-        sb.append(label).append(": ").append(inventoryId);
-        return sb.toString();
+        StringBuffer buf = new StringBuffer();
+        buf.append(label.getValue()).append(": [ ");
+        buf.append(row).append(", ");
+        buf.append(col).append(" ]: ");
+        buf.append(inventoryId.getValue());
+        return buf.toString();
     }
 
     @Override

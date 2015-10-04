@@ -44,7 +44,6 @@ public class DecodedTubes extends AbstractSceneRoot {
 
     public DecodedTubes() {
         super("Decoded tubes");
-        LOG.debug("DecodedTubes");
         sortedList = new ArrayList<>();
     }
 
@@ -55,7 +54,6 @@ public class DecodedTubes extends AbstractSceneRoot {
         ObservableList<PlateWell> plateWells = FXCollections.observableArrayList(sortedList);
         table.setItems(plateWells);
         table.getSortOrder().add(labelColumn);
-        LOG.debug("plate wells: {}", sortedList.size());
     }
 
     @Override

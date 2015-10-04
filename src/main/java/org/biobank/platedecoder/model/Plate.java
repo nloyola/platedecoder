@@ -13,9 +13,9 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Plate {
+public class Plate implements PlateWellHandler {
 
-    @SuppressWarnings("unused")
+    //@SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(Plate.class);
 
     private final int rows;
@@ -70,9 +70,13 @@ public class Plate {
         return wellsStream.filter(w -> w.isSelected()).collect(Collectors.toList());
     }
 
+    @Override
     public void wellSelected(PlateWell well,
                              boolean   selectedRegionEnd,
                              boolean   addToSelection) {
+        LOG.debug("well: {}, selectedRegionEnd: {}, addToSelection: {}",
+                  new Object [] { well, selectedRegionEnd, addToSelection });
+
         if (!selectedRegionEnd && !addToSelection) {
             // deselet all but the selected cell
             selectedWells.stream().filter(w -> w != well).forEach(w -> w.setSelected(false));
@@ -87,7 +91,10 @@ public class Plate {
                     endRow = well.getRow(),
                     endCol = well.getCol();
 
-                int minRow = Math.min(startRow, endRow), minCol = Math.min(startCol, endCol), maxRow = Math.max(startRow, endRow), maxCol = Math.max(startCol, endCol);
+                int minRow = Math.min(startRow, endRow),
+                    minCol = Math.min(startCol, endCol),
+                    maxRow = Math.max(startRow, endRow),
+                    maxCol = Math.max(startCol, endCol);
 
                 selectedWells.addAll(selectWellRange(minRow, minCol, maxRow, maxCol));
                 selectedWells.stream().forEach(w -> w.setSelected(true));

@@ -42,12 +42,9 @@ public class PlateWellRegion extends Region {
         styleProperty().bind(
             Bindings.when(well.getSelectedProperty())
             .then("-fx-background-color: #2EFE64")
-            .otherwise("-fx-background-color: #FBF8EF"));
-
-        styleProperty().bind(
-            Bindings.when(well.getFilledProperty())
-            .then("-fx-background-color: #2EFE64")
-            .otherwise("-fx-background-color: #FBF800"));
+            .otherwise(Bindings.when(well.getFilledProperty())
+                       .then("-fx-background-color: #FBF800")
+                       .otherwise("-fx-background-color: #FBF8EF")));
 
         Light.Distant light = new Light.Distant();
         light.setAzimuth(-135);

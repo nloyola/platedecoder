@@ -1,3 +1,7 @@
+//
+// Gradle build file for platedecoder project.
+//
+
 apply plugin: 'java'
 apply plugin: 'application'
 apply plugin: 'eclipse'
@@ -5,12 +9,18 @@ apply plugin: 'eclipse'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+version = '0.1-SNAPSHOT'
+mainClassName = "org.biobank.platedecoder.ui.PlateDecoder"
+
 jar {
    manifest.attributes "Main-Class": "org.biobank.platedecoder.ui.PlateDecoder"
 }
 
 repositories {
-    mavenCentral()
+   mavenLocal()
+   mavenCentral()
 }
 
 dependencies {
@@ -26,25 +36,49 @@ dependencies {
    testCompile 'de.saxsys:jfx-testrunner:1.1'
 }
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '2.5'
-}
-
-allprojects {
-    gradle.projectsEvaluated {
-        tasks.withType(JavaCompile) {
-            options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
-        }
-    }
-}
-
-task listJars << {
-    configurations.compile.each { File file -> println file.name }
+test {
+   systemProperty "java.library.path", "lib"
 }
 
 run {
-    jvmArgs = ['-Djava.library.path=./lib']
+   systemProperty "java.library.path", "lib"
 }
 
-mainClassName = "org.biobank.platedecoder.ui.PlateDecoder"
+tasks.withType(JavaExec) {
+   jvmArgs '-Xmx1024m'
+}
 
+applicationDefaultJvmArgs = ["-Djava.library.path=./lib"]
+
+task wrapper(type: Wrapper) {
+   gradleVersion = '2.5'
+}
+
+allprojects {
+   gradle.projectsEvaluated {
+      tasks.withType(JavaCompile) {
+         options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+      }
+   }
+}
+
+task listJars << {
+   configurations.compile.each { File file -> println file.name }
+}
+
+eclipse.classpath {
+
+   /* With sources, it's much more convenient in debugging */
+   downloadSources = true
+   downloadJavadoc = true
+
+   /* Ugly hack to stick the JNI pointer into the .classpath file. */
+   file.withXml { provider ->
+      provider.asNode().findAll { it.@path.contains('org.eclipse.jdt.launching.JRE_CONTAINER') }.each {
+         it.appendNode('attributes')
+         .appendNode('attribute',
+                     [ name: 'org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY',
+                       value: 'platedecoder/lib' ])
+      }
+   }
+}

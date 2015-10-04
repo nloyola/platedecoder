@@ -43,21 +43,21 @@ public class DecodeResult extends ScanLibResult {
 
     private static Map<String, String> labelToInventoryIdMap(Set<DecodedWell> set) {
         Map<String, String> result = new HashMap<>();
-        for (DecodedWell well : set) {
-            if (!well.getMessage().isEmpty()) {
-                result.put(well.getLabel(), well.getMessage());
-            }
-        }
+        set.forEach(well -> {
+                if (!well.getMessage().isEmpty()) {
+                    result.put(well.getLabel(), well.getMessage());
+                }
+            });
         return result;
     }
 
     private static Map<String, String> inventoryIdToLabelMap(Set<DecodedWell> set) {
         Map<String, String> result = new HashMap<>();
-        for (DecodedWell well : set) {
-            if (!well.getMessage().isEmpty()) {
-                result.put(well.getMessage(), well.getLabel());
-            }
-        }
+        set.forEach(well -> {
+                if (!well.getMessage().isEmpty()) {
+                    result.put(well.getMessage(), well.getLabel());
+                }
+            });
         return result;
     }
 

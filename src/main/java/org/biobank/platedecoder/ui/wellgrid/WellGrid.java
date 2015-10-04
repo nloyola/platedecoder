@@ -2,7 +2,6 @@ package org.biobank.platedecoder.ui.wellgrid;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.scene.Node;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -20,14 +19,14 @@ import org.biobank.platedecoder.model.PlateType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// for dragging and resizing see
-// http://stackoverflow.com/questions/26298873/resizable-and-movable-rectangle
-
 /**
  * This class maintains the size of the grid and manages the rectangles corresponding to each
  * well that may contain the image of a tube.
  *
  * The well grid can be resized and moved using the mouse.
+ *
+ * For dragging and resizing see:
+ *   http://stackoverflow.com/questions/26298873/resizable-and-movable-rectangle
  */
 public class WellGrid extends Rectangle {
 
@@ -36,7 +35,7 @@ public class WellGrid extends Rectangle {
 
     private final PlateModel model = PlateModel.getInstance();
 
-    private final Node parentNode;
+    private final WellGridHandler wellGridHandler;
 
     private final ImageView imageView;
 
@@ -50,12 +49,16 @@ public class WellGrid extends Rectangle {
 
     private final Image wellDecodedImage;
 
+    private static final Color A1_CELL_FILL_COLOR = Color.rgb(189, 237, 255, 0.35);
+
+    private static final Color DECODED_CELL_FILL_COLOR = Color.rgb(153, 198, 142, .25);
+
     /**
      * The well grid is superimposed on the image containinig the 2D barcodes. The image is scaled
      * to fit into the window displayed to the user. The {@code scale} is the scaling factor used to
      * display the image.
      */
-    public WellGrid(Node       parentNode,
+    public WellGrid(final WellGridHandler wellGridHandler,
                     ImageView  imageView,
                     PlateType plateType,
                     double     x,
@@ -64,7 +67,8 @@ public class WellGrid extends Rectangle {
                     double     height,
                     double     scale) {
         super(x, y, width, height);
-        this.parentNode = parentNode;
+
+        this.wellGridHandler = wellGridHandler;
         this.imageView = imageView;
         this.plateType = plateType;
         this.displayScaleProperty = new SimpleDoubleProperty(scale);
@@ -99,35 +103,21 @@ public class WellGrid extends Rectangle {
 
         for (int row = 0; row < rows; ++row) {
             for (int col = 0; col < cols; ++col) {
+                String label = getLabelForGridPosition(row, col);
+
                 // make the well slightly smaller so that user can see gaps between wells
-                cell = new WellCell(
-                    parentNode,
-                    1,
-                    1,
-                    wellDisplayWidth,
-                    wellDisplayHeight,
-                    (deltaX,  deltaY) -> {
-                        double dScale = displayScaleProperty.getValue();
-                        double adjustedDeltaX = deltaX / dScale;
-                        double adjustedDeltaY = deltaY / dScale;
-                        Image image = imageView.getImage();
-
-                        double newX = Math.min(Math.max(0.0, getX() + adjustedDeltaX),
-                                               image.getWidth() - getWidth());
-                        double newY = Math.min(Math.max(0.0, getY() + adjustedDeltaY),
-                                               image.getHeight() - getHeight());
-
-                        setX(newX);
-                        setY(newY);
-                        update();
-                    });
+                cell = new WellCell(wellGridHandler,
+                                    label,
+                                    1,
+                                    1,
+                                    wellDisplayWidth,
+                                    wellDisplayHeight);
 
                 cell.setTranslateX(offsetX);
                 cell.setTranslateY(offsetY);
-                String label = getLabelForGridPosition(row, col);
 
                 if (label.equals("A1")) {
-                    cell.setFill(Color.rgb(213, 236, 199, .7));
+                    cell.setFill(A1_CELL_FILL_COLOR);
                 }
 
                 Tooltip.install(cell, new Tooltip(label));
@@ -139,6 +129,24 @@ public class WellGrid extends Rectangle {
             offsetX = wellGridX;
             offsetY += wellHeight;
         }
+    }
+
+    public void cellMoved(@SuppressWarnings("unused") WellCell cell,
+                          double deltaX,
+                          double deltaY) {
+        double dScale = displayScaleProperty.getValue();
+        double adjustedDeltaX = deltaX / dScale;
+        double adjustedDeltaY = deltaY / dScale;
+        Image image = imageView.getImage();
+
+        double newX = Math.min(Math.max(0.0, getX() + adjustedDeltaX),
+                               image.getWidth() - getWidth());
+        double newY = Math.min(Math.max(0.0, getY() + adjustedDeltaY),
+                               image.getHeight() - getHeight());
+
+        setX(newX);
+        setY(newY);
+        update();
     }
 
     public void createWellDecodedIcons() {
@@ -195,6 +203,12 @@ public class WellGrid extends Rectangle {
 
                     if (!inventoryId.isEmpty()) {
                         labelBuf.append(": ").append(inventoryId);
+                    }
+
+                    if (!label.equals("A1")) {
+                        Color fillColor = inventoryId.isEmpty()
+                            ? Color.TRANSPARENT : DECODED_CELL_FILL_COLOR;
+                        cell.setFill(fillColor);
                     }
 
                     Tooltip.install(cell, new Tooltip(labelBuf.toString()));
@@ -272,7 +286,7 @@ public class WellGrid extends Rectangle {
         double size = 10;
 
         ResizeRectNW resizeRectNW = new ResizeRectNW(
-            parentNode,
+            wellGridHandler,
             size,
             (deltaX, deltaY) -> {
                 double displayScale = displayScaleProperty.getValue();
@@ -297,7 +311,7 @@ public class WellGrid extends Rectangle {
         resizeRectNW.yProperty().bind(yProperty().multiply(displayScaleProperty));
 
         ResizeRectSE resizeRectSE = new ResizeRectSE(
-            parentNode,
+            wellGridHandler,
             size,
             (deltaX, deltaY) -> {
                 double displayScale = displayScaleProperty.getValue();
@@ -348,3 +362,4 @@ public class WellGrid extends Rectangle {
     }
 
 }
+

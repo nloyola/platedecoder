@@ -4,7 +4,6 @@ import javafx.util.Pair;
 
 public class SbsLabeling {
 
-    @SuppressWarnings("nls")
     public static final String SBS_ROW_LABELLING_PATTERN = "ABCDEFGHIJKLMNOP";
 
     public static final int SBS_MAX_COLS = 24;
@@ -12,7 +11,6 @@ public class SbsLabeling {
     public static final int ROW_DEFAULT = 8;
     public static final int COL_DEFAULT = 12;
 
-    @SuppressWarnings("nls")
     public static String fromRowCol(int row, int col) {
         if (row >= SBS_ROW_LABELLING_PATTERN.length()) {
             throw new IllegalArgumentException("invalid row size for position: " + row);
@@ -31,7 +29,6 @@ public class SbsLabeling {
      * Get the row and column position corresponding to the given SBS standard 2 or 3 char string
      * position. Eg. could be A2 or F12.
      */
-    @SuppressWarnings("nls")
     public static Pair<Integer, Integer> toRowCol(String label) {
         if ((label.length() < 2) || (label.length() > 3)) {
             throw new IllegalArgumentException("invalid length for label string: " + label);

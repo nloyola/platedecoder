@@ -1,5 +1,6 @@
 decode.png
 filtered.png
+testImages
 *.class
 .classpath
 .project
