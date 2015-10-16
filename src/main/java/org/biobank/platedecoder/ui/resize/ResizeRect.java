@@ -1,4 +1,4 @@
-package org.biobank.platedecoder.ui.wellgrid;
+package org.biobank.platedecoder.ui.resize;
 
 import java.util.Optional;
 
@@ -12,51 +12,50 @@ import javafx.scene.shape.Rectangle;
  */
 public abstract class ResizeRect extends Rectangle {
 
-    protected final WellGridHandler wellGridHandler;
+    protected final ResizeHandler resizeHandler;
 
     protected Optional<Point2D> mouseLocationMaybe;
 
     protected double size;
 
-    public ResizeRect(WellGridHandler     wellGridHandler,
+    public ResizeRect(final ResizeHandler resizeHandler,
                       double              size,
-                      Cursor              mouseEnteredCursor,
-                      final ResizeHandler resizeHandler) {
+                      Cursor              mouseEnteredCursor) {
         super(0, 0, size, size);
 
-        this.wellGridHandler    = wellGridHandler;
+        this.resizeHandler      = resizeHandler;
         this.size               = size;
         this.mouseLocationMaybe = Optional.empty();
 
         setFill(Color.LIGHTGREEN);
 
         setOnMouseEntered(event -> {
-                this.wellGridHandler.setCursor(mouseEnteredCursor);
+                this.resizeHandler.setResizeCursor(mouseEnteredCursor);
             });
 
         setOnMouseExited(event -> {
-                this.wellGridHandler.setCursor(Cursor.DEFAULT);
+                this.resizeHandler.setResizeCursor(Cursor.DEFAULT);
             });
 
         setOnMousePressed(event -> {
-                this.wellGridHandler.setCursor(Cursor.CLOSED_HAND);
+                this.resizeHandler.setResizeCursor(Cursor.CLOSED_HAND);
                 mouseLocationMaybe = Optional.of(
                     new Point2D(event.getSceneX(), event.getSceneY()));
             });
 
         setOnMouseReleased(event -> {
-                this.wellGridHandler.setCursor(Cursor.DEFAULT);
+                this.resizeHandler.setResizeCursor(Cursor.DEFAULT);
                 mouseLocationMaybe = Optional.empty();
             });
 
         setOnMouseDragged(event -> {
                 mouseLocationMaybe.ifPresent(mouseLocation -> {
-                        wellGridHandler.setCursor(Cursor.CLOSED_HAND);
+                        resizeHandler.setResizeCursor(Cursor.CLOSED_HAND);
 
                         double deltaX = event.getSceneX() - mouseLocation.getX();
                         double deltaY = event.getSceneY() - mouseLocation.getY();
 
-                        resizeHandler.mouseDragged(deltaX, deltaY);
+                        resizeHandler.mouseDragged(this, deltaX, deltaY);
 
                         mouseLocationMaybe = Optional.of(
                             new Point2D(event.getSceneX(), event.getSceneY()));

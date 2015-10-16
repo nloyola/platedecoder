@@ -32,6 +32,14 @@ public class PlateDecoderPreferences {
 
     private static final String PREFS_APP_WINDOW_HEIGHT = "PREFS_APP_WINDOW_HEIGHT";
 
+    private static final String PREFS_SCAN_REGION_X = "PREFS_SCAN_REGION_X";
+
+    private static final String PREFS_SCAN_REGION_Y = "PREFS_SCAN_REGION_Y_";
+
+    private static final String PREFS_SCAN_REGION_WIDTH = "PREFS_SCAN_REGION_WIDTH";
+
+    private static final String PREFS_SCAN_REGION_HEIGHT = "PREFS_SCAN_REGION_HEIGHT";
+
     private static final String PREFS_WELL_GRID_X = "PREFS_WELL_GRID_X";
 
     private static final String PREFS_WELL_GRID_Y = "PREFS_WELL_GRID_Y_";
@@ -89,11 +97,27 @@ public class PlateDecoderPreferences {
         return new Rectangle(x, y, width, height);
     }
 
-    public void setWellRectangle(PlateType plateType, Rectangle grid) {
-        prefs.putDouble(geKeyForWellRectangle(plateType, PREFS_WELL_GRID_X), grid.getX());
-        prefs.putDouble(geKeyForWellRectangle(plateType, PREFS_WELL_GRID_Y), grid.getY());
-        prefs.putDouble(geKeyForWellRectangle(plateType, PREFS_WELL_GRID_WIDTH), grid.getWidth());
-        prefs.putDouble(geKeyForWellRectangle(plateType, PREFS_WELL_GRID_HEIGHT), grid.getHeight());
+    public void setWellRectangle(PlateType plateType, Rectangle region) {
+        prefs.putDouble(geKeyForWellRectangle(plateType, PREFS_WELL_GRID_X), region.getX());
+        prefs.putDouble(geKeyForWellRectangle(plateType, PREFS_WELL_GRID_Y), region.getY());
+        prefs.putDouble(geKeyForWellRectangle(plateType, PREFS_WELL_GRID_WIDTH), region.getWidth());
+        prefs.putDouble(geKeyForWellRectangle(plateType, PREFS_WELL_GRID_HEIGHT), region.getHeight());
+    }
+
+    public Rectangle getScanRegion() {
+        double x      = prefs.getDouble(PREFS_SCAN_REGION_X, DEFAULT_SCAN_REGION[0]);
+        double y      = prefs.getDouble(PREFS_SCAN_REGION_Y, DEFAULT_SCAN_REGION[1]);
+        double width  = prefs.getDouble(PREFS_SCAN_REGION_WIDTH, DEFAULT_SCAN_REGION[2]);
+        double height = prefs.getDouble(PREFS_SCAN_REGION_HEIGHT, DEFAULT_SCAN_REGION[3]);
+
+        return new Rectangle(x, y, width, height);
+    }
+
+    public void setScanRegion(Rectangle grid) {
+        prefs.putDouble(PREFS_WELL_GRID_X, grid.getX());
+        prefs.putDouble(PREFS_WELL_GRID_Y, grid.getY());
+        prefs.putDouble(PREFS_WELL_GRID_WIDTH, grid.getWidth());
+        prefs.putDouble(PREFS_WELL_GRID_HEIGHT, grid.getHeight());
     }
 
     public PlateType getPlateType() {
@@ -136,6 +160,10 @@ public class PlateDecoderPreferences {
     }
 
     public static class PlateDecoderDefaults {
+
+        public static final double [] DEFAULT_SCAN_REGION = new double [] {
+            0, 0, 300, 200
+        };
 
         public static final double [] DEFAULT_WELL_GRID = new double [] {
             0, 0, 1500, 1000

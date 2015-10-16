@@ -2,6 +2,7 @@ package org.biobank.platedecoder.ui.wellgrid;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.scene.Cursor;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -16,6 +17,10 @@ import static org.biobank.platedecoder.dmscanlib.CellRectangle.*;
 import org.biobank.platedecoder.model.PlateModel;
 import org.biobank.platedecoder.model.PlateOrientation;
 import org.biobank.platedecoder.model.PlateType;
+import org.biobank.platedecoder.ui.resize.ResizeHandler;
+import org.biobank.platedecoder.ui.resize.ResizeRect;
+import org.biobank.platedecoder.ui.resize.ResizeRectNW;
+import org.biobank.platedecoder.ui.resize.ResizeRectSE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,10 +33,16 @@ import org.slf4j.LoggerFactory;
  * For dragging and resizing see:
  *   http://stackoverflow.com/questions/26298873/resizable-and-movable-rectangle
  */
-public class WellGrid extends Rectangle {
+public class WellGrid extends Rectangle implements ResizeHandler {
 
     @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(WellGrid.class);
+
+    private static final double RESIZE_RECT_SIZE = 10;
+
+    private static final Color A1_CELL_FILL_COLOR = Color.rgb(189, 237, 255, 0.35);
+
+    private static final Color DECODED_CELL_FILL_COLOR = Color.rgb(153, 198, 142, .25);
 
     private final PlateModel model = PlateModel.getInstance();
 
@@ -49,9 +60,9 @@ public class WellGrid extends Rectangle {
 
     private final Image wellDecodedImage;
 
-    private static final Color A1_CELL_FILL_COLOR = Color.rgb(189, 237, 255, 0.35);
+    private ResizeRectNW resizeRectNW;
 
-    private static final Color DECODED_CELL_FILL_COLOR = Color.rgb(153, 198, 142, .25);
+    private ResizeRectSE resizeRectSE;
 
     /**
      * The well grid is superimposed on the image containinig the 2D barcodes. The image is scaled
@@ -74,6 +85,19 @@ public class WellGrid extends Rectangle {
         this.displayScaleProperty = new SimpleDoubleProperty(scale);
 
         wellDecodedImage = new Image(WellGrid.class.getResourceAsStream("accept.png"));
+
+        resizeRectNW = new ResizeRectNW(this, RESIZE_RECT_SIZE);
+        resizeRectNW.xProperty().bind(xProperty().multiply(displayScaleProperty));
+        resizeRectNW.yProperty().bind(yProperty().multiply(displayScaleProperty));
+
+        resizeRectSE = new ResizeRectSE(this, RESIZE_RECT_SIZE);
+
+        resizeRectSE.xProperty()
+            .bind(xProperty().multiply(displayScaleProperty)
+                  .add(widthProperty().multiply(displayScaleProperty)).subtract(RESIZE_RECT_SIZE));
+        resizeRectSE.yProperty()
+            .bind(yProperty().multiply(displayScaleProperty)
+                  .add(heightProperty().multiply(displayScaleProperty)).subtract(RESIZE_RECT_SIZE));
 
         createWellCells();
         createWellDecodedIcons();
@@ -283,61 +307,65 @@ public class WellGrid extends Rectangle {
     }
 
     public Rectangle [] getResizeControls() {
-        double size = 10;
-
-        ResizeRectNW resizeRectNW = new ResizeRectNW(
-            wellGridHandler,
-            size,
-            (deltaX, deltaY) -> {
-                double displayScale = displayScaleProperty.getValue();
-                double x = getX();
-                double y = getY();
-                double width = getWidth();
-                double height = getHeight();
-                double adjustedSize = size / displayScale;
-                double adjustedDeltaX = deltaX / displayScale;
-                double adjustedDeltaY = deltaY / displayScale;
-
-                double newX = Math.min(Math.max(0.0, x + adjustedDeltaX), x + width - adjustedSize);
-                double newY = Math.min(Math.max(0.0, y + adjustedDeltaY), y + height - adjustedSize);
-
-                double newWidth = Math.min(Math.max(adjustedSize, width - adjustedDeltaX), x + width);
-                double newHeight = Math.min(Math.max(adjustedSize, height - adjustedDeltaY), y + height);
-
-                resized(newX, newY, newWidth, newHeight);
-            });
-
-        resizeRectNW.xProperty().bind(xProperty().multiply(displayScaleProperty));
-        resizeRectNW.yProperty().bind(yProperty().multiply(displayScaleProperty));
-
-        ResizeRectSE resizeRectSE = new ResizeRectSE(
-            wellGridHandler,
-            size,
-            (deltaX, deltaY) -> {
-                double displayScale = displayScaleProperty.getValue();
-                double x = getX();
-                double y = getY();
-                double width = getWidth();
-                double height = getHeight();
-                double adjustedSize = size / displayScale;
-                Image image = imageView.getImage();
-
-                double newWidth = Math.min(Math.max(adjustedSize, width + deltaX / displayScale),
-                                           image.getWidth() - x);
-                double newHeight = Math.min(Math.max(adjustedSize, height + deltaY / displayScale),
-                                            image.getHeight() - y);
-
-                resized(x, y, newWidth, newHeight);
-            });
-
-        resizeRectSE.xProperty()
-            .bind(xProperty().multiply(displayScaleProperty)
-                  .add(widthProperty().multiply(displayScaleProperty)).subtract(size));
-        resizeRectSE.yProperty()
-            .bind(yProperty().multiply(displayScaleProperty)
-                  .add(heightProperty().multiply(displayScaleProperty)).subtract(size));
-
         return new Rectangle [] { resizeRectNW, resizeRectSE };
+    }
+
+    public void setScale(double scale) {
+        displayScaleProperty.setValue(scale);
+
+        // resizeRectNW.setScaleX(scale);
+        // resizeRectNW.setScaleY(scale);
+
+        // resizeRectSE.setScaleX(scale);
+        // resizeRectSE.setScaleY(scale);
+
+        update();
+    }
+
+    public double getScale() {
+        return displayScaleProperty.getValue();
+    }
+
+    @Override
+    public void setResizeCursor(Cursor value) {
+        wellGridHandler.setCursor(value);
+    }
+
+    @Override
+    public void mouseDragged(ResizeRect resizeRect, double deltaX, double deltaY) {
+        double displayScale = displayScaleProperty.getValue();
+        double x = getX();
+        double y = getY();
+        double width = getWidth();
+        double height = getHeight();
+        double adjustedSize = RESIZE_RECT_SIZE / displayScale;
+        double newWidth;
+        double newHeight;
+
+        if (resizeRect == resizeRectNW) {
+            double adjustedDeltaX = deltaX / displayScale;
+            double adjustedDeltaY = deltaY / displayScale;
+
+            // NOTE: x and y are re-assigned
+            x = Math.min(Math.max(0.0, x + adjustedDeltaX), x + width - adjustedSize);
+            y = Math.min(Math.max(0.0, y + adjustedDeltaY), y + height - adjustedSize);
+
+            newWidth = Math.min(Math.max(adjustedSize, width - adjustedDeltaX), x + width);
+            newHeight = Math.min(Math.max(adjustedSize, height - adjustedDeltaY), y + height);
+
+        } else if (resizeRect == resizeRectSE) {
+            Image image = imageView.getImage();
+
+            newWidth = Math.min(Math.max(adjustedSize, width + deltaX / displayScale),
+                                image.getWidth() - x);
+            newHeight = Math.min(Math.max(adjustedSize, height + deltaY / displayScale),
+                                 image.getHeight() - y);
+        } else {
+            throw new IllegalStateException(
+                "invalid callback for resize: " + resizeRect);
+        }
+
+        resized(x, y, newWidth, newHeight);
     }
 
     private void resized(double x, double y, double width, double height) {
@@ -352,14 +380,4 @@ public class WellGrid extends Rectangle {
         update();
     }
 
-    public void setScale(double scale) {
-        displayScaleProperty.setValue(scale);
-        update();
-    }
-
-    public double getScale() {
-        return displayScaleProperty.getValue();
-    }
-
 }
-

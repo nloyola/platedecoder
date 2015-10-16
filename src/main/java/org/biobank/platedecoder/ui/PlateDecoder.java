@@ -9,6 +9,7 @@ import org.biobank.platedecoder.ui.scene.DecodedTubes;
 import org.biobank.platedecoder.ui.scene.FileChoose;
 import org.biobank.platedecoder.ui.scene.ImageAndGrid;
 import org.biobank.platedecoder.ui.scene.ImageSource;
+import org.biobank.platedecoder.ui.scene.ScanRegionScene;
 import org.biobank.platedecoder.ui.scene.SpecimenLink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,6 +75,10 @@ public class PlateDecoder extends Application {
                     setSceneTestDecode();
                     break;
 
+                case "scanningregion":
+                    setSceneScanningRegion();
+                    break;
+
                 case "specimenlink":
                     setSceneTestSpecimenLink();
                     break;
@@ -113,10 +118,19 @@ public class PlateDecoder extends Application {
                 changeScene(specimenLink);
             });
 
+        // (global-visual-line-mode -1)
+
         changeScene(imageAndGrid);
         //imageAndGrid.setImageFileURI("file:///home/nelson/Desktop/scanned_ice4_cropped.bmp");
-        imageAndGrid.setImageFileURI("file:///home/nelson/Desktop/testImages/8x12/FrozenPalletImages/HP_L1985A/scanned4.bmp");
-        //imageAndGrid.setImageFileURI("file:///home/nelson/Dropbox/CBSR/scanlib/testImages/12x12/stanford_12x12_1.jpg");
+        imageAndGrid.setImageFileURI(
+            "file:///home/nelson/Desktop/testImages/8x12/FrozenPalletImages/HP_L1985A/scanned4.bmp");
+        //imageAndGrid.setImageFileURI(
+        //"file:///home/nelson/Dropbox/CBSR/scanlib/testImages/12x12/stanford_12x12_1.jpg");
+    }
+
+    private void setSceneScanningRegion() {
+        ScanRegionScene scanRegion = new ScanRegionScene();
+        changeScene(scanRegion);
     }
 
     private void setScene() {

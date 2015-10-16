@@ -68,8 +68,6 @@ public class ImageAndGrid extends AbstractSceneRoot implements WellGridHandler {
 
     private ScrollPane imagePane;
 
-    private BorderPane borderPane;
-
     private WellGrid wellGrid;
 
     private Label filenameLabel;
@@ -119,37 +117,38 @@ public class ImageAndGrid extends AbstractSceneRoot implements WellGridHandler {
      */
     private void createWellGrid() {
         Image image = imageView.getImage();
-        if (image != null) {
-            decodedWellsMaybe = Optional.empty();
-            Rectangle r;
 
-            if (wellGrid == null) {
-                r = PlateDecoderPreferences.getInstance().getWellRectangle(model.getPlateType());
-            } else {
-                r = wellGrid;
-            }
+        if (image == null) return;
 
-            wellGrid = new WellGrid(this,
-                                    imageView,
-                                    model.getPlateType(),
-                                    r.getX(),
-                                    r.getY(),
-                                    r.getWidth(),
-                                    r.getHeight(),
-                                    imageView.getLayoutBounds().getWidth() / image.getWidth());
+        decodedWellsMaybe = Optional.empty();
+        Rectangle r;
 
-            wellGrid.setScale(imageView.getLayoutBounds().getWidth() / image.getWidth());
-
-            imageGroup.getChildren().clear();
-            imageGroup.getChildren().add(imageView);
-            imageGroup.getChildren().addAll(wellGrid.getWellCells());
-            imageGroup.getChildren().addAll(wellGrid.getWellDecodedIcons());
-            imageGroup.getChildren().addAll(wellGrid.getResizeControls());
-
-            updateDecodedWellCount(Collections.emptySet());
-
-            wellGrid.update();
+        if (wellGrid == null) {
+            r = PlateDecoderPreferences.getInstance().getWellRectangle(model.getPlateType());
+        } else {
+            r = wellGrid;
         }
+
+        wellGrid = new WellGrid(this,
+                                imageView,
+                                model.getPlateType(),
+                                r.getX(),
+                                r.getY(),
+                                r.getWidth(),
+                                r.getHeight(),
+                                imageView.getLayoutBounds().getWidth() / image.getWidth());
+
+        wellGrid.setScale(imageView.getLayoutBounds().getWidth() / image.getWidth());
+
+        imageGroup.getChildren().clear();
+        imageGroup.getChildren().add(imageView);
+        imageGroup.getChildren().addAll(wellGrid.getWellCells());
+        imageGroup.getChildren().addAll(wellGrid.getWellDecodedIcons());
+        imageGroup.getChildren().addAll(wellGrid.getResizeControls());
+
+        updateDecodedWellCount(Collections.emptySet());
+
+        wellGrid.update();
     }
 
     @Override
@@ -157,7 +156,7 @@ public class ImageAndGrid extends AbstractSceneRoot implements WellGridHandler {
         Node controls = createControlsPane();
         Node imagePane = createImagePane();
 
-        borderPane = new BorderPane();
+        BorderPane borderPane = new BorderPane();
         borderPane.setPadding(new Insets(5, 5, 5, 5));
         borderPane.setLeft(controls);
         borderPane.setCenter(imagePane);
@@ -354,8 +353,7 @@ public class ImageAndGrid extends AbstractSceneRoot implements WellGridHandler {
         }
     }
 
-    @SuppressWarnings("unused")
-    private void decodeImageAction(ActionEvent e) {
+    private void decodeImageAction(@SuppressWarnings("unused") ActionEvent e) {
         Task<DecodeResult> worker = new Task<DecodeResult>() {
                 @Override
                 protected DecodeResult call() throws Exception {
@@ -504,4 +502,3 @@ public class ImageAndGrid extends AbstractSceneRoot implements WellGridHandler {
         return dlg.showAndWait();
     }
 }
-

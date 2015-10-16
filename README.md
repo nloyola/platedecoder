@@ -77,7 +77,7 @@ To build from Emacs type: `TERM="dumb" gradle build` or `gradle --console=plain 
 
 Use the [Graphical Installer](http://eclim.org/install.html#installer) to install Eclim.
 
-For tests to run the native library folder has to be added to the JVM parameters as follows:
+For tests to run, the native library folder has to be added to the JVM parameters as follows:
 
 ```
 <path_to_eclim>/eclim -command project_setting -p platedecoder -s org.eclim.java.junit.jvmargs -v \[\"-Djava.library.path=./lib\"\]

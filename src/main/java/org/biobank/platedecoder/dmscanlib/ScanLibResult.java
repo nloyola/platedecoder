@@ -89,4 +89,14 @@ public class ScanLibResult {
         this.value = value;
     }
 
+    @Override
+    public String toString() {
+        StringBuffer buf = new StringBuffer();
+        buf.append("[ resultCode: ").append(getResultCode());
+        buf.append(", value: ").append(value);
+        buf.append(", message: ").append(message);
+        buf.append(" ]");
+        return buf.toString();
+    }
+
 }

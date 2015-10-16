@@ -5,7 +5,9 @@ import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.StackPane;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
@@ -26,8 +28,11 @@ public class ZoomingPane extends ScrollPane {
 
     private static final double ZOOM_OUT = 1.0 / ZOOM_IN;
 
+    private DoubleProperty zoomScaleProperty;
+
     public ZoomingPane(Node content) {
         final StackPane zoomPane = new StackPane();
+        this.zoomScaleProperty = new SimpleDoubleProperty(1.0);
         zoomPane.getChildren().add(content);
 
         final Group scrollContent = new Group(zoomPane);
@@ -44,6 +49,7 @@ public class ZoomingPane extends ScrollPane {
                 Point2D scrollOffset = figureScrollOffset(scrollContent);
 
                 double scale = content.getScaleX() * scaleFactor;
+                zoomScaleProperty.setValue(scale);
                 content.setScaleX(scale);
                 content.setScaleY(scale);
 
@@ -131,8 +137,17 @@ public class ZoomingPane extends ScrollPane {
             vValue = getVmin();
         }
         setVvalue(vValue);
+    }
 
-        //LOG.debug("repositionScroller: hValue: {}, vValue: {}", hValue, vValue);
+    /**
+     * Returns the scaling factor used to display the image.
+     *
+     * The user can zoom into and out of the image. The scale factor represents the amount of zoom.
+     *
+     * @return the zoomScaleProperty
+     */
+    public DoubleProperty getZoomScaleProperty() {
+        return zoomScaleProperty;
     }
 
 }
