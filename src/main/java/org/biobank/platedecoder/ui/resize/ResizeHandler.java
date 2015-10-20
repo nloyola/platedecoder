@@ -6,6 +6,6 @@ public interface ResizeHandler {
 
     public void setResizeCursor(Cursor value);
 
-    public void mouseDragged(ResizeRect resizeRect, double deltaX, double deltaY);
+    public void mouseDragged(ResizeHandle resizeRect, double deltaX, double deltaY);
 
 }

@@ -14,9 +14,9 @@ import javafx.scene.shape.Rectangle;
 import java.util.Optional;
 
 import org.biobank.platedecoder.ui.resize.ResizeHandler;
-import org.biobank.platedecoder.ui.resize.ResizeRect;
-import org.biobank.platedecoder.ui.resize.ResizeRectNW;
-import org.biobank.platedecoder.ui.resize.ResizeRectSE;
+import org.biobank.platedecoder.ui.resize.ResizeHandle;
+import org.biobank.platedecoder.ui.resize.ResizeHandleNW;
+import org.biobank.platedecoder.ui.resize.ResizeHandleSE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,12 +31,12 @@ import org.slf4j.LoggerFactory;
  */
 public class ScanRegion extends Rectangle implements ResizeHandler {
 
-    //@SuppressWarnings("unused")
+    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(ScanRegion.class);
 
     private ScanRegionHandler scanRegionHandler;
 
-    private static final double RESIZE_RECT_SIZE = 20;
+    private static final double RESIZE_RECT_SIZE = 30;
 
     private static final double STROKE_WIDTH = 1;
 
@@ -53,9 +53,9 @@ public class ScanRegion extends Rectangle implements ResizeHandler {
     /** The scale used for the containing node. */
     private double imageZoomScale;
 
-    private ResizeRectNW  resizeRectNW;
+    private ResizeHandleNW  resizeRectNW;
 
-    private ResizeRectSE  resizeRectSE;
+    private ResizeHandleSE  resizeRectSE;
 
     protected Optional<Point2D> mouseLocationMaybe = Optional.empty();
 
@@ -104,20 +104,20 @@ public class ScanRegion extends Rectangle implements ResizeHandler {
         });
 
         setOnMouseDragged(this::mouseDragged);
-
-        resizeRectNW = new ResizeRectNW(this, RESIZE_RECT_SIZE);
-        resizeRectNW.xProperty().bind(xProperty().multiply(displayScaleProperty));
-        resizeRectNW.yProperty().bind(yProperty().multiply(displayScaleProperty));
-
-        resizeRectSE = new ResizeRectSE(this, RESIZE_RECT_SIZE);
-        resizeRectSE.xProperty()
-            .bind(xProperty().multiply(displayScaleProperty)
-                  .add(widthProperty().multiply(displayScaleProperty)).subtract(RESIZE_RECT_SIZE));
-        resizeRectSE.yProperty()
-            .bind(yProperty().multiply(displayScaleProperty)
-                  .add(heightProperty().multiply(displayScaleProperty)).subtract(RESIZE_RECT_SIZE));
-
         setDisplayScale(scale);
+
+        createResizeControls();
+    }
+
+    private void createResizeControls() {
+        resizeRectNW = new ResizeHandleNW(this, xProperty(), yProperty(), displayScaleProperty);
+
+        resizeRectSE = new ResizeHandleSE(this,
+                                          xProperty(),
+                                          yProperty(),
+                                          widthProperty(),
+                                          heightProperty(),
+                                          displayScaleProperty);
     }
 
     public Rectangle getDisplayRegion() {
@@ -136,19 +136,13 @@ public class ScanRegion extends Rectangle implements ResizeHandler {
     public void setDisplayScale(double scale) {
         displayScaleProperty.setValue(scale);
         resized(getX(), getY(), getWidth(), getHeight());
-
-        // resizeRectNW.setScaleX(scale);
-        // resizeRectNW.setScaleY(scale);
-
-        // resizeRectSE.setScaleX(scale);
-        // resizeRectSE.setScaleY(scale);
     }
 
     public double getDisplayScale() {
         return displayScaleProperty.getValue();
     }
 
-    public Rectangle [] getResizeControls() {
+    public Rectangle [] getResizeHandles() {
         return new Rectangle [] { resizeRectNW, resizeRectSE };
     }
 
@@ -186,7 +180,7 @@ public class ScanRegion extends Rectangle implements ResizeHandler {
     }
 
     @Override
-    public void mouseDragged(ResizeRect resizeRect, double deltaX, double deltaY) {
+    public void mouseDragged(ResizeHandle resizeRect, double deltaX, double deltaY) {
         double displayScale = displayScaleProperty.getValue();
         double x = getX();
         double y = getY();

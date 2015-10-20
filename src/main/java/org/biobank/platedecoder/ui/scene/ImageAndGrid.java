@@ -144,7 +144,7 @@ public class ImageAndGrid extends AbstractSceneRoot implements WellGridHandler {
         imageGroup.getChildren().add(imageView);
         imageGroup.getChildren().addAll(wellGrid.getWellCells());
         imageGroup.getChildren().addAll(wellGrid.getWellDecodedIcons());
-        imageGroup.getChildren().addAll(wellGrid.getResizeControls());
+        imageGroup.getChildren().addAll(wellGrid.getResizeHandles());
 
         updateDecodedWellCount(Collections.emptySet());
 

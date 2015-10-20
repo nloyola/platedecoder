@@ -175,7 +175,7 @@ public class ScanRegionScene extends AbstractSceneRoot implements ScanRegionHand
                     imageGroup.getChildren().clear();
                     imageGroup.getChildren().add(imageView);
                     imageGroup.getChildren().add(scanRegion.getDisplayRegion());
-                    imageGroup.getChildren().addAll(scanRegion.getResizeControls());
+                    imageGroup.getChildren().addAll(scanRegion.getResizeHandles());
                 }
             });
 

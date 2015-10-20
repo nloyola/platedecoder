@@ -18,9 +18,9 @@ import org.biobank.platedecoder.model.PlateModel;
 import org.biobank.platedecoder.model.PlateOrientation;
 import org.biobank.platedecoder.model.PlateType;
 import org.biobank.platedecoder.ui.resize.ResizeHandler;
-import org.biobank.platedecoder.ui.resize.ResizeRect;
-import org.biobank.platedecoder.ui.resize.ResizeRectNW;
-import org.biobank.platedecoder.ui.resize.ResizeRectSE;
+import org.biobank.platedecoder.ui.resize.ResizeHandle;
+import org.biobank.platedecoder.ui.resize.ResizeHandleNW;
+import org.biobank.platedecoder.ui.resize.ResizeHandleSE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +38,7 @@ public class WellGrid extends Rectangle implements ResizeHandler {
     @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(WellGrid.class);
 
-    private static final double RESIZE_RECT_SIZE = 10;
+    private static final double RESIZE_RECT_SIZE = 30;
 
     private static final Color A1_CELL_FILL_COLOR = Color.rgb(189, 237, 255, 0.35);
 
@@ -60,9 +60,9 @@ public class WellGrid extends Rectangle implements ResizeHandler {
 
     private final Image wellDecodedImage;
 
-    private ResizeRectNW resizeRectNW;
+    private ResizeHandleNW resizeRectNW;
 
-    private ResizeRectSE resizeRectSE;
+    private ResizeHandleSE resizeRectSE;
 
     /**
      * The well grid is superimposed on the image containinig the 2D barcodes. The image is scaled
@@ -86,21 +86,20 @@ public class WellGrid extends Rectangle implements ResizeHandler {
 
         wellDecodedImage = new Image(WellGrid.class.getResourceAsStream("accept.png"));
 
-        resizeRectNW = new ResizeRectNW(this, RESIZE_RECT_SIZE);
-        resizeRectNW.xProperty().bind(xProperty().multiply(displayScaleProperty));
-        resizeRectNW.yProperty().bind(yProperty().multiply(displayScaleProperty));
-
-        resizeRectSE = new ResizeRectSE(this, RESIZE_RECT_SIZE);
-
-        resizeRectSE.xProperty()
-            .bind(xProperty().multiply(displayScaleProperty)
-                  .add(widthProperty().multiply(displayScaleProperty)).subtract(RESIZE_RECT_SIZE));
-        resizeRectSE.yProperty()
-            .bind(yProperty().multiply(displayScaleProperty)
-                  .add(heightProperty().multiply(displayScaleProperty)).subtract(RESIZE_RECT_SIZE));
-
+        createResizeHandles();
         createWellCells();
         createWellDecodedIcons();
+    }
+
+    private void createResizeHandles() {
+        resizeRectNW = new ResizeHandleNW(this, xProperty(), yProperty(), displayScaleProperty);
+
+        resizeRectSE = new ResizeHandleSE(this,
+                                          xProperty(),
+                                          yProperty(),
+                                          widthProperty(),
+                                          heightProperty(),
+                                          displayScaleProperty);
     }
 
     private void createWellCells() {
@@ -306,19 +305,12 @@ public class WellGrid extends Rectangle implements ResizeHandler {
                                    model.getBarcodePosition());
     }
 
-    public Rectangle [] getResizeControls() {
+    public Rectangle [] getResizeHandles() {
         return new Rectangle [] { resizeRectNW, resizeRectSE };
     }
 
     public void setScale(double scale) {
         displayScaleProperty.setValue(scale);
-
-        // resizeRectNW.setScaleX(scale);
-        // resizeRectNW.setScaleY(scale);
-
-        // resizeRectSE.setScaleX(scale);
-        // resizeRectSE.setScaleY(scale);
-
         update();
     }
 
@@ -332,7 +324,7 @@ public class WellGrid extends Rectangle implements ResizeHandler {
     }
 
     @Override
-    public void mouseDragged(ResizeRect resizeRect, double deltaX, double deltaY) {
+    public void mouseDragged(ResizeHandle resizeRect, double deltaX, double deltaY) {
         double displayScale = displayScaleProperty.getValue();
         double x = getX();
         double y = getY();

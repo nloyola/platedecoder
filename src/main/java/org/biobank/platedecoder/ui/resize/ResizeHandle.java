@@ -10,7 +10,9 @@ import javafx.scene.shape.Rectangle;
 /**
  * A rectangle, displayed to the user, that allows a parent object to be resized using the mouse.
  */
-public abstract class ResizeRect extends Rectangle {
+public abstract class ResizeHandle extends Rectangle {
+
+    protected static final double RESIZE_RECT_SIZE = 30;
 
     protected final ResizeHandler resizeHandler;
 
@@ -18,13 +20,12 @@ public abstract class ResizeRect extends Rectangle {
 
     protected double size;
 
-    public ResizeRect(final ResizeHandler resizeHandler,
-                      double              size,
-                      Cursor              mouseEnteredCursor) {
+    public ResizeHandle(final ResizeHandler resizeHandler,
+                        double              size,
+                        Cursor              mouseEnteredCursor) {
         super(0, 0, size, size);
 
         this.resizeHandler      = resizeHandler;
-        this.size               = size;
         this.mouseLocationMaybe = Optional.empty();
 
         setFill(Color.LIGHTGREEN);
