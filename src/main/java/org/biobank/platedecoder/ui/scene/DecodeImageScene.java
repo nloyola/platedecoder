@@ -53,10 +53,10 @@ import javafx.scene.layout.VBox;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 
-public class ImageAndGrid extends AbstractSceneRoot implements WellGridHandler {
+public class DecodeImageScene extends AbstractSceneRoot implements WellGridHandler {
 
     //@SuppressWarnings("unused")
-    private static final Logger LOG = LoggerFactory.getLogger(ImageAndGrid.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DecodeImageScene.class);
 
     private URL imageUrl;
 
@@ -78,7 +78,7 @@ public class ImageAndGrid extends AbstractSceneRoot implements WellGridHandler {
 
     private Optional<EventHandler<ActionEvent>> continueHandlerMaybe = Optional.empty();
 
-    public ImageAndGrid() {
+    public DecodeImageScene() {
         super("Align grid with barcodes");
 
         model.getPlateTypeProperty().addListener((observable, oldValue, newValue) -> {

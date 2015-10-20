@@ -36,8 +36,6 @@ public class ScanRegion extends Rectangle implements ResizeHandler {
 
     private ScanRegionHandler scanRegionHandler;
 
-    private static final double RESIZE_RECT_SIZE = 30;
-
     private static final double STROKE_WIDTH = 1;
 
     private static final Paint STROKE_COLOR = Color.RED;
@@ -71,7 +69,13 @@ public class ScanRegion extends Rectangle implements ResizeHandler {
                       double                   width,
                       double                   height,
                       double                   scale) {
-        super(x, y, width, height);displayRegion = new Rectangle(scale * x,
+        super(x, y, width, height);
+        this.scanRegionHandler = scanRegionHandler;
+        this.imageView = imageView;
+        this.displayScaleProperty = new SimpleDoubleProperty(scale);
+        imageZoomScale = 1.0;
+
+        displayRegion = new Rectangle(scale * x,
                                       scale * y,
                                       scale * width,
                                       scale * height);
@@ -79,33 +83,27 @@ public class ScanRegion extends Rectangle implements ResizeHandler {
         displayRegion.setStroke(STROKE_COLOR);
         displayRegion.setStrokeWidth(STROKE_WIDTH);
 
-        imageZoomScale = 1.0;
-
-        this.scanRegionHandler = scanRegionHandler;
-        this.imageView = imageView;
-        this.displayScaleProperty = new SimpleDoubleProperty(scale);
-
-        setOnMouseEntered(event -> {
+        displayRegion.setOnMouseEntered(event -> {
             scanRegionHandler.setCursor(Cursor.CLOSED_HAND);
         });
 
-        setOnMouseExited(event -> {
+        displayRegion.setOnMouseExited(event -> {
             scanRegionHandler.setCursor(Cursor.DEFAULT);
         });
 
-        setOnMouseReleased(event -> {
+        displayRegion.setOnMouseReleased(event -> {
             scanRegionHandler.setCursor(Cursor.CLOSED_HAND);
             mouseLocationMaybe = Optional.empty();
         });
 
-        setOnMousePressed(event -> {
+        displayRegion.setOnMousePressed(event -> {
             scanRegionHandler.setCursor(Cursor.MOVE);
             mouseLocationMaybe = Optional.of(new Point2D(event.getSceneX(), event.getSceneY()));
         });
 
-        setOnMouseDragged(this::mouseDragged);
-        setDisplayScale(scale);
+        displayRegion.setOnMouseDragged(this::mouseDragged);
 
+        setDisplayScale(scale);
         createResizeControls();
     }
 
@@ -152,14 +150,14 @@ public class ScanRegion extends Rectangle implements ResizeHandler {
     }
 
     /**
-     * Called  when the user drags a cell.
+     * Called  when the user drags the scan region rectangle.
      */
     private void mouseDragged(MouseEvent event) {
         mouseLocationMaybe.ifPresent(mouseLocation -> {
                 event.consume();
 
-                double deltaX = event.getSceneX() - mouseLocation.getX();
-                double deltaY = event.getSceneY() - mouseLocation.getY();
+                double deltaX = (event.getSceneX() - mouseLocation.getX()) / imageZoomScale;
+                double deltaY = (event.getSceneY() - mouseLocation.getY()) / imageZoomScale;
 
                 mouseLocationMaybe = Optional.of(
                     new Point2D(event.getSceneX(), event.getSceneY()));
@@ -176,6 +174,8 @@ public class ScanRegion extends Rectangle implements ResizeHandler {
 
                 setX(newX);
                 setY(newY);
+
+                resized(newX, newY, getWidth(), getHeight());
             });
     }
 
@@ -186,7 +186,6 @@ public class ScanRegion extends Rectangle implements ResizeHandler {
         double y = getY();
         double width = getWidth();
         double height = getHeight();
-        double adjustedSize = RESIZE_RECT_SIZE / displayScale;
         double newWidth;
         double newHeight;
 
@@ -199,19 +198,23 @@ public class ScanRegion extends Rectangle implements ResizeHandler {
             double adjustedDeltaY = deltaY / displayScale;
 
             // NOTE: x and y are re-assigned
-            x = Math.min(Math.max(0.0, x + adjustedDeltaX), x + width - adjustedSize);
-            y = Math.min(Math.max(0.0, y + adjustedDeltaY), y + height - adjustedSize);
+            x = Math.min(Math.max(0.0, x + adjustedDeltaX), x + width - ResizeHandle.RESIZE_RECT_SIZE);
+            y = Math.min(Math.max(0.0, y + adjustedDeltaY), y + height - ResizeHandle.RESIZE_RECT_SIZE);
 
-            newWidth = Math.min(Math.max(adjustedSize, width - adjustedDeltaX), x + width);
-            newHeight = Math.min(Math.max(adjustedSize, height - adjustedDeltaY), y + height);
+            newWidth = Math.min(
+                Math.max(ResizeHandle.RESIZE_RECT_SIZE, width - adjustedDeltaX), x + width);
+            newHeight = Math.min(
+                Math.max(ResizeHandle.RESIZE_RECT_SIZE, height - adjustedDeltaY), y + height);
 
         } else if (resizeRect == resizeRectSE) {
             Image image = imageView.getImage();
 
-            newWidth = Math.min(Math.max(adjustedSize, width + deltaX / displayScale),
-                                image.getWidth() - x);
-            newHeight = Math.min(Math.max(adjustedSize, height + deltaY / displayScale),
-                                 image.getHeight() - y);
+            newWidth = Math.min(
+                Math.max(ResizeHandle.RESIZE_RECT_SIZE, width + deltaX / displayScale),
+                image.getWidth() - x);
+            newHeight = Math.min(
+                Math.max(ResizeHandle.RESIZE_RECT_SIZE, height + deltaY / displayScale),
+                image.getHeight() - y);
         } else {
             throw new IllegalStateException(
                 "invalid callback for resize: " + resizeRect);

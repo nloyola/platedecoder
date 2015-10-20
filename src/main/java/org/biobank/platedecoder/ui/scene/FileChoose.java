@@ -53,7 +53,6 @@ public class FileChoose extends AbstractSceneRoot {
         grid.add(decodeBtn, 1, 2);
 
         final HBox box = new HBox(8);
-        box.setPadding(new Insets(5, 5, 5, 5));
         box.setPadding(new Insets(0, 20, 10, 20));
         box.getChildren().addAll(browseFileBtn, decodeBtn);
 

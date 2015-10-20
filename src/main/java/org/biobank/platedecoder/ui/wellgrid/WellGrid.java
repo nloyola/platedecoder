@@ -38,8 +38,6 @@ public class WellGrid extends Rectangle implements ResizeHandler {
     @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(WellGrid.class);
 
-    private static final double RESIZE_RECT_SIZE = 30;
-
     private static final Color A1_CELL_FILL_COLOR = Color.rgb(189, 237, 255, 0.35);
 
     private static final Color DECODED_CELL_FILL_COLOR = Color.rgb(153, 198, 142, .25);
@@ -330,7 +328,6 @@ public class WellGrid extends Rectangle implements ResizeHandler {
         double y = getY();
         double width = getWidth();
         double height = getHeight();
-        double adjustedSize = RESIZE_RECT_SIZE / displayScale;
         double newWidth;
         double newHeight;
 
@@ -339,19 +336,23 @@ public class WellGrid extends Rectangle implements ResizeHandler {
             double adjustedDeltaY = deltaY / displayScale;
 
             // NOTE: x and y are re-assigned
-            x = Math.min(Math.max(0.0, x + adjustedDeltaX), x + width - adjustedSize);
-            y = Math.min(Math.max(0.0, y + adjustedDeltaY), y + height - adjustedSize);
+            x = Math.min(Math.max(0.0, x + adjustedDeltaX), x + width - ResizeHandle.RESIZE_RECT_SIZE);
+            y = Math.min(Math.max(0.0, y + adjustedDeltaY), y + height - ResizeHandle.RESIZE_RECT_SIZE);
 
-            newWidth = Math.min(Math.max(adjustedSize, width - adjustedDeltaX), x + width);
-            newHeight = Math.min(Math.max(adjustedSize, height - adjustedDeltaY), y + height);
+            newWidth = Math.min(
+                Math.max(ResizeHandle.RESIZE_RECT_SIZE, width - adjustedDeltaX), x + width);
+            newHeight = Math.min(
+                Math.max(ResizeHandle.RESIZE_RECT_SIZE, height - adjustedDeltaY), y + height);
 
         } else if (resizeRect == resizeRectSE) {
             Image image = imageView.getImage();
 
-            newWidth = Math.min(Math.max(adjustedSize, width + deltaX / displayScale),
-                                image.getWidth() - x);
-            newHeight = Math.min(Math.max(adjustedSize, height + deltaY / displayScale),
-                                 image.getHeight() - y);
+            newWidth = Math.min(
+                Math.max(ResizeHandle.RESIZE_RECT_SIZE, width + deltaX / displayScale),
+                image.getWidth() - x);
+            newHeight = Math.min(
+                Math.max(ResizeHandle.RESIZE_RECT_SIZE, height + deltaY / displayScale),
+                image.getHeight() - y);
         } else {
             throw new IllegalStateException(
                 "invalid callback for resize: " + resizeRect);

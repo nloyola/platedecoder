@@ -7,7 +7,7 @@ import org.biobank.platedecoder.model.PlateDecoderPreferences;
 import org.biobank.platedecoder.ui.scene.AbstractSceneRoot;
 import org.biobank.platedecoder.ui.scene.DecodedTubes;
 import org.biobank.platedecoder.ui.scene.FileChoose;
-import org.biobank.platedecoder.ui.scene.ImageAndGrid;
+import org.biobank.platedecoder.ui.scene.DecodeImageScene;
 import org.biobank.platedecoder.ui.scene.ImageSource;
 import org.biobank.platedecoder.ui.scene.ScanRegionScene;
 import org.biobank.platedecoder.ui.scene.SpecimenLink;
@@ -98,7 +98,7 @@ public class PlateDecoder extends Application {
     }
 
     private void setSceneTestDecode() {
-        ImageAndGrid imageAndGrid = new ImageAndGrid();
+        DecodeImageScene imageAndGrid = new DecodeImageScene();
         DecodedTubes decodedTubes = new DecodedTubes();
         SpecimenLink specimenLink = new SpecimenLink();
 
@@ -136,7 +136,7 @@ public class PlateDecoder extends Application {
     private void setScene() {
         ImageSource imageSourceSelection = new ImageSource();
         FileChoose fileChoose = new FileChoose();
-        ImageAndGrid imageAndGrid = new ImageAndGrid();
+        DecodeImageScene imageAndGrid = new DecodeImageScene();
         DecodedTubes decodedTubes = new DecodedTubes();
 
         imageSourceSelection.onFlatbedSelectedAction(e -> {

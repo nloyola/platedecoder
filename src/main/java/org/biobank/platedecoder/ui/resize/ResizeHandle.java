@@ -12,7 +12,7 @@ import javafx.scene.shape.Rectangle;
  */
 public abstract class ResizeHandle extends Rectangle {
 
-    protected static final double RESIZE_RECT_SIZE = 30;
+    public static final double RESIZE_RECT_SIZE = 30;
 
     protected final ResizeHandler resizeHandler;
 

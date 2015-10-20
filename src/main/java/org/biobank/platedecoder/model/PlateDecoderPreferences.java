@@ -104,20 +104,26 @@ public class PlateDecoderPreferences {
         prefs.putDouble(geKeyForWellRectangle(plateType, PREFS_WELL_GRID_HEIGHT), region.getHeight());
     }
 
+    /**
+     * Returns the dimensions in INCHES.
+     */
     public Rectangle getScanRegion() {
-        double x      = prefs.getDouble(PREFS_SCAN_REGION_X, DEFAULT_SCAN_REGION[0]);
-        double y      = prefs.getDouble(PREFS_SCAN_REGION_Y, DEFAULT_SCAN_REGION[1]);
-        double width  = prefs.getDouble(PREFS_SCAN_REGION_WIDTH, DEFAULT_SCAN_REGION[2]);
-        double height = prefs.getDouble(PREFS_SCAN_REGION_HEIGHT, DEFAULT_SCAN_REGION[3]);
+        double x      = prefs.getDouble(PREFS_SCAN_REGION_X, DEFAULT_SCAN_REGION_INCHES[0]);
+        double y      = prefs.getDouble(PREFS_SCAN_REGION_Y, DEFAULT_SCAN_REGION_INCHES[1]);
+        double width  = prefs.getDouble(PREFS_SCAN_REGION_WIDTH, DEFAULT_SCAN_REGION_INCHES[2]);
+        double height = prefs.getDouble(PREFS_SCAN_REGION_HEIGHT, DEFAULT_SCAN_REGION_INCHES[3]);
 
         return new Rectangle(x, y, width, height);
     }
 
+    /**
+     * Sets the dimensions in INCHES.
+     */
     public void setScanRegion(Rectangle grid) {
-        prefs.putDouble(PREFS_WELL_GRID_X, grid.getX());
-        prefs.putDouble(PREFS_WELL_GRID_Y, grid.getY());
-        prefs.putDouble(PREFS_WELL_GRID_WIDTH, grid.getWidth());
-        prefs.putDouble(PREFS_WELL_GRID_HEIGHT, grid.getHeight());
+        prefs.putDouble(PREFS_SCAN_REGION_X, grid.getX());
+        prefs.putDouble(PREFS_SCAN_REGION_Y, grid.getY());
+        prefs.putDouble(PREFS_SCAN_REGION_WIDTH, grid.getWidth());
+        prefs.putDouble(PREFS_SCAN_REGION_HEIGHT, grid.getHeight());
     }
 
     public PlateType getPlateType() {
@@ -161,8 +167,8 @@ public class PlateDecoderPreferences {
 
     public static class PlateDecoderDefaults {
 
-        public static final double [] DEFAULT_SCAN_REGION = new double [] {
-            0, 0, 300, 200
+        public static final double [] DEFAULT_SCAN_REGION_INCHES = new double [] {
+            0.25, 0.25, 3.0, 2.0
         };
 
         public static final double [] DEFAULT_WELL_GRID = new double [] {

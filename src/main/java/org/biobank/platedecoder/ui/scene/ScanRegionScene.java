@@ -1,6 +1,7 @@
 package org.biobank.platedecoder.ui.scene;
 
 import java.io.File;
+import java.util.Optional;
 
 import org.biobank.platedecoder.dmscanlib.ScanLib;
 import org.biobank.platedecoder.dmscanlib.ScanLibResult;
@@ -9,9 +10,11 @@ import org.biobank.platedecoder.ui.ZoomingPane;
 import org.biobank.platedecoder.ui.scanregion.ScanRegion;
 import org.biobank.platedecoder.ui.scanregion.ScanRegionHandler;
 import org.controlsfx.dialog.ProgressDialog;
+import org.controlsfx.tools.Borders;
 
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.Node;
@@ -20,7 +23,9 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Text;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +47,10 @@ public class ScanRegionScene extends AbstractSceneRoot implements ScanRegionHand
 
     private ScanRegion scanRegion;
 
+    private Button continueButton;
+
+    private Optional<EventHandler<ActionEvent>> continueHandlerMaybe = Optional.empty();
+
     public ScanRegionScene() {
         super("Define scanning region");
     }
@@ -49,6 +58,7 @@ public class ScanRegionScene extends AbstractSceneRoot implements ScanRegionHand
     @Override
     public void onDisplay() {
         createScanRegion();
+        continueButton.setDisable(true);
     }
 
     @Override
@@ -67,16 +77,41 @@ public class ScanRegionScene extends AbstractSceneRoot implements ScanRegionHand
     }
 
     private Node createControlsPane() {
-        Button button = new Button("Scan");
-        button.setOnAction(this::scanFlatbed);
-        button.setMaxWidth(Double.MAX_VALUE);
+        Button scanButton = new Button("Scan");
+        scanButton.setOnAction(this::scanAction);
+        scanButton.setMaxWidth(Double.MAX_VALUE);
+
+        continueButton = new Button("Continue");
+        continueButton.setOnAction(this::continueAction);
+        continueButton.setMaxWidth(Double.MAX_VALUE);
+
+        HBox hbox = new HBox(5);
+        hbox.setPadding(new Insets(0, 20, 10, 20));
+        hbox.getChildren().addAll(scanButton, continueButton);
 
         GridPane grid = new GridPane();
         grid.setVgap(2);
         grid.setHgap(2);
-        grid.add(button, 0, 0);
+        grid.add(createInstructionsArea(), 0, 0);
+        grid.add(hbox, 0, 1);
 
         return grid;
+    }
+
+    private Node createInstructionsArea() {
+        StringBuffer buf = new StringBuffer();
+        buf.append("Place a plate on your flatbed scanner and then press the scan button.\n\n");
+        buf.append("Align the rectangle so that it contains all the tubes on the plate.\n\n");
+        buf.append("Use the scroll wheel on the mouse to zoom into / out of the image.\n\n");
+        buf.append("Once aligned press the continue button.");
+
+        Text text = new Text();
+        text.setText(buf.toString());
+        text.setWrappingWidth(200);
+
+        return Borders.wrap(text)
+            .etchedBorder().build()
+            .build();
     }
 
     private Node createImagePane() {
@@ -126,9 +161,10 @@ public class ScanRegionScene extends AbstractSceneRoot implements ScanRegionHand
         Rectangle r;
 
         if (scanRegion == null) {
-            r = PlateDecoderPreferences.getInstance().getScanRegion();
+            r = inchesToPixels(PlateDecoderPreferences.getInstance().getScanRegion(),
+                               FLATBED_IMAGE_DPI);
         } else {
-            r = scanRegion.getDisplayRegion();
+            r = scanRegion;
         }
 
         double scale = imageView.getLayoutBounds().getWidth() / image.getWidth();
@@ -141,7 +177,7 @@ public class ScanRegionScene extends AbstractSceneRoot implements ScanRegionHand
                                     scale);
     }
 
-    private void scanFlatbed(@SuppressWarnings("unused") ActionEvent e) {
+    private void scanAction(@SuppressWarnings("unused") ActionEvent e) {
         LOG.debug("scanFlatbed");
         Task<ScanLibResult> worker = new Task<ScanLibResult>() {
                 @Override
@@ -176,6 +212,8 @@ public class ScanRegionScene extends AbstractSceneRoot implements ScanRegionHand
                     imageGroup.getChildren().add(imageView);
                     imageGroup.getChildren().add(scanRegion.getDisplayRegion());
                     imageGroup.getChildren().addAll(scanRegion.getResizeHandles());
+
+                    continueButton.setDisable(false);
                 }
             });
 
@@ -199,5 +237,31 @@ public class ScanRegionScene extends AbstractSceneRoot implements ScanRegionHand
     private ScanLibResult scanFlatbedLinux() throws InterruptedException {
         Thread.sleep(500);
         return new ScanLibResult(ScanLib.SC_SUCCESS, 0, "");
+    }
+
+    public void onContinueAction(EventHandler<ActionEvent> continueHandler) {
+        continueHandlerMaybe = Optional.of(continueHandler);
+    }
+
+    private void continueAction(ActionEvent event) {
+        Rectangle r = pixelsToInches(scanRegion, FLATBED_IMAGE_DPI);
+
+        PlateDecoderPreferences.getInstance().setScanRegion(r);
+        LOG.debug("continueAction: rect: {}", r);
+        continueHandlerMaybe.ifPresent(handler -> handler.handle(event));
+    }
+
+    private Rectangle pixelsToInches(Rectangle r, long dotsPerInch) {
+        return new Rectangle(r.getX()      / dotsPerInch,
+                             r.getY()      / dotsPerInch,
+                             r.getWidth()  / dotsPerInch,
+                             r.getHeight() / dotsPerInch);
+    }
+
+    private Rectangle inchesToPixels(Rectangle r, long dotsPerInch) {
+        return new Rectangle(r.getX()      * dotsPerInch,
+                             r.getY()      * dotsPerInch,
+                             r.getWidth()  * dotsPerInch,
+                             r.getHeight() * dotsPerInch);
     }
 }
