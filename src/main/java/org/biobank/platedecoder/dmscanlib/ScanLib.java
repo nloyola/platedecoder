@@ -100,16 +100,15 @@ public class ScanLib {
      *
      * @return SC_SUCCESS if valid. SC_FAIL unable to scan an image.
      */
-    public native ScanLibResult scanImage(
-        long verbose,
-        long dpi,
-        int brightness,
-        int contrast,
-        double x,
-        double y,
-        double width,
-        double height,
-        String filename);
+    public native ScanLibResult scanImage(long verbose,
+                                          long dpi,
+                                          int brightness,
+                                          int contrast,
+                                          double x,
+                                          double y,
+                                          double width,
+                                          double height,
+                                          String filename);
 
     /**
      * Scans the whole flatbed region. The image is in Windows BMP format.
@@ -124,12 +123,11 @@ public class ScanLib {
      *
      * @return SC_SUCCESS if valid. SC_FAIL unable to scan an image.
      */
-    public native ScanLibResult scanFlatbed(
-        long verbose,
-        long dpi,
-        int brightness,
-        int contrast,
-        String filename);
+    public native ScanLibResult scanFlatbed(long verbose,
+                                            long dpi,
+                                            int brightness,
+                                            int contrast,
+                                            String filename);
 
     /**
      * Used to scan a region of the flatbed containing an 2d barcodes and decode individual
@@ -148,17 +146,16 @@ public class ScanLib {
      * @param wells An array of {@link CellRectangle} objects defining the well regions containing
      *            2D barcode tubes.
      */
-    public native DecodeResult scanAndDecode(
-        long verbose,
-        long dpi,
-        int brightness,
-        int contrast,
-        double x,
-        double y,
-        double width,
-        double height,
-        DecodeOptions decodeOptions,
-        CellRectangle[] wells);
+    public native DecodeResult scanAndDecode(long verbose,
+                                             long dpi,
+                                             int brightness,
+                                             int contrast,
+                                             double x,
+                                             double y,
+                                             double width,
+                                             double height,
+                                             DecodeOptions decodeOptions,
+                                             CellRectangle[] wells);
 
     /**
      * Used to decode individual rectangles within the image containing 2D barcodes.
@@ -171,10 +168,9 @@ public class ScanLib {
      *            2D barcode tubes.
      *
      */
-    public native DecodeResult decodeImage(
-        long verbose,
-        String filename,
-        DecodeOptions decodeOptions,
-        CellRectangle[] wells);
+    public native DecodeResult decodeImage(long verbose,
+                                           String filename,
+                                           DecodeOptions decodeOptions,
+                                           CellRectangle[] wells);
 
 }

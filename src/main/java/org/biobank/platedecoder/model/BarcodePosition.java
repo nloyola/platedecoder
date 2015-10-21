@@ -13,8 +13,6 @@ public enum BarcodePosition {
     TOP("Tube tops"),
     BOTTOM("Tube bottoms");
 
-    public static final int size = values().length;
-
     private final String displayLabel;
 
     private BarcodePosition(String displayString) {

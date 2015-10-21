@@ -1,11 +1,11 @@
 package org.biobank.platedecoder.ui.scene;
 
-import java.io.File;
 import java.util.Optional;
 
 import org.biobank.platedecoder.dmscanlib.ScanLib;
 import org.biobank.platedecoder.dmscanlib.ScanLibResult;
 import org.biobank.platedecoder.model.PlateDecoderPreferences;
+import org.biobank.platedecoder.ui.PlateDecoder;
 import org.biobank.platedecoder.ui.ZoomingPane;
 import org.biobank.platedecoder.ui.scanregion.ScanRegion;
 import org.biobank.platedecoder.ui.scanregion.ScanRegionHandler;
@@ -34,10 +34,6 @@ public class ScanRegionScene extends AbstractSceneRoot implements ScanRegionHand
 
     //@SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(ScanRegionScene.class);
-
-    private static final boolean IS_LINUX = System.getProperty("os.name").startsWith("Linux");
-
-    private static final String FLATBED_IMAGE_NAME = "flatbed.png";
 
     private static final long FLATBED_IMAGE_DPI = 300;
 
@@ -161,8 +157,13 @@ public class ScanRegionScene extends AbstractSceneRoot implements ScanRegionHand
         Rectangle r;
 
         if (scanRegion == null) {
-            r = inchesToPixels(PlateDecoderPreferences.getInstance().getScanRegion(),
-                               FLATBED_IMAGE_DPI);
+            Optional<Rectangle> rectMaybe = PlateDecoderPreferences.getInstance().getScanRegion();
+            if (rectMaybe.isPresent()) {
+                r = inchesToPixels(rectMaybe.get(), FLATBED_IMAGE_DPI);
+            } else {
+                r = inchesToPixels(PlateDecoderPreferences.getInstance().getDefaultScanRegion(),
+                                   FLATBED_IMAGE_DPI);
+            }
         } else {
             r = scanRegion;
         }
@@ -178,14 +179,14 @@ public class ScanRegionScene extends AbstractSceneRoot implements ScanRegionHand
     }
 
     private void scanAction(@SuppressWarnings("unused") ActionEvent e) {
-        LOG.debug("scanFlatbed");
         Task<ScanLibResult> worker = new Task<ScanLibResult>() {
                 @Override
                 protected ScanLibResult call() throws Exception {
-                    if (IS_LINUX) {
+                    if (PlateDecoder.IS_LINUX) {
                         return scanFlatbedLinux();
                     }
-                    return scanFlatbedWindows();}
+                    return scanFlatbedWindows();
+                }
             };
 
         ProgressDialog dlg = new ProgressDialog(worker);
@@ -196,13 +197,7 @@ public class ScanRegionScene extends AbstractSceneRoot implements ScanRegionHand
                 ScanLibResult result = worker.getValue();
 
                 if (result.getResultCode() == ScanLibResult.Result.SUCCESS) {
-                    StringBuffer buf = new StringBuffer();
-                    buf.append("file://");
-                    buf.append(System.getProperty("user.dir"));
-                    buf.append(File.separator);
-                    buf.append(FLATBED_IMAGE_NAME);
-
-                    Image image = new Image(buf.toString());
+                    Image image = new Image(PlateDecoder.flatbedImageFilenameToUrl());
                     imageView.setImage(image);
                     imageView.setCache(true);
 
@@ -231,7 +226,7 @@ public class ScanRegionScene extends AbstractSceneRoot implements ScanRegionHand
                                                  FLATBED_IMAGE_DPI,
                                                  0,
                                                  0,
-                                                 FLATBED_IMAGE_NAME);
+                                                 PlateDecoder.flatbedImageFilename());
     }
 
     private ScanLibResult scanFlatbedLinux() throws InterruptedException {

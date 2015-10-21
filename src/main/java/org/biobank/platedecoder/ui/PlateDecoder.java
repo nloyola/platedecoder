@@ -1,14 +1,17 @@
 package org.biobank.platedecoder.ui;
 
+import java.io.File;
 import java.util.Map;
+import java.util.Optional;
 
 import org.biobank.platedecoder.dmscanlib.LibraryLoader;
 import org.biobank.platedecoder.model.PlateDecoderPreferences;
 import org.biobank.platedecoder.ui.scene.AbstractSceneRoot;
+import org.biobank.platedecoder.ui.scene.DecodeImageScene;
 import org.biobank.platedecoder.ui.scene.DecodedTubes;
 import org.biobank.platedecoder.ui.scene.FileChoose;
-import org.biobank.platedecoder.ui.scene.DecodeImageScene;
 import org.biobank.platedecoder.ui.scene.ImageSource;
+import org.biobank.platedecoder.ui.scene.ScanPlateScene;
 import org.biobank.platedecoder.ui.scene.ScanRegionScene;
 import org.biobank.platedecoder.ui.scene.SpecimenLink;
 import org.slf4j.Logger;
@@ -16,19 +19,30 @@ import org.slf4j.LoggerFactory;
 
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.Region;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
-public class PlateDecoder extends Application {
+public class PlateDecoder extends Application implements EventHandler<WindowEvent> {
 
-    @SuppressWarnings("unused")
+    //@SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(PlateDecoder.class);
 
+    public static final boolean IS_LINUX = System.getProperty("os.name").startsWith("Linux");
+
     public static final boolean IS_DEBUG_MODE = (System.getProperty("debug") != null);
+
+    private static final String FLATBED_IMAGE_NAME = "flatbed.png";
+
+    private static final String FLATBED_PLATE_IMAGE_NAME = "plate.png";
+
+    private AbstractSceneRoot onBackFromDecodeImage;
 
     private Stage stage;
 
@@ -52,7 +66,6 @@ public class PlateDecoder extends Application {
         sceneHeight = dimensions.getY();
 
         setStartScene();
-        sceneOnClose();
         stage.show();
     }
 
@@ -98,16 +111,16 @@ public class PlateDecoder extends Application {
     }
 
     private void setSceneTestDecode() {
-        DecodeImageScene imageAndGrid = new DecodeImageScene();
+        DecodeImageScene decodeImage = new DecodeImageScene();
         DecodedTubes decodedTubes = new DecodedTubes();
         SpecimenLink specimenLink = new SpecimenLink();
 
-        imageAndGrid.onContinueAction(e -> {
+        decodeImage.onContinueAction(e -> {
                 changeScene(decodedTubes);
             });
 
         decodedTubes.enableBackAction(e -> {
-                changeScene(imageAndGrid);
+                changeScene(decodeImage);
             });
 
         decodedTubes.enableFinishAction(e -> {
@@ -118,11 +131,9 @@ public class PlateDecoder extends Application {
                 changeScene(specimenLink);
             });
 
-        // (global-visual-line-mode -1)
-
-        changeScene(imageAndGrid);
+        changeScene(decodeImage);
         //imageAndGrid.setImageFileURI("file:///home/nelson/Desktop/scanned_ice4_cropped.bmp");
-        imageAndGrid.setImageFileURI(
+        decodeImage.setImageFileURI(
             "file:///home/nelson/Desktop/testImages/8x12/FrozenPalletImages/HP_L1985A/scanned4.bmp");
         //imageAndGrid.setImageFileURI(
         //"file:///home/nelson/Dropbox/CBSR/scanlib/testImages/12x12/stanford_12x12_1.jpg");
@@ -135,12 +146,25 @@ public class PlateDecoder extends Application {
 
     private void setScene() {
         ImageSource imageSourceSelection = new ImageSource();
-        FileChoose fileChoose = new FileChoose();
-        DecodeImageScene imageAndGrid = new DecodeImageScene();
-        DecodedTubes decodedTubes = new DecodedTubes();
+        FileChoose fileChoose            = new FileChoose();
+        ScanRegionScene scanRegion       = new ScanRegionScene();
+        ScanPlateScene scanPlate         = new ScanPlateScene();
+        DecodeImageScene decodeImage     = new DecodeImageScene();
+        DecodedTubes decodedTubes        = new DecodedTubes();
 
-        imageSourceSelection.onFlatbedSelectedAction(e -> {
+        // TODO: fix back button when flatbed scan is used
+
+        imageSourceSelection.onFilesystemAction(e -> {
                 changeScene(fileChoose);
+            });
+
+        imageSourceSelection.onFlatbedScanAction(e -> {
+                Optional<Rectangle> rectMaybe = PlateDecoderPreferences.getInstance().getScanRegion();
+                if (rectMaybe.isPresent()) {
+                    changeScene(scanPlate);
+                } else {
+                    changeScene(scanRegion);
+                }
             });
 
         fileChoose.enableBackAction(e -> {
@@ -148,20 +172,42 @@ public class PlateDecoder extends Application {
             });
 
         fileChoose.onDecodeAction(e -> {
-                imageAndGrid.setImageFileURI(fileChoose.getSelectedFileURI());
-                changeScene(imageAndGrid);
+                onBackFromDecodeImage = fileChoose;
+                decodeImage.setImageFileURI(fileChoose.getSelectedFileURI());
+                changeScene(decodeImage);
             });
 
-        imageAndGrid.enableBackAction(e -> {
-                changeScene(fileChoose);
+        scanRegion.onContinueAction(e -> {
+                changeScene(scanPlate);
             });
 
-        imageAndGrid.onContinueAction(e -> {
+        scanRegion.enableBackAction(e -> {
+                changeScene(imageSourceSelection);
+            });
+
+        scanPlate.onScanCompleteAction(e -> {
+                onBackFromDecodeImage = scanPlate;
+                decodeImage.setImageFileURI(flatbedPlateImageFilenameToUrl());
+                changeScene(decodeImage);
+            });
+
+        scanPlate.enableBackAction(e -> {
+                changeScene(imageSourceSelection);
+            });
+
+        decodeImage.enableBackAction(e -> {
+                if (onBackFromDecodeImage == null) {
+                    throw new IllegalStateException("onBackFromDecodeImage is null");
+                }
+                changeScene(onBackFromDecodeImage);
+            });
+
+        decodeImage.onContinueAction(e -> {
                 changeScene(decodedTubes);
             });
 
         decodedTubes.enableBackAction(e -> {
-                changeScene(imageAndGrid);
+                changeScene(decodeImage);
             });
 
         decodedTubes.enableFinishAction(e -> {
@@ -180,16 +226,20 @@ public class PlateDecoder extends Application {
         }
         sceneRoot.onDisplay();
         stage.setScene(new Scene(sceneRoot, sceneWidth, sceneHeight));
+
+        // need to call this whenever the scene is changed
+        stage.setOnCloseRequest(this);
     }
 
-    private void sceneOnClose() {
-        stage.setOnCloseRequest(e -> {
-                Scene scene = stage.getScene();
-                if (scene != null) {
-                    PlateDecoderPreferences.getInstance().setAppWindowSize(
-                        scene.getWidth(), scene.getHeight());
-                }
-            });
+    @Override
+    public void handle(WindowEvent we) {
+        LOG.debug("sceneOnClose");
+        Scene scene = stage.getScene();
+        if (scene != null) {
+            LOG.debug("sceneOnClose: saving window size");
+            PlateDecoderPreferences.getInstance().setAppWindowSize(
+                scene.getWidth(), scene.getHeight());
+        }
     }
 
     public static void infoDialog(String infoMessage, String titleBar) {
@@ -215,6 +265,37 @@ public class PlateDecoder extends Application {
         alert.setHeaderText(headerMessage);
         alert.setContentText(infoMessage);
         alert.showAndWait();
+    }
+
+    public static String flatbedImageFilename() {
+        return FLATBED_IMAGE_NAME;
+    }
+
+    public static String flatbedPlateImageFilename() {
+        return FLATBED_PLATE_IMAGE_NAME;
+    }
+
+    private static String userDirFilenameToUrl(String filename) {
+        StringBuffer buf = new StringBuffer();
+        buf.append("file://");
+        buf.append(System.getProperty("user.dir"));
+        buf.append(File.separator);
+        buf.append(filename);
+        return buf.toString();
+    }
+
+    /**
+     * Returns the file name used to store the image of the entire flatbed scanning region.
+     */
+    public static String flatbedImageFilenameToUrl() {
+        return userDirFilenameToUrl(FLATBED_IMAGE_NAME);
+    }
+
+    /**
+     * Returns the file name used to store the image of the plate.
+     */
+    public static String flatbedPlateImageFilenameToUrl() {
+        return userDirFilenameToUrl(FLATBED_PLATE_IMAGE_NAME);
     }
 
 }

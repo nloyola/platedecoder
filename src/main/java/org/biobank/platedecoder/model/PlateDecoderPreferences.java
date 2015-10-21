@@ -2,6 +2,7 @@ package org.biobank.platedecoder.model;
 
 import static org.biobank.platedecoder.model.PlateDecoderPreferences.PlateDecoderDefaults.*;
 
+import java.util.Optional;
 import java.util.prefs.Preferences;
 
 import org.slf4j.Logger;
@@ -32,6 +33,8 @@ public class PlateDecoderPreferences {
 
     private static final String PREFS_APP_WINDOW_HEIGHT = "PREFS_APP_WINDOW_HEIGHT";
 
+    private static final String PREFS_DRIVER_TYPE = "PREFS_DRIVER_TYPE";
+
     private static final String PREFS_SCAN_REGION_X = "PREFS_SCAN_REGION_X";
 
     private static final String PREFS_SCAN_REGION_Y = "PREFS_SCAN_REGION_Y_";
@@ -54,6 +57,8 @@ public class PlateDecoderPreferences {
 
     private static final String PREFS_BARCODE_POSITION = "PREFS_BARCODE_POSITION";
 
+    private static final String PREFS_FLATBED_LAST_USED_DPI = "PREFS_FLATBED_LAST_USED_DPI";
+
     private static final String PREFS_SPECIMEN_LINK_DIVIDER_POSITION =
         "PREFS_SPECIMEN_LINK_DIVIDER_POSITION";
 
@@ -74,6 +79,47 @@ public class PlateDecoderPreferences {
     public void setAppWindowSize(double width, double height) {
         prefs.putDouble(PREFS_APP_WINDOW_WIDTH,  width);
         prefs.putDouble(PREFS_APP_WINDOW_HEIGHT, height);
+    }
+
+    public DriverType getDriverType() {
+        return DriverType.valueOf(prefs.get(PREFS_DRIVER_TYPE, DEFAULT_DRIVER_TYPE));
+    }
+
+    public void setDriverType(DriverType driverType) {
+        prefs.put(PREFS_DRIVER_TYPE, driverType.name());
+    }
+
+    /**
+     * Returns the dimensions in INCHES.
+     */
+    public Optional<Rectangle> getScanRegion() {
+        double x      = prefs.getDouble(PREFS_SCAN_REGION_X,      -1);
+        double y      = prefs.getDouble(PREFS_SCAN_REGION_Y,      -1);
+        double width  = prefs.getDouble(PREFS_SCAN_REGION_WIDTH,  -1);
+        double height = prefs.getDouble(PREFS_SCAN_REGION_HEIGHT, -1);
+
+        if ((x < 0) || (y < 0) || (width < 0) || (height < 0)) {
+            return Optional.empty();
+        }
+
+        return Optional.of(new Rectangle(x, y, width, height));
+    }
+
+    public Rectangle getDefaultScanRegion() {
+        return new Rectangle(DEFAULT_SCAN_REGION_INCHES[0],
+                             DEFAULT_SCAN_REGION_INCHES[1],
+                             DEFAULT_SCAN_REGION_INCHES[2],
+                             DEFAULT_SCAN_REGION_INCHES[3]);
+    }
+
+    /**
+     * Sets the dimensions in INCHES.
+     */
+    public void setScanRegion(Rectangle grid) {
+        prefs.putDouble(PREFS_SCAN_REGION_X, grid.getX());
+        prefs.putDouble(PREFS_SCAN_REGION_Y, grid.getY());
+        prefs.putDouble(PREFS_SCAN_REGION_WIDTH, grid.getWidth());
+        prefs.putDouble(PREFS_SCAN_REGION_HEIGHT, grid.getHeight());
     }
 
     private String geKeyForWellRectangle(PlateType plateType, String subKey) {
@@ -102,28 +148,6 @@ public class PlateDecoderPreferences {
         prefs.putDouble(geKeyForWellRectangle(plateType, PREFS_WELL_GRID_Y), region.getY());
         prefs.putDouble(geKeyForWellRectangle(plateType, PREFS_WELL_GRID_WIDTH), region.getWidth());
         prefs.putDouble(geKeyForWellRectangle(plateType, PREFS_WELL_GRID_HEIGHT), region.getHeight());
-    }
-
-    /**
-     * Returns the dimensions in INCHES.
-     */
-    public Rectangle getScanRegion() {
-        double x      = prefs.getDouble(PREFS_SCAN_REGION_X, DEFAULT_SCAN_REGION_INCHES[0]);
-        double y      = prefs.getDouble(PREFS_SCAN_REGION_Y, DEFAULT_SCAN_REGION_INCHES[1]);
-        double width  = prefs.getDouble(PREFS_SCAN_REGION_WIDTH, DEFAULT_SCAN_REGION_INCHES[2]);
-        double height = prefs.getDouble(PREFS_SCAN_REGION_HEIGHT, DEFAULT_SCAN_REGION_INCHES[3]);
-
-        return new Rectangle(x, y, width, height);
-    }
-
-    /**
-     * Sets the dimensions in INCHES.
-     */
-    public void setScanRegion(Rectangle grid) {
-        prefs.putDouble(PREFS_SCAN_REGION_X, grid.getX());
-        prefs.putDouble(PREFS_SCAN_REGION_Y, grid.getY());
-        prefs.putDouble(PREFS_SCAN_REGION_WIDTH, grid.getWidth());
-        prefs.putDouble(PREFS_SCAN_REGION_HEIGHT, grid.getHeight());
     }
 
     public PlateType getPlateType() {
@@ -159,6 +183,14 @@ public class PlateDecoderPreferences {
         prefs.putDouble(PREFS_SPECIMEN_LINK_DIVIDER_POSITION, position);
     }
 
+    public FlatbedDpi getFlatbedDpi() {
+        return FlatbedDpi.valueOf(prefs.get(PREFS_FLATBED_LAST_USED_DPI, DEFAULT_FLATBED_DPI));
+    }
+
+    public void setFlatbedDpi(FlatbedDpi dpi) {
+        prefs.put(PREFS_FLATBED_LAST_USED_DPI, dpi.name());
+    }
+
     //--
 
     private static class PlateDecoderPreferencesHolder {
@@ -166,6 +198,8 @@ public class PlateDecoderPreferences {
     }
 
     public static class PlateDecoderDefaults {
+
+        public static final String DEFAULT_DRIVER_TYPE = DriverType.NONE.name();
 
         public static final double [] DEFAULT_SCAN_REGION_INCHES = new double [] {
             0.25, 0.25, 3.0, 2.0
@@ -186,5 +220,8 @@ public class PlateDecoderPreferences {
         public static final String DEFAULT_BARCODE_POSITION = BarcodePosition.BOTTOM.name();
 
         public static final double DEFAULT_SPECIMEN_LINK_DIVIDER_POSITION = 0.3;
+
+        public static final String DEFAULT_FLATBED_DPI = FlatbedDpi.DPI_300.name();
+
     }
 }

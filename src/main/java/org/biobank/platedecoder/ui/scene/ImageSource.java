@@ -10,35 +10,12 @@ import javafx.scene.layout.GridPane;
 
 public class ImageSource extends AbstractSceneRoot {
 
-    private RadioButton filesystemBtn;
+    private RadioButton filesystemButton;
 
-    private RadioButton flatbedBtn;
+    private RadioButton flatbedScanButton;
 
     public ImageSource() {
-        super("Select the image source");
-    }
-
-    @Override
-    protected Node creatContents() {
-        final GridPane grid = new GridPane();
-        grid.setVgap(10);
-        grid.setHgap(10);
-        grid.setPadding(new Insets(20, 5, 5, 5));
-
-        final ToggleGroup toggleGroup = new ToggleGroup();
-
-        filesystemBtn = new RadioButton("Filesystem");
-        filesystemBtn.setToggleGroup(toggleGroup);
-        grid.add(filesystemBtn, 0, 0);
-
-        flatbedBtn = new RadioButton("Flatbed scanner");
-        flatbedBtn.setToggleGroup(toggleGroup);
-        grid.add(flatbedBtn, 0, 1);
-        return grid;
-    }
-
-    public void onFlatbedSelectedAction(EventHandler<ActionEvent> flatbedSelectedHandler) {
-        filesystemBtn.setOnAction(flatbedSelectedHandler);
+        super("Choose an action");
     }
 
     @Override
@@ -46,8 +23,35 @@ public class ImageSource extends AbstractSceneRoot {
         unselectAll();
     }
 
+    @Override
+    protected Node creatContents() {
+        filesystemButton = new RadioButton("Filesystem");
+        flatbedScanButton = new RadioButton("Flatbed scanner");
+
+        final ToggleGroup toggleGroup = new ToggleGroup();
+        filesystemButton.setToggleGroup(toggleGroup);
+        flatbedScanButton.setToggleGroup(toggleGroup);
+
+        final GridPane grid = new GridPane();
+        grid.setPadding(new Insets(20, 5, 5, 5));
+        grid.setVgap(10);
+        grid.setHgap(10);
+
+        grid.add(filesystemButton, 0, 0);
+        grid.add(flatbedScanButton, 0, 1);
+        return grid;
+    }
+
+    public void onFilesystemAction(EventHandler<ActionEvent> flatbedSelectedHandler) {
+        filesystemButton.setOnAction(flatbedSelectedHandler);
+    }
+
+    public void onFlatbedScanAction(EventHandler<ActionEvent> flatbedSelectedHandler) {
+        flatbedScanButton.setOnAction(flatbedSelectedHandler);
+    }
+
     public void unselectAll() {
-        filesystemBtn.setSelected(false);
-        flatbedBtn.setSelected(false);
+        filesystemButton.setSelected(false);
+        flatbedScanButton.setSelected(false);
     }
 };

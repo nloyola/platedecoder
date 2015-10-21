@@ -26,6 +26,8 @@ public class PlateModel {
 
     private ObjectProperty<BarcodePosition> barcodePositionProperty;
 
+    private ObjectProperty<FlatbedDpi> flatbedDpiProperty;
+
     private PlateModel() {
         plateTypeProperty = new SimpleObjectProperty<PlateType>(
             PlateDecoderPreferences.getInstance().getPlateType());
@@ -48,6 +50,9 @@ public class PlateModel {
                 PlateDecoderPreferences.getInstance().setBarcodePosition((newValue));
                 createNewPlate();
             });
+
+        flatbedDpiProperty = new SimpleObjectProperty<FlatbedDpi>(
+            PlateDecoderPreferences.getInstance().getFlatbedDpi());
 
         createNewPlate();
     }
@@ -100,8 +105,15 @@ public class PlateModel {
         return plate;
     }
 
+    public FlatbedDpi getFlatbedDpi() {
+        return flatbedDpiProperty.getValue();
+    }
+
+    public void setFlatbedDpi(FlatbedDpi dpi) {
+        flatbedDpiProperty.set(dpi);
+    }
+
     private static class PlateModelHolder {
         private static final PlateModel INSTANCE = new PlateModel();
     }
-
 }

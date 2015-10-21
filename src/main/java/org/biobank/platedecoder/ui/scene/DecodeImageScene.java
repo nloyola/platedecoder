@@ -15,11 +15,11 @@ import org.biobank.platedecoder.dmscanlib.DecodeResult;
 import org.biobank.platedecoder.dmscanlib.DecodedWell;
 import org.biobank.platedecoder.dmscanlib.ScanLib;
 import org.biobank.platedecoder.dmscanlib.ScanLibResult;
-import org.biobank.platedecoder.model.BarcodePosition;
 import org.biobank.platedecoder.model.Plate;
 import org.biobank.platedecoder.model.PlateDecoderPreferences;
-import org.biobank.platedecoder.model.PlateOrientation;
+import org.biobank.platedecoder.ui.BarcodePositionChooser;
 import org.biobank.platedecoder.ui.ManualDecodeDialog;
+import org.biobank.platedecoder.ui.PlateOrientationChooser;
 import org.biobank.platedecoder.ui.PlateTypeChooser;
 import org.biobank.platedecoder.ui.wellgrid.WellCell;
 import org.biobank.platedecoder.ui.wellgrid.WellGrid;
@@ -41,15 +41,12 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
-import javafx.scene.control.RadioButton;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 
@@ -176,8 +173,8 @@ public class DecodeImageScene extends AbstractSceneRoot implements WellGridHandl
         grid.setVgap(2);
         grid.setHgap(2);
         grid.add(plateTypeChooser, 0, 0, 2, 1);
-        grid.add(createOrientationControls(), 0, 1, 2, 1);
-        grid.add(createBarcodePisitionsControls(), 0, 2, 2, 1);
+        grid.add(new PlateOrientationChooser(), 0, 1, 2, 1);
+        grid.add(new BarcodePositionChooser(), 0, 2, 2, 1);
         grid.add(createInstructionsArea(), 0, 3, 2, 1);
         grid.add(decodeButton, 0, 4);
         grid.add(continueBtn, 1, 4);
@@ -185,54 +182,6 @@ public class DecodeImageScene extends AbstractSceneRoot implements WellGridHandl
         GridPane.setHalignment(continueBtn, HPos.RIGHT);
 
         return grid;
-    }
-
-    private Node createOrientationControls() {
-        final ToggleGroup toggleGroup = new ToggleGroup();
-
-        RadioButton landscape = new RadioButton("Landscape");
-        landscape.setToggleGroup(toggleGroup);
-        RadioButton portrait = new RadioButton("Portrait");
-        portrait.setToggleGroup(toggleGroup);
-
-        final VBox orientationBox = new VBox(5, landscape, portrait);
-
-        landscape.setSelected(
-            model.getPlateOrientation().equals(PlateOrientation.LANDSCAPE));
-        portrait.setSelected(
-            model.getPlateOrientation().equals(PlateOrientation.PORTRAIT));
-
-        toggleGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
-                model.setPlateOrientation(newValue == landscape
-                                          ? PlateOrientation.LANDSCAPE : PlateOrientation.PORTRAIT);
-            });
-
-        return Borders.wrap(orientationBox)
-            .etchedBorder().title("Orientation").build()
-            .build();
-    }
-
-    private Node createBarcodePisitionsControls() {
-        final ToggleGroup toggleGroup = new ToggleGroup();
-
-        RadioButton tubeTops = new RadioButton("Tube tops");
-        tubeTops.setToggleGroup(toggleGroup);
-        RadioButton tubeBottoms = new RadioButton("Tube bottoms");
-        tubeBottoms.setToggleGroup(toggleGroup);
-
-        final VBox orientationBox = new VBox(5, tubeTops, tubeBottoms);
-
-        tubeTops.setSelected(model.getBarcodePosition().equals(BarcodePosition.TOP));
-        tubeBottoms.setSelected(model.getBarcodePosition().equals(BarcodePosition.BOTTOM));
-
-        toggleGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
-                model.setBarcodePosition(newValue == tubeTops
-                                          ? BarcodePosition.TOP : BarcodePosition.BOTTOM);
-            });
-
-        return Borders.wrap(orientationBox)
-            .etchedBorder().title("Barcode Positions").build()
-            .build();
     }
 
     private Node createInstructionsArea() {

@@ -21,17 +21,17 @@ public class PlateTypeChooser extends GridPane {
     private final PlateModel model = PlateModel.getInstance();
 
     public PlateTypeChooser() {
-        Text plateTypeText = new Text();
-        plateTypeText.setText("Plate type:");
+        Text text = new Text();
+        text.setText("Plate type:");
 
-        ChoiceBox<PlateType> plateTypeChoice = createPlateChoiceBox();
+        ChoiceBox<PlateType> choice = createPlateChoiceBox();
 
-        addRow(0, plateTypeText, plateTypeChoice);
-        setMargin(plateTypeText, new Insets(5));
-        setMargin(plateTypeChoice, new Insets(5));
-        plateTypeChoice.setValue(model.getPlateType());
+        addRow(0, text, choice);
+        setMargin(text, new Insets(5));
+        setMargin(choice, new Insets(5));
+        choice.setValue(model.getPlateType());
 
-        plateTypeChoice.getSelectionModel().selectedItemProperty()
+        choice.getSelectionModel().selectedItemProperty()
             .addListener((observable, oldValue, newValue) -> {
                     LOG.debug("plate type changed: {}", newValue);
                     model.setPlateType(newValue);
