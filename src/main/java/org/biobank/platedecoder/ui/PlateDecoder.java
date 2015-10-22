@@ -1,5 +1,7 @@
 package org.biobank.platedecoder.ui;
 
+import static org.biobank.platedecoder.model.PlateDecoderDefaults.*;
+
 import java.io.File;
 import java.util.Map;
 import java.util.Optional;
@@ -37,10 +39,6 @@ public class PlateDecoder extends Application implements EventHandler<WindowEven
     public static final boolean IS_LINUX = System.getProperty("os.name").startsWith("Linux");
 
     public static final boolean IS_DEBUG_MODE = (System.getProperty("debug") != null);
-
-    private static final String FLATBED_IMAGE_NAME = "flatbed.png";
-
-    private static final String FLATBED_PLATE_IMAGE_NAME = "plate.png";
 
     private AbstractSceneRoot onBackFromDecodeImage;
 
