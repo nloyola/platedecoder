@@ -2,9 +2,10 @@ package org.biobank.platedecoder.ui.scene;
 
 import java.util.Optional;
 
-import org.biobank.platedecoder.dmscanlib.ScanLib;
 import org.biobank.platedecoder.dmscanlib.ScanLibResult;
+import org.biobank.platedecoder.model.PlateDecoderDefaults;
 import org.biobank.platedecoder.model.PlateDecoderPreferences;
+import org.biobank.platedecoder.service.ScanRegionTask;
 import org.biobank.platedecoder.ui.PlateDecoder;
 import org.biobank.platedecoder.ui.ZoomingPane;
 import org.biobank.platedecoder.ui.scanregion.ScanRegion;
@@ -12,7 +13,6 @@ import org.biobank.platedecoder.ui.scanregion.ScanRegionHandler;
 import org.controlsfx.dialog.ProgressDialog;
 import org.controlsfx.tools.Borders;
 
-import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -34,8 +34,6 @@ public class ScanRegionScene extends AbstractSceneRoot implements ScanRegionHand
 
     //@SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(ScanRegionScene.class);
-
-    private static final long FLATBED_IMAGE_DPI = 300;
 
     private ImageView imageView;
 
@@ -159,10 +157,10 @@ public class ScanRegionScene extends AbstractSceneRoot implements ScanRegionHand
         if (scanRegion == null) {
             Optional<Rectangle> rectMaybe = PlateDecoderPreferences.getInstance().getScanRegion();
             if (rectMaybe.isPresent()) {
-                r = inchesToPixels(rectMaybe.get(), FLATBED_IMAGE_DPI);
+                r = inchesToPixels(rectMaybe.get(), PlateDecoderDefaults.FLATBED_IMAGE_DPI);
             } else {
                 r = inchesToPixels(PlateDecoderPreferences.getInstance().getDefaultScanRegion(),
-                                   FLATBED_IMAGE_DPI);
+                                   PlateDecoderDefaults.FLATBED_IMAGE_DPI);
             }
         } else {
             r = scanRegion;
@@ -179,15 +177,17 @@ public class ScanRegionScene extends AbstractSceneRoot implements ScanRegionHand
     }
 
     private void scanAction(@SuppressWarnings("unused") ActionEvent e) {
-        Task<ScanLibResult> worker = new Task<ScanLibResult>() {
-                @Override
-                protected ScanLibResult call() throws Exception {
-                    if (PlateDecoder.IS_LINUX) {
-                        return scanFlatbedLinux();
-                    }
-                    return scanFlatbedWindows();
-                }
-            };
+        if (!checkFilePresentLinux()) {
+            PlateDecoder.errorDialog(
+                "Simulating a scan of the entire flatbed will not work. "
+                + "To correct this, please copy an image to: "
+                + PlateDecoder.flatbedImageFilenameToUrl(),
+                "Unable to simulate action",
+                "File is missing.");
+            return;
+        }
+
+        ScanRegionTask worker = new ScanRegionTask();
 
         ProgressDialog dlg = new ProgressDialog(worker);
         dlg.setTitle("Scanning flatbed");
@@ -221,17 +221,11 @@ public class ScanRegionScene extends AbstractSceneRoot implements ScanRegionHand
         th.start();
     }
 
-    private ScanLibResult scanFlatbedWindows() {
-        return ScanLib.getInstance().scanFlatbed(0L,
-                                                 FLATBED_IMAGE_DPI,
-                                                 0,
-                                                 0,
-                                                 PlateDecoder.flatbedImageFilename());
-    }
-
-    private ScanLibResult scanFlatbedLinux() throws InterruptedException {
-        Thread.sleep(500);
-        return new ScanLibResult(ScanLib.SC_SUCCESS, 0, "");
+    private boolean checkFilePresentLinux() {
+        if (PlateDecoder.IS_LINUX) {
+            return PlateDecoder.fileExists(PlateDecoder.flatbedImageFilename());
+        }
+        return true;
     }
 
     public void onContinueAction(EventHandler<ActionEvent> continueHandler) {
@@ -239,7 +233,7 @@ public class ScanRegionScene extends AbstractSceneRoot implements ScanRegionHand
     }
 
     private void continueAction(ActionEvent event) {
-        Rectangle r = pixelsToInches(scanRegion, FLATBED_IMAGE_DPI);
+        Rectangle r = pixelsToInches(scanRegion, PlateDecoderDefaults.FLATBED_IMAGE_DPI);
 
         PlateDecoderPreferences.getInstance().setScanRegion(r);
         LOG.debug("continueAction: rect: {}", r);

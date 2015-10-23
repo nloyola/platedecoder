@@ -9,14 +9,12 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.biobank.platedecoder.dmscanlib.CellRectangle;
-import org.biobank.platedecoder.dmscanlib.DecodeOptions;
 import org.biobank.platedecoder.dmscanlib.DecodeResult;
 import org.biobank.platedecoder.dmscanlib.DecodedWell;
-import org.biobank.platedecoder.dmscanlib.ScanLib;
 import org.biobank.platedecoder.dmscanlib.ScanLibResult;
 import org.biobank.platedecoder.model.Plate;
 import org.biobank.platedecoder.model.PlateDecoderPreferences;
+import org.biobank.platedecoder.service.DecodeImageTask;
 import org.biobank.platedecoder.ui.BarcodePositionChooser;
 import org.biobank.platedecoder.ui.ManualDecodeDialog;
 import org.biobank.platedecoder.ui.PlateOrientationChooser;
@@ -29,7 +27,6 @@ import org.controlsfx.tools.Borders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.HPos;
@@ -303,30 +300,19 @@ public class DecodeImageScene extends AbstractSceneRoot implements WellGridHandl
     }
 
     private void decodeImageAction(@SuppressWarnings("unused") ActionEvent e) {
-        Task<DecodeResult> worker = new Task<DecodeResult>() {
-                @Override
-                protected DecodeResult call() throws Exception {
-                    Set<CellRectangle> cells = CellRectangle.getCellsForBoundingBox(
-                        wellGrid,
-                        model.getPlateOrientation(),
-                        model.getPlateType(),
-                        model.getBarcodePosition());
-
-                    DecodeResult result = ScanLib.getInstance().decodeImage(
-                        0L,
-                        getFilenameFromImageUrl(imageUrl),
-                        DecodeOptions.getDefaultDecodeOptions(),
-                        cells.toArray(new CellRectangle[] {}));
-                    return result;
-                }
-            };
-
+        DecodeImageTask worker =
+            new DecodeImageTask(wellGrid,
+                                model.getFlatbedDpi().getValue(),
+                                model.getPlateOrientation(),
+                                model.getPlateType(),
+                                model.getBarcodePosition(),
+                                getFilenameFromImageUrl(imageUrl));
         ProgressDialog dlg = new ProgressDialog(worker);
         dlg.setTitle("Decoding image");
         dlg.setHeaderText("Decoding image");
 
         worker.setOnSucceeded(event -> {
-                DecodeResult result = worker.getValue();
+                DecodeResult result = (DecodeResult) worker.getValue();
 
                 if (result.getResultCode() == ScanLibResult.Result.SUCCESS) {
                     if (decodedWellsMaybe.isPresent()) {

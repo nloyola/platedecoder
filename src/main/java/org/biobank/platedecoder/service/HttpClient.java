@@ -50,4 +50,5 @@ public class HttpClient {
             .encodeToString((userName + ":" + password).getBytes(StandardCharsets.UTF_8));
     }
 
+
 }

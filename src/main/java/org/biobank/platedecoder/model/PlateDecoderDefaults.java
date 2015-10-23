@@ -2,6 +2,8 @@ package org.biobank.platedecoder.model;
 
 public class PlateDecoderDefaults {
 
+    public static final long FLATBED_IMAGE_DPI = 300;
+
     public static final String FLATBED_IMAGE_NAME = "flatbed.png";
 
     public static final String FLATBED_PLATE_IMAGE_NAME = "plate.png";

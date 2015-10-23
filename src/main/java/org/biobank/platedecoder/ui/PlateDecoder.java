@@ -31,6 +31,9 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
+/**
+ * This class manages how all the scenes that make up the application are connected.
+ */
 public class PlateDecoder extends Application implements EventHandler<WindowEvent> {
 
     //@SuppressWarnings("unused")
@@ -262,6 +265,13 @@ public class PlateDecoder extends Application implements EventHandler<WindowEven
         alert.setTitle(titleBar);
         alert.setHeaderText(headerMessage);
         alert.setContentText(infoMessage);
+
+        if (IS_LINUX) {
+            //FIXME: Remove after release 8u40
+            alert.setResizable(true);
+            alert.getDialogPane().setPrefSize(480, 320);
+        }
+
         alert.showAndWait();
     }
 
@@ -296,4 +306,12 @@ public class PlateDecoder extends Application implements EventHandler<WindowEven
         return userDirFilenameToUrl(FLATBED_PLATE_IMAGE_NAME);
     }
 
+
+    /**
+     * Returns true if filename exists and is not a directory.
+     */
+    public static boolean fileExists(String filename) {
+        File f = new File(filename);
+        return (f.exists() && !f.isDirectory());
+    }
 }
