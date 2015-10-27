@@ -65,6 +65,16 @@ folder. The other DLLs go in the root folder. Required DLLs are:
 * opencv_imgproc248.dll
 * OpenThreadsWin32.dll
 
+### Linux required libraries
+
+Use the following command to install the required libraries to run
+this application on Linux.
+
+```bash
+sudo apt-get install libdmtx-dev libopenthreads-dev libgoogle-glog-dev \
+libgtest-dev libgflags-dev libopencv-dev libconfig++-dev
+```
+
 #### Future
 
 See [launch4j](http://launch4j.sourceforge.net/docs.html) for how to generate a Windows EXE file.
