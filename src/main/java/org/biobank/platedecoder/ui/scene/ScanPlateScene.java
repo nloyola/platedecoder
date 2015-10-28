@@ -73,7 +73,6 @@ public class ScanPlateScene extends AbstractSceneRoot {
         dlg.setHeaderText("Scanning plate");
 
         worker.setOnSucceeded(event -> {
-            LOG.error("here");
             FlatbedDpi dpi = model.getFlatbedDpi();
             PlateDecoderPreferences.getInstance().setFlatbedDpi(dpi);
             scanCompleteHandlerMaybe.ifPresent(handler -> handler.handle(e));

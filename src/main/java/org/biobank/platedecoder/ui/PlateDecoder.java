@@ -12,7 +12,7 @@ import org.biobank.platedecoder.ui.scene.AbstractSceneRoot;
 import org.biobank.platedecoder.ui.scene.DecodeImageScene;
 import org.biobank.platedecoder.ui.scene.DecodedTubes;
 import org.biobank.platedecoder.ui.scene.FileChoose;
-import org.biobank.platedecoder.ui.scene.ImageSource;
+import org.biobank.platedecoder.ui.scene.InitialScene;
 import org.biobank.platedecoder.ui.scene.ScanPlateScene;
 import org.biobank.platedecoder.ui.scene.ScanRegionScene;
 import org.biobank.platedecoder.ui.scene.SpecimenLink;
@@ -36,7 +36,7 @@ import javafx.stage.WindowEvent;
  */
 public class PlateDecoder extends Application implements EventHandler<WindowEvent> {
 
-    //@SuppressWarnings("unused")
+    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(PlateDecoder.class);
 
     public static final boolean IS_LINUX = System.getProperty("os.name").startsWith("Linux");
@@ -107,7 +107,7 @@ public class PlateDecoder extends Application implements EventHandler<WindowEven
         changeScene(specimenLink);
 
         specimenLink.enableFinishAction(e -> {
-                Platform.exit();
+                closeApp();
             });
     }
 
@@ -125,7 +125,7 @@ public class PlateDecoder extends Application implements EventHandler<WindowEven
             });
 
         decodedTubes.enableFinishAction(e -> {
-                Platform.exit();
+                closeApp();
             });
 
         decodedTubes.onSpecimenLinkAction(e -> {
@@ -146,7 +146,7 @@ public class PlateDecoder extends Application implements EventHandler<WindowEven
     }
 
     private void setScene() {
-        ImageSource imageSourceSelection = new ImageSource();
+        InitialScene imageSourceSelection = new InitialScene();
         FileChoose fileChoose            = new FileChoose();
         ScanRegionScene scanRegion       = new ScanRegionScene();
         ScanPlateScene scanPlate         = new ScanPlateScene();
@@ -212,7 +212,7 @@ public class PlateDecoder extends Application implements EventHandler<WindowEven
             });
 
         decodedTubes.enableFinishAction(e -> {
-                Platform.exit();
+                closeApp();
             });
 
         changeScene(imageSourceSelection);
@@ -226,7 +226,14 @@ public class PlateDecoder extends Application implements EventHandler<WindowEven
             scene.setRoot(new Region());
         }
         sceneRoot.onDisplay();
-        stage.setScene(new Scene(sceneRoot, sceneWidth, sceneHeight));
+        scene = new Scene(sceneRoot, sceneWidth, sceneHeight);
+        scene.widthProperty().addListener((observable, oldValue, newValue) -> {
+                sceneWidth = newValue.doubleValue();
+            });
+        scene.heightProperty().addListener((observable, oldValue, newValue) -> {
+                sceneHeight = newValue.doubleValue();
+            });
+        stage.setScene(scene);
 
         // need to call this whenever the scene is changed
         stage.setOnCloseRequest(this);
@@ -234,10 +241,17 @@ public class PlateDecoder extends Application implements EventHandler<WindowEven
 
     @Override
     public void handle(WindowEvent we) {
-        LOG.debug("sceneOnClose");
+        saveWindowSize();
+    }
+
+    private void closeApp() {
+        saveWindowSize();
+        Platform.exit();
+    }
+
+    private void saveWindowSize() {
         Scene scene = stage.getScene();
         if (scene != null) {
-            LOG.debug("sceneOnClose: saving window size");
             PlateDecoderPreferences.getInstance().setAppWindowSize(
                 scene.getWidth(), scene.getHeight());
         }

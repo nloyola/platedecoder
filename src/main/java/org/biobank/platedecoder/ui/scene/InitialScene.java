@@ -8,13 +8,13 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.GridPane;
 
-public class ImageSource extends AbstractSceneRoot {
+public class InitialScene extends AbstractSceneRoot {
 
     private RadioButton filesystemButton;
 
     private RadioButton flatbedScanButton;
 
-    public ImageSource() {
+    public InitialScene() {
         super("Choose an action");
     }
 

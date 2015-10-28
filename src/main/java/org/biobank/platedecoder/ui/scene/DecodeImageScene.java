@@ -221,8 +221,6 @@ public class DecodeImageScene extends AbstractSceneRoot implements WellGridHandl
                 decodedWells.forEach(
                     well ->
                     plate.setWellInventoryId(well.getLabel(), well.getMessage()));
-
-                LOG.debug("copying to model: plate wells: {}", plate.getWells().size());
             });
 
         // save current dimensions of plate to preferences so they are used next time
