@@ -36,7 +36,7 @@ import javafx.stage.WindowEvent;
  */
 public class PlateDecoder extends Application implements EventHandler<WindowEvent> {
 
-    @SuppressWarnings("unused")
+    //@SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(PlateDecoder.class);
 
     public static final boolean IS_LINUX = System.getProperty("os.name").startsWith("Linux");
@@ -146,20 +146,20 @@ public class PlateDecoder extends Application implements EventHandler<WindowEven
     }
 
     private void setScene() {
-        InitialScene imageSourceSelection = new InitialScene();
-        FileChoose fileChoose            = new FileChoose();
-        ScanRegionScene scanRegion       = new ScanRegionScene();
-        ScanPlateScene scanPlate         = new ScanPlateScene();
-        DecodeImageScene decodeImage     = new DecodeImageScene();
-        DecodedTubes decodedTubes        = new DecodedTubes();
+        InitialScene initialScene    = new InitialScene();
+        FileChoose fileChoose        = new FileChoose();
+        ScanRegionScene scanRegion   = new ScanRegionScene();
+        ScanPlateScene scanPlate     = new ScanPlateScene();
+        DecodeImageScene decodeImage = new DecodeImageScene();
+        DecodedTubes decodedTubes    = new DecodedTubes();
 
         // TODO: fix back button when flatbed scan is used
 
-        imageSourceSelection.onFilesystemAction(e -> {
+        initialScene.onFilesystemAction(e -> {
                 changeScene(fileChoose);
             });
 
-        imageSourceSelection.onFlatbedScanAction(e -> {
+        initialScene.onFlatbedScanAction(e -> {
                 Optional<Rectangle> rectMaybe = PlateDecoderPreferences.getInstance().getScanRegion();
                 if (rectMaybe.isPresent()) {
                     changeScene(scanPlate);
@@ -168,8 +168,20 @@ public class PlateDecoder extends Application implements EventHandler<WindowEven
                 }
             });
 
+        initialScene.onFlatbedScanWithPreviousParamsAction(e -> {
+                decodeImage.setImageFileURI(flatbedPlateImageFilenameToUrl());
+                changeScene(decodeImage);
+            });
+
+        initialScene.modifyConfigrationAction(e -> {
+                scanRegion.onContinueAction(ev -> {
+                        changeScene(initialScene);
+                    });
+                changeScene(scanRegion);
+            });
+
         fileChoose.enableBackAction(e -> {
-                changeScene(imageSourceSelection);
+                changeScene(initialScene);
             });
 
         fileChoose.onDecodeAction(e -> {
@@ -183,7 +195,7 @@ public class PlateDecoder extends Application implements EventHandler<WindowEven
             });
 
         scanRegion.enableBackAction(e -> {
-                changeScene(imageSourceSelection);
+                changeScene(initialScene);
             });
 
         scanPlate.onScanCompleteAction(e -> {
@@ -193,7 +205,7 @@ public class PlateDecoder extends Application implements EventHandler<WindowEven
             });
 
         scanPlate.enableBackAction(e -> {
-                changeScene(imageSourceSelection);
+                changeScene(initialScene);
             });
 
         decodeImage.enableBackAction(e -> {
@@ -215,7 +227,7 @@ public class PlateDecoder extends Application implements EventHandler<WindowEven
                 closeApp();
             });
 
-        changeScene(imageSourceSelection);
+        changeScene(initialScene);
     }
 
     private <T extends AbstractSceneRoot> void changeScene(T sceneRoot) {
@@ -237,6 +249,7 @@ public class PlateDecoder extends Application implements EventHandler<WindowEven
 
         // need to call this whenever the scene is changed
         stage.setOnCloseRequest(this);
+        LOG.debug("changed scene: {}", sceneRoot.getClass().getSimpleName());
     }
 
     @Override

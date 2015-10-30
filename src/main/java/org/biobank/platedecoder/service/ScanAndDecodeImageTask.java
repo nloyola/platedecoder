@@ -13,14 +13,13 @@ import org.biobank.platedecoder.model.PlateDecoderPreferences;
 import org.biobank.platedecoder.model.PlateOrientation;
 import org.biobank.platedecoder.model.PlateType;
 import org.biobank.platedecoder.ui.PlateDecoder;
-import org.biobank.platedecoder.ui.wellgrid.WellGrid;
 
 import javafx.concurrent.Task;
 import javafx.scene.shape.Rectangle;
 
 public class ScanAndDecodeImageTask extends Task<ScanLibResult> {
 
-    private final WellGrid wellGrid;
+    private final Rectangle scanRect;
 
     private final long dpi;
 
@@ -32,13 +31,13 @@ public class ScanAndDecodeImageTask extends Task<ScanLibResult> {
 
     private BarcodePosition barcodePosition;
 
-    public ScanAndDecodeImageTask(WellGrid         wellGrid,
+    public ScanAndDecodeImageTask(Rectangle        scanRect,
                                   long             dpi,
                                   PlateOrientation orientation,
                                   PlateType        plateType,
                                   BarcodePosition  barcodePosition,
                                   String           filename) {
-        this.wellGrid        = wellGrid;
+        this.scanRect        = scanRect;
         this.dpi             = dpi;
         this.orientation     = orientation;
         this.plateType       = plateType;
@@ -94,7 +93,7 @@ public class ScanAndDecodeImageTask extends Task<ScanLibResult> {
 
     protected DecodeResult decode() {
         Set<CellRectangle> cells = CellRectangle.getCellsForBoundingBox(
-            wellGrid,
+            scanRect,
             orientation,
             plateType,
             barcodePosition);

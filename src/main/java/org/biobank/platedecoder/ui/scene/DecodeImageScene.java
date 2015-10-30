@@ -47,6 +47,14 @@ import javafx.scene.layout.Pane;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 
+// TODO: add a clear button, so manually entered cells can be cleared
+
+// TODO: when the image is from a flatbed scan, the file name should say so. Maybe rename file name
+// to "image source".
+
+/**
+ * Used for decoding the tubes present in an image.
+ */
 public class DecodeImageScene extends AbstractSceneRoot implements WellGridHandler {
 
     //@SuppressWarnings("unused")
@@ -91,19 +99,25 @@ public class DecodeImageScene extends AbstractSceneRoot implements WellGridHandl
 
     @Override
     public void onDisplay() {
-        // since this method is also called when the user presses the "Back" button, it clears
-        // previous decode information if present
-        decodedWellsMaybe.ifPresent(decodedWells -> {
-                decodedWellsMaybe = Optional.empty();
-                model.createNewPlate();
-            });
+        // could be called with model.getPlate() already populated with decode information
 
-        updateDecodedWellCount(Collections.emptySet());
+		Set<DecodedWell> decodedWells =
+            model.getPlate().getWells().stream().filter(well -> !well.getInventoryId().isEmpty())
+            .map(well -> new DecodedWell(well.getLabel(), well.getInventoryId()))
+            .collect(Collectors.toSet());
+
+        if (decodedWells.isEmpty()) {
+            decodedWellsMaybe = Optional.empty();
+        } else {
+            decodedWellsMaybe = Optional.of(decodedWells);
+        }
+
         createWellGrid();
         if (wellGrid != null) {
+            updateWellGrid();
             wellGrid.update();
         }
-        continueBtn.setDisable(true);
+        continueBtn.setDisable(decodedWells.isEmpty());
     }
 
     /**
@@ -114,7 +128,6 @@ public class DecodeImageScene extends AbstractSceneRoot implements WellGridHandl
 
         if (image == null) return;
 
-        decodedWellsMaybe = Optional.empty();
         Rectangle r;
 
         if (wellGrid == null) {
@@ -140,9 +153,14 @@ public class DecodeImageScene extends AbstractSceneRoot implements WellGridHandl
         imageGroup.getChildren().addAll(wellGrid.getWellDecodedIcons());
         imageGroup.getChildren().addAll(wellGrid.getResizeHandles());
 
-        updateDecodedWellCount(Collections.emptySet());
+        Set<DecodedWell> wells = decodedWellsMaybe.isPresent()
+            ? decodedWellsMaybe.get() : Collections.emptySet();
+
+        updateDecodedWellCount(wells);
 
         wellGrid.update();
+
+        LOG.debug("decodedWells: {}", wells.size());
     }
 
     @Override
@@ -338,13 +356,7 @@ public class DecodeImageScene extends AbstractSceneRoot implements WellGridHandl
                         updateDecodedWellCount(decodedWells);
                     }
 
-                    decodedWellsMaybe.ifPresent(decodedWells -> {
-                            decodedWells.forEach(
-                                well ->
-                                wellGrid.setWellCellInventoryId(well.getLabel(), well.getMessage()));
-                            wellGrid.update();
-                        });
-
+                    updateWellGrid();
                     continueBtn.setDisable(false);
                 } else {
                     LOG.error("decode failed: {}", result.getResultCode());
@@ -358,6 +370,15 @@ public class DecodeImageScene extends AbstractSceneRoot implements WellGridHandl
         Thread th = new Thread(worker);
         th.setDaemon(true);
         th.start();
+    }
+
+    private void updateWellGrid() {
+        decodedWellsMaybe.ifPresent(decodedWells -> {
+                decodedWells.forEach(
+                    well ->
+                    wellGrid.setWellCellInventoryId(well.getLabel(), well.getMessage()));
+                wellGrid.update();
+            });
     }
 
     public void onContinueAction(EventHandler<ActionEvent> continueHandler) {

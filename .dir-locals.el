@@ -5,7 +5,7 @@
                         (locate-dominating-file default-directory ".dir-locals.el")
                         "..")))
          (eval . (global-set-key [f5] '(lambda () (interactive)
-                                         (eclim-java-run-run "Run PlateDecoder")))
+                                         (nl/eclim-run-configuartion "Run PlateDecoder")))
                )
          )
       )

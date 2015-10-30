@@ -3,7 +3,6 @@ package org.biobank.platedecoder.ui.scene;
 import java.util.Optional;
 
 import org.biobank.platedecoder.model.FlatbedDpi;
-import org.biobank.platedecoder.model.PlateDecoderDefaults;
 import org.biobank.platedecoder.model.PlateDecoderPreferences;
 import org.biobank.platedecoder.service.ScanPlateTask;
 import org.biobank.platedecoder.ui.FlatbedDpiChooser;
@@ -56,7 +55,7 @@ public class ScanPlateScene extends AbstractSceneRoot {
         return button;
     }
 
-    private void scanPlate(ActionEvent e) {
+    private void scanPlate(ActionEvent event) {
         if (!checkFilePresentLinux()) {
             PlateDecoder.errorDialog(
                 "Simulating the flatbed scan of a plate will not work. "
@@ -67,19 +66,19 @@ public class ScanPlateScene extends AbstractSceneRoot {
             return;
         }
 
-        ScanPlateTask worker = new ScanPlateTask(PlateDecoderDefaults.FLATBED_IMAGE_DPI);
+        ScanPlateTask worker = new ScanPlateTask(model.getFlatbedDpi().getValue());
         ProgressDialog dlg = new ProgressDialog(worker);
         dlg.setTitle("Scanning plate");
         dlg.setHeaderText("Scanning plate");
 
-        worker.setOnSucceeded(event -> {
+        worker.setOnSucceeded(e -> {
             FlatbedDpi dpi = model.getFlatbedDpi();
             PlateDecoderPreferences.getInstance().setFlatbedDpi(dpi);
-            scanCompleteHandlerMaybe.ifPresent(handler -> handler.handle(e));
+            scanCompleteHandlerMaybe.ifPresent(handler -> handler.handle(event));
         });
 
-        worker.setOnFailed(event -> {
-            LOG.error("The task failed: {}", event);
+        worker.setOnFailed(e -> {
+            LOG.error("The task failed: {}", e);
         });
 
         Thread th = new Thread(worker);
