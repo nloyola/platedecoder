@@ -50,7 +50,7 @@ public class InitialScene extends SceneRoot {
         filesystemButton = new RadioButton("Decode image - decode tubes in an image from the filesystem");
         flatbedScanButton = new RadioButton("Scan and decode - using the flatbed scanner");
         withPrevParamsButton = new RadioButton("Scan and decode with my previous settings");
-        modifyConfiguration = new RadioButton("Modify my configuration");
+        modifyConfiguration = new RadioButton("Modify configuration");
 
         withPrevParamsButton.setOnAction(this::withPrevParamsAction);
 

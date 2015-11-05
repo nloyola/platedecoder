@@ -29,142 +29,167 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 
+/**
+ * Displays the results of the decoded 2D barcodes in an image.
+ *
+ * <p>This scene displays a table view with each row displaying the position label for a tube and
+ * the string decoded from the corresponding 2D barcode. If nothing was decoded for a position in
+ * the plate, then a blank cell is displayed for that label.
+ *
+ * <p>Additional buttons are displayed below the table view that allow the user to:
+ *   <ul>
+ *     <li>Copy the table's information to the clipboard.</li>
+ *     <li>Copy the values decoded from the 2D barcodes as a comma separated string.</li>
+ *     <li>Export the infrmation to a CSV file.</li>
+ *     <li>Allow for the information to be linked to patients.</li>
+ *     <li>Allow for the information to be assigned to positions.</li>
+ *   </ul>
+ */
 public class DecodedTubes extends SceneRoot {
 
-    //@SuppressWarnings("unused")
-    private static final Logger LOG = LoggerFactory.getLogger(DecodedTubes.class);
+   //@SuppressWarnings("unused")
+   private static final Logger LOG = LoggerFactory.getLogger(DecodedTubes.class);
 
-    private TableView<PlateWell> table;
+   private TableView<PlateWell> table;
 
-    private TableColumn<PlateWell, String> labelColumn;
+   private TableColumn<PlateWell, String> labelColumn;
 
-    private List<PlateWell> sortedList;
+   private List<PlateWell> sortedList;
 
-    private Optional<EventHandler<ActionEvent>> specimenLinkHandlerMaybe = Optional.empty();
+   private Optional<EventHandler<ActionEvent>> specimenLinkHandlerMaybe = Optional.empty();
 
-    public DecodedTubes() {
-        super("Decoded tubes");
-        sortedList = new ArrayList<>();
-    }
+   /**
+    * Creates the scene.
+    *
+    */
+   public DecodedTubes() {
+      super("Decoded tubes");
+      sortedList = new ArrayList<>();
+   }
 
-    @Override
-    public void onDisplay() {
-        sortedList = new ArrayList<>(model.getPlate().getWells());
-        Collections.sort(sortedList);
-        ObservableList<PlateWell> plateWells = FXCollections.observableArrayList(sortedList);
-        table.setItems(plateWells);
-        table.getSortOrder().add(labelColumn);
-    }
+   @Override
+   public void onDisplay() {
+      sortedList = new ArrayList<>(model.getPlate().getWells());
+      Collections.sort(sortedList);
+      ObservableList<PlateWell> plateWells = FXCollections.observableArrayList(sortedList);
+      table.setItems(plateWells);
+      table.getSortOrder().add(labelColumn);
+   }
 
-    @Override
-    protected Node creatContents() {
-        table = new TableView<>();
+   @Override
+   protected Node creatContents() {
+      table = new TableView<>();
 
-        labelColumn = new TableColumn<>("Label");
-        labelColumn.setCellValueFactory(cellData -> cellData.getValue().getLabelProperty());
-        labelColumn.setSortType(TableColumn.SortType.ASCENDING);
-        labelColumn.setComparator((String l1, String l2) -> {
-                SbsPosition pos1 = new SbsPosition(l1);
-                SbsPosition pos2 = new SbsPosition(l2);
-                return pos1.compareTo(pos2);
-            });
-        labelColumn.prefWidthProperty().bind(table.widthProperty().divide(10));
+      labelColumn = new TableColumn<>("Label");
+      labelColumn.setCellValueFactory(cellData -> cellData.getValue().getLabelProperty());
+      labelColumn.setSortType(TableColumn.SortType.ASCENDING);
+      labelColumn.setComparator((String l1, String l2) -> {
+            SbsPosition pos1 = new SbsPosition(l1);
+            SbsPosition pos2 = new SbsPosition(l2);
+            return pos1.compareTo(pos2);
+         });
+      labelColumn.prefWidthProperty().bind(table.widthProperty().divide(10));
 
-        TableColumn<PlateWell, String> inventoryIdColumn = new TableColumn<>("Inventory ID");
-        inventoryIdColumn.setCellValueFactory(cellData ->
-                                              cellData.getValue().getInventoryIdProperty());
-        inventoryIdColumn.prefWidthProperty().bind(table.widthProperty().multiply(0.85));
+      TableColumn<PlateWell, String> inventoryIdColumn = new TableColumn<>("Inventory ID");
+      inventoryIdColumn.setCellValueFactory(cellData ->
+                                            cellData.getValue().getInventoryIdProperty());
+      inventoryIdColumn.prefWidthProperty().bind(table.widthProperty().multiply(0.85));
 
-        table.getColumns().add(labelColumn);
-        table.getColumns().add(inventoryIdColumn);
+      table.getColumns().add(labelColumn);
+      table.getColumns().add(inventoryIdColumn);
 
-        HBox hbox = new HBox(10);
-        hbox.setPadding(new Insets(20, 15, 15, 15));
-        hbox.getChildren().addAll(createButtons());
+      HBox hbox = new HBox(10);
+      hbox.setPadding(new Insets(20, 15, 15, 15));
+      hbox.getChildren().addAll(createButtons());
 
-        VBox vbox = new VBox(10);
-        vbox.setPadding(new Insets(5, 5, 5, 5));
-        vbox.getChildren().addAll(table, hbox);
+      VBox vbox = new VBox(10);
+      vbox.setPadding(new Insets(5, 5, 5, 5));
+      vbox.getChildren().addAll(table, hbox);
 
-        onDisplay();
+      onDisplay();
 
-        return vbox;
-    }
+      return vbox;
+   }
 
-    private Button [] createButtons() {
-        Button copyToClipboardBtn = new Button("Copy to clipboard");
-        copyToClipboardBtn.setOnAction(this::copyToClipboardAction);
+   /**
+    * Allows for an action handler to be called when the user presses the specimen link button.
+    *
+    * @param handler The handler to be invoked when the user presses the button.
+    */
+   public void onSpecimenLinkAction(EventHandler<ActionEvent> handler) {
+      specimenLinkHandlerMaybe = Optional.of(handler);
+   }
 
-        Button copyToClipboardNoLabelsBtn = new Button("Copy to clipboard (no labels)");
-        copyToClipboardNoLabelsBtn.setOnAction(this::copyToClipboardNoLabelsAction);
+   private Button [] createButtons() {
+      Button copyToClipboardBtn = new Button("Copy to clipboard");
+      copyToClipboardBtn.setOnAction(this::copyToClipboardAction);
 
-        Button exportToCsvBtn = new Button("Export to CSV");
-        exportToCsvBtn.setOnAction(this::exportToCsvAction);
+      Button copyToClipboardNoLabelsBtn = new Button("Copy to clipboard (no labels)");
+      copyToClipboardNoLabelsBtn.setOnAction(this::copyToClipboardNoLabelsAction);
 
-        Button specimenLinkBtn = new Button("Specimen link");
-        specimenLinkBtn.setOnAction(this::specimenLinkAction);
+      Button exportToCsvBtn = new Button("Export to CSV");
+      exportToCsvBtn.setOnAction(this::exportToCsvAction);
 
-        Button specimenAssignBtn = new Button("Specimen assign");
-        specimenAssignBtn.setOnAction(this::specimenAssignAction);
+      Button specimenLinkBtn = new Button("Specimen link");
+      specimenLinkBtn.setOnAction(this::specimenLinkAction);
 
-        return new Button [] {
-            copyToClipboardBtn,
-            copyToClipboardNoLabelsBtn,
-            exportToCsvBtn,
-            specimenLinkBtn,
-            specimenAssignBtn
-        };
-    }
+      Button specimenAssignBtn = new Button("Specimen assign");
+      specimenAssignBtn.setOnAction(this::specimenAssignAction);
 
-    @SuppressWarnings("unused")
-    private void copyToClipboardAction(ActionEvent e) {
-        String text = sortedList.stream()
-            .map(w -> w.getLabel() + "," + w.getInventoryId())
-            .collect(Collectors.joining("\n"));
+      return new Button [] {
+         copyToClipboardBtn,
+         copyToClipboardNoLabelsBtn,
+         exportToCsvBtn,
+         specimenLinkBtn,
+         specimenAssignBtn
+      };
+   }
 
-        ClipboardContent cb = new ClipboardContent();
-        cb.putString(text);
-        Clipboard.getSystemClipboard().setContent(cb);
-    }
+   @SuppressWarnings("unused")
+   private void copyToClipboardAction(ActionEvent e) {
+      String text = sortedList.stream()
+         .map(w -> w.getLabel() + "," + w.getInventoryId())
+         .collect(Collectors.joining("\n"));
 
-    @SuppressWarnings("unused")
-    private void copyToClipboardNoLabelsAction(ActionEvent e) {
-        String text = sortedList.stream()
-            .map(PlateWell::getInventoryId)
-            .collect(Collectors.joining(","));
+      ClipboardContent cb = new ClipboardContent();
+      cb.putString(text);
+      Clipboard.getSystemClipboard().setContent(cb);
+   }
 
-        ClipboardContent cb = new ClipboardContent();
-        cb.putString(text);
-        Clipboard.getSystemClipboard().setContent(cb);
-    }
+   @SuppressWarnings("unused")
+   private void copyToClipboardNoLabelsAction(ActionEvent e) {
+      String text = sortedList.stream()
+         .map(PlateWell::getInventoryId)
+         .collect(Collectors.joining(","));
 
-    @SuppressWarnings("unused")
-    private void exportToCsvAction(ActionEvent e) {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Export to CSV");
-        File file = fileChooser.showSaveDialog(this.getScene().getWindow());
-        if (file != null) {
-            try {
-                PlateWellCsvWriter.write(file.toString(), sortedList);
-            } catch (Exception ex) {
-                LOG.error(ex.getMessage());
-                PlateDecoder.errorDialog("Could not save file: " + ex.getMessage(),
-                                         "File save error",
-                                         null);
-            }
-        }
-    }
+      ClipboardContent cb = new ClipboardContent();
+      cb.putString(text);
+      Clipboard.getSystemClipboard().setContent(cb);
+   }
 
-    public void onSpecimenLinkAction(EventHandler<ActionEvent> handler) {
-        specimenLinkHandlerMaybe = Optional.of(handler);
-    }
+   @SuppressWarnings("unused")
+   private void exportToCsvAction(ActionEvent e) {
+      FileChooser fileChooser = new FileChooser();
+      fileChooser.setTitle("Export to CSV");
+      File file = fileChooser.showSaveDialog(this.getScene().getWindow());
+      if (file != null) {
+         try {
+            PlateWellCsvWriter.write(file.toString(), sortedList);
+         } catch (Exception ex) {
+            LOG.error(ex.getMessage());
+            PlateDecoder.errorDialog("Could not save file: " + ex.getMessage(),
+                                     "File save error",
+                                     null);
+         }
+      }
+   }
 
-    private void specimenLinkAction(ActionEvent event) {
-        specimenLinkHandlerMaybe.ifPresent(handler -> handler.handle(event));
-    }
+   private void specimenLinkAction(ActionEvent event) {
+      specimenLinkHandlerMaybe.ifPresent(handler -> handler.handle(event));
+   }
 
-    @SuppressWarnings("unused")
-    private void specimenAssignAction(ActionEvent e) {
-        PlateDecoder.infoDialog("To be completed", "Under construction");
-    }
+   @SuppressWarnings("unused")
+   private void specimenAssignAction(ActionEvent e) {
+      PlateDecoder.infoDialog("To be completed", "Under construction");
+   }
 }

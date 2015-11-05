@@ -10,48 +10,69 @@ import javafx.scene.layout.VBox;
 
 /**
  * A widget that allows the user to select a value from a group of radio buttons.
- *
- * The user's  election is saved to PlateModel.
  */
 public abstract class RadioButtonChooser extends VBox {
 
-    protected final PlateModel model = PlateModel.getInstance();
+   protected final PlateModel model = PlateModel.getInstance();
 
-    private final ToggleGroup toggleGroup = new ToggleGroup();
+   private final ToggleGroup toggleGroup = new ToggleGroup();
 
-    private final VBox toggleGroupContainer = new VBox(5);
+   private final VBox toggleGroupContainer = new VBox(5);
 
-    /**
-     * @param title The label to display in the border that surrounds the radio buttons.
-     */
-    public RadioButtonChooser(String title) {
-        super();
+   /**
+    * Creates a widget that presents several options in a radio button group wrapped in a border.
+    *
+    * <p>The user can select one of these options.
+    *
+    * @param title The label to display in the border that surrounds the radio buttons.
+    */
+   public RadioButtonChooser(String title) {
+      super();
 
-        toggleGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
-                if (toggleGroup.getSelectedToggle() != null) {
-                    setValue(newValue.getUserData());
-                }
-            });
+      toggleGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
+            if (toggleGroup.getSelectedToggle() != null) {
+               setValue(newValue.getUserData());
+            }
+         });
 
-        Node border = Borders.wrap(toggleGroupContainer).etchedBorder().title(title).build()
-            .build();
+      Node border = Borders.wrap(toggleGroupContainer).etchedBorder().title(title).build()
+         .build();
 
-        getChildren().add(border);
-    }
+      getChildren().add(border);
+   }
 
-    protected abstract void setValue(Object obj);
+   /**
+    * This method is called when the user selects one of the radio buttons.
+    *
+    * <p>Subclasses must implement this method to record the user's selection.
+    *
+    * @param obj The object that represents the selection.
+    */
+   protected abstract void setValue(Object obj);
 
-    protected void addButton(String label, Object userDataObj, boolean isSelected) {
-        RadioButton button = new RadioButton(label);
-        button.setUserData(userDataObj);
+   /**
+    * Subclasses should call this method to add radio buttons to the widget.
+    *
+    * <p>When the button is selected by the user, {@link #setValue setValue} is invoked with {@code
+    * userDataObj}.
+    *
+    * @param label The string to be displayed with this button.
+    *
+    * @param userDataObj The object to associated with this button.
+    *
+    * @param isSelected The initial selection state for this button.
+    */
+   protected void addButton(String label, Object userDataObj, boolean isSelected) {
+      RadioButton button = new RadioButton(label);
+      button.setUserData(userDataObj);
 
-        if (isSelected) {
-            button.setSelected(true);
-            button.requestFocus();
-        }
+      if (isSelected) {
+         button.setSelected(true);
+         button.requestFocus();
+      }
 
-        button.setToggleGroup(toggleGroup);
-        toggleGroupContainer.getChildren().add(button);
-    }
+      button.setToggleGroup(toggleGroup);
+      toggleGroupContainer.getChildren().add(button);
+   }
 
 }
