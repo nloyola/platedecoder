@@ -41,6 +41,12 @@ To run the application, type:
 gradle run
 ```
 
+To generate the Javadoc.
+
+```bash
+gradle -q --console=plain javadoc
+```
+
 To build an installation, type:
 
 ```bash

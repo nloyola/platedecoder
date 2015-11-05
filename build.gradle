@@ -18,6 +18,11 @@ jar {
    manifest.attributes "Main-Class": "org.biobank.platedecoder.ui.PlateDecoder"
 }
 
+javadoc {
+   source = sourceSets.main.allJava
+   classpath = configurations.compile
+}
+
 repositories {
    mavenLocal()
    mavenCentral()
