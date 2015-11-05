@@ -8,7 +8,7 @@ import org.biobank.platedecoder.model.PlateModel;
  *
  * <p>The user's  selection is saved to PlateModel.
  */
-public class BarcodePositionChooser extends RadioButtonChooser {
+public class BarcodePositionChooser extends RadioButtonChooser<BarcodePosition> {
 
     private final PlateModel model = PlateModel.getInstance();
 
@@ -23,8 +23,8 @@ public class BarcodePositionChooser extends RadioButtonChooser {
     }
 
     @Override
-    protected void setValue(Object obj) {
-        model.setBarcodePosition((BarcodePosition) obj);
+    protected void setValue(BarcodePosition position) {
+        model.setBarcodePosition(position);
     }
 
 }

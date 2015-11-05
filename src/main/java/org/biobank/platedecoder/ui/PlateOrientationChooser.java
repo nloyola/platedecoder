@@ -8,7 +8,7 @@ import org.biobank.platedecoder.model.PlateOrientation;
 
  * The user's  election is saved to PlateModel.
  */
-public class PlateOrientationChooser extends RadioButtonChooser {
+public class PlateOrientationChooser extends RadioButtonChooser<PlateOrientation> {
 
     private final PlateModel model = PlateModel.getInstance();
 
@@ -23,8 +23,8 @@ public class PlateOrientationChooser extends RadioButtonChooser {
     }
 
     @Override
-    protected void setValue(Object obj) {
-        model.setPlateOrientation((PlateOrientation) obj);
+    protected void setValue(PlateOrientation position) {
+        model.setPlateOrientation(position);
     }
 
 }

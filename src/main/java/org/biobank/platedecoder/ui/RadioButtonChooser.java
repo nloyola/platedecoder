@@ -11,7 +11,7 @@ import javafx.scene.layout.VBox;
 /**
  * A widget that allows the user to select a value from a group of radio buttons.
  */
-public abstract class RadioButtonChooser extends VBox {
+public abstract class RadioButtonChooser<T> extends VBox {
 
    protected final PlateModel model = PlateModel.getInstance();
 
@@ -26,18 +26,17 @@ public abstract class RadioButtonChooser extends VBox {
     *
     * @param title The label to display in the border that surrounds the radio buttons.
     */
+   @SuppressWarnings("unchecked")
    public RadioButtonChooser(String title) {
       super();
 
       toggleGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
             if (toggleGroup.getSelectedToggle() != null) {
-               setValue(newValue.getUserData());
+               setValue((T) newValue.getUserData());
             }
          });
 
-      Node border = Borders.wrap(toggleGroupContainer).etchedBorder().title(title).build()
-         .build();
-
+      Node border = Borders.wrap(toggleGroupContainer).etchedBorder().title(title).build().build();
       getChildren().add(border);
    }
 
@@ -48,7 +47,7 @@ public abstract class RadioButtonChooser extends VBox {
     *
     * @param obj The object that represents the selection.
     */
-   protected abstract void setValue(Object obj);
+   protected abstract void setValue(T obj);
 
    /**
     * Subclasses should call this method to add radio buttons to the widget.
@@ -62,7 +61,7 @@ public abstract class RadioButtonChooser extends VBox {
     *
     * @param isSelected The initial selection state for this button.
     */
-   protected void addButton(String label, Object userDataObj, boolean isSelected) {
+   protected void addButton(String label, T userDataObj, boolean isSelected) {
       RadioButton button = new RadioButton(label);
       button.setUserData(userDataObj);
 

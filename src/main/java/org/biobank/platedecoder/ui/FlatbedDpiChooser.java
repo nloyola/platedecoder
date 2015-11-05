@@ -8,7 +8,7 @@ import org.biobank.platedecoder.model.PlateModel;
  *
  * The user's  election is saved to PlateModel.
  */
-public class FlatbedDpiChooser extends RadioButtonChooser {
+public class FlatbedDpiChooser extends RadioButtonChooser<FlatbedDpi> {
 
     private final PlateModel model = PlateModel.getInstance();
 
@@ -23,8 +23,8 @@ public class FlatbedDpiChooser extends RadioButtonChooser {
     }
 
     @Override
-    protected void setValue(Object obj) {
-        model.setFlatbedDpi((FlatbedDpi) obj);
+    protected void setValue(FlatbedDpi dpi) {
+        model.setFlatbedDpi(dpi);
     }
 
 }

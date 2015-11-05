@@ -15,201 +15,222 @@ import javafx.collections.ObservableList;
  */
 public class PlateModel {
 
-    @SuppressWarnings("unused")
-    private static final Logger LOG = LoggerFactory.getLogger(PlateModel.class);
+   @SuppressWarnings("unused")
+   private static final Logger LOG = LoggerFactory.getLogger(PlateModel.class);
 
-    // Where the plate's information is stored.
-    private Plate plate;
+   // Where the plate's information is stored.
+   private Plate plate;
 
-    // the list of plate types that are possible
-    public ObservableList<PlateType> plateTypes =
-        FXCollections.observableArrayList(Arrays.asList(PlateType.values()));
+   // the list of plate types that are possible
+   public ObservableList<PlateType> plateTypes =
+      FXCollections.observableArrayList(Arrays.asList(PlateType.values()));
 
 
-    // The type of plate currently selected. I.e. the number of wells it contains.
-    private ObjectProperty<PlateType> plateTypeProperty;
+   // The type of plate currently selected. I.e. the number of wells it contains.
+   private ObjectProperty<PlateType> plateTypeProperty;
 
-    // The orientation of the plate when it was scanned or a picture taken of it.
-    private ObjectProperty<PlateOrientation> plateOrientationProperty;
+   // The orientation of the plate when it was scanned or a picture taken of it.
+   private ObjectProperty<PlateOrientation> plateOrientationProperty;
 
-    // If the barcodes are present on the tube tops or bottoms.
-    private ObjectProperty<BarcodePosition> barcodePositionProperty;
+   // If the barcodes are present on the tube tops or bottoms.
+   private ObjectProperty<BarcodePosition> barcodePositionProperty;
 
-    // The DPI used when the flatbed scanner was used to take an image of the plate.
-    private ObjectProperty<FlatbedDpi> flatbedDpiProperty;
+   // The TWAIN driver type
+   private ObjectProperty<DriverType> driverTypeProperty;
 
-    private PlateModel() {
-        plateTypeProperty = new SimpleObjectProperty<PlateType>(
-            PlateDecoderPreferences.getInstance().getPlateType());
+   // The DPI used when the flatbed scanner was used to take an image of the plate.
+   private ObjectProperty<FlatbedDpi> flatbedDpiProperty;
 
-        plateOrientationProperty = new SimpleObjectProperty<PlateOrientation>(
-            PlateDecoderPreferences.getInstance().getPlateOrietation());
+   private PlateModel() {
+      plateTypeProperty = new SimpleObjectProperty<PlateType>(
+         PlateDecoderPreferences.getInstance().getPlateType());
 
-        barcodePositionProperty = new SimpleObjectProperty<BarcodePosition>(
-            PlateDecoderPreferences.getInstance().getBarcodePosition());
+      plateOrientationProperty = new SimpleObjectProperty<PlateOrientation>(
+         PlateDecoderPreferences.getInstance().getPlateOrietation());
 
-        plateTypeProperty.addListener((observable, oldValue, newValue) -> {
-                PlateDecoderPreferences.getInstance().setPlateType(newValue);
-                createNewPlate();
-            });
-        plateOrientationProperty.addListener((observable, oldValue, newValue) -> {
-                PlateDecoderPreferences.getInstance().setPlateOrientation(newValue);
-                createNewPlate();
-            });
-        barcodePositionProperty.addListener((observable, oldValue, newValue) -> {
-                PlateDecoderPreferences.getInstance().setBarcodePosition((newValue));
-                createNewPlate();
-            });
+      barcodePositionProperty = new SimpleObjectProperty<BarcodePosition>(
+         PlateDecoderPreferences.getInstance().getBarcodePosition());
 
-        flatbedDpiProperty = new SimpleObjectProperty<FlatbedDpi>(
-            PlateDecoderPreferences.getInstance().getFlatbedDpi());
+      plateTypeProperty.addListener((observable, oldValue, newValue) -> {
+            PlateDecoderPreferences.getInstance().setPlateType(newValue);
+            createNewPlate();
+         });
+      plateOrientationProperty.addListener((observable, oldValue, newValue) -> {
+            PlateDecoderPreferences.getInstance().setPlateOrientation(newValue);
+            createNewPlate();
+         });
+      barcodePositionProperty.addListener((observable, oldValue, newValue) -> {
+            PlateDecoderPreferences.getInstance().setBarcodePosition((newValue));
+            createNewPlate();
+         });
 
-        createNewPlate();
-    }
+      flatbedDpiProperty = new SimpleObjectProperty<FlatbedDpi>(
+         PlateDecoderPreferences.getInstance().getFlatbedDpi());
 
-    /**
-     * This object is a singleton. Use this method to access it.
-     *
-     * @return the reference to this singleton.
-     */
-    public static PlateModel getInstance() {
-        return PlateModelHolder.INSTANCE;
-    }
+      createNewPlate();
+   }
 
-    /**
-     * Used to set the plate's type.
-     *
-     * @param plateType  The value to assign to the plate's type.
-     *
-     * @see #getPlateType
-     */
-    public void setPlateType(PlateType plateType) {
-        plateTypeProperty.setValue(plateType);
-    }
+   /**
+    * This object is a singleton. Use this method to access it.
+    *
+    * @return the reference to this singleton.
+    */
+   public static PlateModel getInstance() {
+      return PlateModelHolder.INSTANCE;
+   }
 
-    /**
-     * Used to get the plate's type.
-     *
-     * @return The plate's type.
-     *
-     * @see #setPlateType setPlateType
-     */
-    public PlateType getPlateType() {
-        return plateTypeProperty.getValue();
-    }
+   /**
+    * Used to set the plate's type.
+    *
+    * @param plateType  The value to assign to the plate's type.
+    *
+    * @see #getPlateType
+    */
+   public void setPlateType(PlateType plateType) {
+      plateTypeProperty.setValue(plateType);
+   }
 
-    /**
-     * The property that holds the plate's type.
-     *
-     * @return The property that holds the plate's type.
-     *
-     * @see #getPlateType
-     * @see #setPlateType setPlateType
-     */
-    public ObjectProperty<PlateType> getPlateTypeProperty() {
-        return plateTypeProperty;
-    }
+   /**
+    * Used to get the plate's type.
+    *
+    * @return The plate's type.
+    *
+    * @see #setPlateType setPlateType
+    */
+   public PlateType getPlateType() {
+      return plateTypeProperty.getValue();
+   }
 
-    /**
-     * Used to set the plate's orientation.
-     *
-     * @param orientation  The value to assign to the plate's orientation.
-     *
-     * @see #getPlateOrientation
-     */
-    public void setPlateOrientation(PlateOrientation orientation) {
-        plateOrientationProperty.setValue(orientation);
-    }
+   /**
+    * The property that holds the plate's type.
+    *
+    * @return The property that holds the plate's type.
+    *
+    * @see #getPlateType
+    * @see #setPlateType setPlateType
+    */
+   public ObjectProperty<PlateType> getPlateTypeProperty() {
+      return plateTypeProperty;
+   }
 
-    /**
-     * Used to get the plate's orientation.
-     *
-     * @return The plate's orientation.
-     *
-     * @see #setPlateOrientation setPlateOrientation
-     */
-    public PlateOrientation getPlateOrientation() {
-        return plateOrientationProperty.getValue();
-    }
+   /**
+    * Used to set the plate's orientation.
+    *
+    * @param orientation  The value to assign to the plate's orientation.
+    *
+    * @see #getPlateOrientation
+    */
+   public void setPlateOrientation(PlateOrientation orientation) {
+      plateOrientationProperty.setValue(orientation);
+   }
 
-    /**
-     * The property that holds the plate's orientation.
-     *
-     * @return The property that holds the plate's orientation.
-     *
-     * @see #getPlateOrientation
-     * @see #setPlateOrientation setPlateOrientation
-     */
-    public ObjectProperty<PlateOrientation> getPlateOrientationProperty() {
-        return plateOrientationProperty;
-    }
+   /**
+    * Used to get the plate's orientation.
+    *
+    * @return The plate's orientation.
+    *
+    * @see #setPlateOrientation setPlateOrientation
+    */
+   public PlateOrientation getPlateOrientation() {
+      return plateOrientationProperty.getValue();
+   }
 
-    /**
-     * Used to set the position of the barcodes.
-     *
-     * @param position  Either tube tops or tube bottoms.
-     *
-     * @see #getBarcodePosition
-     */
-    public void setBarcodePosition(BarcodePosition position) {
-        barcodePositionProperty.setValue(position);
-    }
+   /**
+    * The property that holds the plate's orientation.
+    *
+    * @return The property that holds the plate's orientation.
+    *
+    * @see #getPlateOrientation
+    * @see #setPlateOrientation setPlateOrientation
+    */
+   public ObjectProperty<PlateOrientation> getPlateOrientationProperty() {
+      return plateOrientationProperty;
+   }
 
-    /**
-     * Used to get the positions of the barcodes.
-     *
-     * @return The position of the barcodes.
-     *
-     * @see #setBarcodePosition setBarcodePosition
-     */
-    public BarcodePosition getBarcodePosition() {
-        return barcodePositionProperty.getValue();
-    }
+   /**
+    * Used to set the position of the barcodes.
+    *
+    * @param position  Either tube tops or tube bottoms.
+    *
+    * @see #getBarcodePosition
+    */
+   public void setBarcodePosition(BarcodePosition position) {
+      barcodePositionProperty.setValue(position);
+   }
 
-    /**
-     * The property that holds the position of the barcodes.
-     *
-     * @return The property that holds the position of the barcodes.
-     *
-     * @see #getBarcodePosition
-     * @see #setBarcodePosition setBarcodePosition
-     */
-    public ObjectProperty<BarcodePosition> getBarcodePositionProperty() {
-        return barcodePositionProperty;
-    }
+   /**
+    * Used to get the positions of the barcodes.
+    *
+    * @return The position of the barcodes.
+    *
+    * @see #setBarcodePosition setBarcodePosition
+    */
+   public BarcodePosition getBarcodePosition() {
+      return barcodePositionProperty.getValue();
+   }
 
-    public void createNewPlate() {
-        plate = new Plate(plateTypeProperty.getValue());
-    }
+   /**
+    * The property that holds the position of the barcodes.
+    *
+    * @return The property that holds the position of the barcodes.
+    *
+    * @see #getBarcodePosition
+    * @see #setBarcodePosition setBarcodePosition
+    */
+   public ObjectProperty<BarcodePosition> getBarcodePositionProperty() {
+      return barcodePositionProperty;
+   }
 
-    /**
-     * The plate contains infomation of the tubes present in the plate.
-     *
-     * @return the plate object.
-     */
-    public Plate getPlate() {
-        return plate;
-    }
+   public void createNewPlate() {
+      plate = new Plate(plateTypeProperty.getValue());
+   }
 
-    /**
-     * The DPI (dots per inch) that was used to scan an image of the plate.
-     *
-     * @return the DPI used to scan the image.
-     */
-    public FlatbedDpi getFlatbedDpi() {
-        return flatbedDpiProperty.getValue();
-    }
+   /**
+    * The plate contains infomation of the tubes present in the plate.
+    *
+    * @return the plate object.
+    */
+   public Plate getPlate() {
+      return plate;
+   }
 
-    /**
-     * Assign the DPI (dots per inch) that was used to scan the image of the plate.
-     *
-     * @param dpi The DPI value.
-     */
-    public void setFlatbedDpi(FlatbedDpi dpi) {
-        flatbedDpiProperty.set(dpi);
-    }
+   /**
+    * The TWAIN driver type used to access the flatbed scanner.
+    *
+    * @return The TWAIN driver type.
+    */
+   public DriverType getDriverType() {
+      return driverTypeProperty.getValue();
+   }
 
-    private static class PlateModelHolder {
-        private static final PlateModel INSTANCE = new PlateModel();
-    }
+   /**
+    * The TWAIN driver type used to access the flatbed scanner.
+    *
+    * @param driverType The TWAIN driver type.
+    */
+   public void setDriverType(DriverType driverType) {
+      driverTypeProperty.setValue(driverType);
+   }
+
+   /**
+    * The DPI (dots per inch) that was used to scan an image of the plate.
+    *
+    * @return the DPI used to scan the image.
+    */
+   public FlatbedDpi getFlatbedDpi() {
+      return flatbedDpiProperty.getValue();
+   }
+
+   /**
+    * Assign the DPI (dots per inch) that was used to scan the image of the plate.
+    *
+    * @param dpi The DPI value.
+    */
+   public void setFlatbedDpi(FlatbedDpi dpi) {
+      flatbedDpiProperty.set(dpi);
+   }
+
+   private static class PlateModelHolder {
+      private static final PlateModel INSTANCE = new PlateModel();
+   }
 }
