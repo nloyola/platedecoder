@@ -14,6 +14,8 @@ import org.slf4j.LoggerFactory;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
@@ -26,7 +28,7 @@ public class ScanPlateScene extends SceneRoot {
     private Optional<EventHandler<ActionEvent>> scanCompleteHandlerMaybe = Optional.empty();
 
     public ScanPlateScene() {
-        super("Scan plate");
+        super("Scanning options");
     }
 
     @Override
@@ -41,16 +43,17 @@ public class ScanPlateScene extends SceneRoot {
         Button scanButton = createScanButton();
 
         GridPane grid = new GridPane();
-        grid.setVgap(2);
-        grid.setHgap(2);
+        grid.setPadding(new Insets(20, 5, 5, 5));
+        grid.setVgap(10);
+        grid.setHgap(10);
         grid.add(dpiChooser, 0, 0);
         grid.add(scanButton, 0, 1);
-
+        grid.setAlignment(Pos.TOP_CENTER);
         return grid;
     }
 
     private Button createScanButton() {
-        Button button = new Button("Scan");
+        Button button = new Button("Continue");
         button.setOnAction(this::scanPlate);
         button.setMaxWidth(Double.MAX_VALUE);
         return button;

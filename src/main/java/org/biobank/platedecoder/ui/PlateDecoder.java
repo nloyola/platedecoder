@@ -1,11 +1,13 @@
 package org.biobank.platedecoder.ui;
 
-import static org.biobank.platedecoder.model.PlateDecoderDefaults.*;
+import static org.biobank.platedecoder.model.PlateDecoderDefaults.FLATBED_IMAGE_NAME;
+import static org.biobank.platedecoder.model.PlateDecoderDefaults.FLATBED_PLATE_IMAGE_NAME;
 
 import java.io.File;
 import java.util.Map;
 
 import org.biobank.platedecoder.dmscanlib.LibraryLoader;
+import org.biobank.platedecoder.model.ImageSourceFileSystem;
 import org.biobank.platedecoder.model.PlateDecoderPreferences;
 import org.biobank.platedecoder.ui.fsm.SceneFsmFactory;
 import org.biobank.platedecoder.ui.scene.DecodeImageScene;
@@ -158,8 +160,9 @@ public class PlateDecoder extends Application implements SceneChanger {
          });
 
       changeScene(decodeImage);
-      decodeImage.setImageFileURI(
-         "file:///home/nelson/Desktop/testImages/8x12/FrozenPalletImages/HP_L1985A/scanned4.bmp");
+      decodeImage.setImageSource(
+         new ImageSourceFileSystem(
+            "file:///home/nelson/Desktop/testImages/8x12/FrozenPalletImages/HP_L1985A/scanned4.bmp"));
    }
 
    // DEBGUG code

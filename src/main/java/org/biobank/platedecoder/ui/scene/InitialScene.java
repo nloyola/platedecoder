@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
@@ -67,6 +68,7 @@ public class InitialScene extends SceneRoot {
         grid.add(flatbedScanButton, 0, 1);
         grid.add(withPrevParamsButton, 0, 2);
         grid.add(modifyConfiguration, 0, 3);
+        grid.setAlignment(Pos.TOP_CENTER);
         return grid;
     }
 

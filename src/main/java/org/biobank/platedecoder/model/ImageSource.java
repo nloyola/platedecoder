@@ -13,10 +13,10 @@ public abstract class ImageSource {
    protected enum ImageSourceType {
 
       /** Image comes from the file system. */
-      FILE_SYSTEM("file system"),
+      FILE_SYSTEM("File system"),
 
       /** Image comes from a flatbed scanner. */
-      FLATBED_SCANNER("flatbed scanner");
+      FLATBED_SCANNER("Flatbed scanner");
 
       private final String description;
 
@@ -67,11 +67,12 @@ public abstract class ImageSource {
    @Override
    public String toString() {
       StringBuffer buf = new StringBuffer();
-      buf.append(type);
+      buf.append("Image source: ");
 
       if (type == ImageSourceType.FILE_SYSTEM) {
-         buf.append(": ");
          buf.append(imageFileUrl);
+      } else {
+         buf.append(type);
       }
 
       return buf.toString();

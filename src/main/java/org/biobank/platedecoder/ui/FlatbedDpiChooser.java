@@ -13,7 +13,7 @@ public class FlatbedDpiChooser extends RadioButtonChooser<FlatbedDpi> {
     private final PlateModel model = PlateModel.getInstance();
 
     public FlatbedDpiChooser() {
-        super("DPI");
+        super("Select DPI");
 
         final FlatbedDpi lastUsedDpi = model.getFlatbedDpi();
 

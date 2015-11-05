@@ -2,9 +2,10 @@ package org.biobank.platedecoder.ui.fsm;
 
 import java.util.Optional;
 
+import org.biobank.platedecoder.model.ImageSourceFileSystem;
+import org.biobank.platedecoder.model.ImageSourceFlatbedScanner;
 import org.biobank.platedecoder.model.PlateDecoderPreferences;
 import org.biobank.platedecoder.service.fsm.Fsm;
-import org.biobank.platedecoder.ui.PlateDecoder;
 import org.biobank.platedecoder.ui.SceneChanger;
 import org.biobank.platedecoder.ui.scene.DecodeImageScene;
 import org.biobank.platedecoder.ui.scene.DecodedTubes;
@@ -127,7 +128,7 @@ class SceneFsm extends Fsm<StateId, ChoicepointId, Event> {
          });
 
       initialScene.onFlatbedScanWithPreviousParamsAction(e -> {
-            decodeImage.setImageFileURI(PlateDecoder.flatbedPlateImageFilenameToUrl());
+            decodeImage.setImageSource(ImageSourceFlatbedScanner.getInstance());
             feedEvent(Event.SCAN_AND_DECODE_WITH_PREVIOUS);
          });
 
@@ -161,7 +162,9 @@ class SceneFsm extends Fsm<StateId, ChoicepointId, Event> {
          });
 
       fileChoose.onDecodeAction(e -> {
-            decodeImage.setImageFileURI(fileChoose.getSelectedFileURI());
+            ImageSourceFileSystem imageSource =
+               new ImageSourceFileSystem(fileChoose.getSelectedFileURI());
+            decodeImage.setImageSource(imageSource);
             feedEvent(Event.IMAGE_SELECTED);
          });
 
@@ -196,7 +199,7 @@ class SceneFsm extends Fsm<StateId, ChoicepointId, Event> {
             feedEvent(Event.BACK_SELECTED);
          });
       scanPlate.onScanCompleteAction(e -> {
-            decodeImage.setImageFileURI(PlateDecoder.flatbedPlateImageFilenameToUrl());
+            decodeImage.setImageSource(ImageSourceFlatbedScanner.getInstance());
             feedEvent(Event.IMAGE_SCANNED);
          });
       scanPlate.enableBackAction(e -> {
