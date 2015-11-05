@@ -30,7 +30,7 @@ import javafx.scene.text.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ScanRegionScene extends AbstractSceneRoot implements ScanRegionHandler {
+public class ScanRegionScene extends SceneRoot implements ScanRegionHandler {
 
     //@SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(ScanRegionScene.class);
@@ -159,7 +159,7 @@ public class ScanRegionScene extends AbstractSceneRoot implements ScanRegionHand
             if (rectMaybe.isPresent()) {
                 r = inchesToPixels(rectMaybe.get(), PlateDecoderDefaults.FLATBED_IMAGE_DPI);
             } else {
-                r = inchesToPixels(PlateDecoderPreferences.getInstance().getDefaultScanRegion(),
+                r = inchesToPixels(PlateDecoderDefaults.getDefaultScanRegion(),
                                    PlateDecoderDefaults.FLATBED_IMAGE_DPI);
             }
         } else {

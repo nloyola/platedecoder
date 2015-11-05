@@ -61,6 +61,20 @@ public class ScanRegion extends Rectangle implements ResizeHandler {
      * The well grid is superimposed on the image containinig the 2D barcodes. The image is scaled
      * to fit into the window displayed to the user. The {@code scale} is the scaling factor used to
      * display the image.
+     *
+     * @param scanRegionHandler  The hanlder to make callbacks to.
+     *
+     * @param imageView  The object that contains a view of the image.
+     *
+     * @param x  The X coordinate of the top left corner of the region.
+     *
+     * @param y  The Y coordinate of the top left corner of the region.
+     *
+     * @param width  The width of the region.
+     *
+     * @param height  The height of the region.
+     *
+     * @param scale  The scale used to display the region.
      */
     public ScanRegion(final  ScanRegionHandler scanRegionHandler,
                       ImageView                imageView,
@@ -125,7 +139,7 @@ public class ScanRegion extends Rectangle implements ResizeHandler {
     /**
      * The user may be zoomed into or out of the image, this value tracks the amount of zoom.
      *
-     * @param imageZoomScale the imageZoomScale to set
+     * @param scale  the zoom scale to set
      */
     public void setImageZoomScale(double scale) {
         imageZoomScale = scale;

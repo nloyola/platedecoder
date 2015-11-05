@@ -1,58 +1,80 @@
 package org.biobank.platedecoder.model;
 
+/**
+ * Stores information about the image that 2D barcodes are decoded from.
+ *
+ */
 public abstract class ImageSource {
 
-    public enum ImageSourceType {
+   /**
+    * Where the image comes from.
+    *
+    */
+   protected enum ImageSourceType {
 
-        FILE_SYSTEM("file system"),
-        FLATBED_SCANNER("flatbed scanner");
+      /** Image comes from the file system. */
+      FILE_SYSTEM("file system"),
 
-        private final String description;
+      /** Image comes from a flatbed scanner. */
+      FLATBED_SCANNER("flatbed scanner");
 
-        private ImageSourceType(String description) {
-            this.description = description;
-        }
+      private final String description;
 
-        @Override
-        public String toString() {
-            return description;
-        }
-    }
+      private ImageSourceType(String description) {
+         this.description = description;
+      }
 
-    private final ImageSourceType type;
+      @Override
+      public String toString() {
+         return description;
+      }
+   }
 
-	private final String imageFileUrl;
+   // TODO add timestamp
 
-	public ImageSource(ImageSourceType type, String imageFileUrl) {
-		this.type = type;
-		this.imageFileUrl = imageFileUrl;
-	}
+   private final ImageSourceType type;
 
-	/**
-	 * @return the type
-	 */
-	public ImageSourceType getType() {
-		return type;
-	}
+   private final String imageFileUrl;
 
-	/**
-	 * @return the imageFileUrl
-	 */
-	public String getImageFileUrl() {
-		return imageFileUrl;
-	}
+   /**
+    * Stores information about the image that 2D barcodes are decoded from.
+    *
+    * @param type Where the image being decoded originated from.
+    *
+    * @param imageFileUrl the URL, as a string, for the file.
+    */
+   public ImageSource(ImageSourceType type, String imageFileUrl) {
+      this.type = type;
+      this.imageFileUrl = imageFileUrl;
+   }
 
-    @Override
-    public String toString() {
-        StringBuffer buf = new StringBuffer();
-        buf.append(type);
+   /**
+    * @return the type
+    */
+   public ImageSourceType getType() {
+      return type;
+   }
 
-        if (type == ImageSourceType.FILE_SYSTEM) {
-            buf.append(": ");
-            buf.append(imageFileUrl);
-        }
+   /**
+    * Where the image being decoded originated from.
+    *
+    * @return the URL for the file in string format.
+    */
+   public String getImageFileUrl() {
+      return imageFileUrl;
+   }
 
-        return buf.toString();
-    }
+   @Override
+   public String toString() {
+      StringBuffer buf = new StringBuffer();
+      buf.append(type);
+
+      if (type == ImageSourceType.FILE_SYSTEM) {
+         buf.append(": ");
+         buf.append(imageFileUrl);
+      }
+
+      return buf.toString();
+   }
 
 }

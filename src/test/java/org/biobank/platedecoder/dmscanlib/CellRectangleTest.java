@@ -101,11 +101,6 @@ public class CellRectangleTest {
         assertEquals(0, cell1.compareTo(cell3));
     }
 
-    @SuppressWarnings("unused")
-    private void logWellRectangle(Set<CellRectangle> cells) {
-        CellRectangle.debugCells(cells);
-    }
-
     /**
      * If the bounds are offset from the origin, so should the first well
      */
@@ -271,4 +266,3 @@ public class CellRectangleTest {
     }
 
 }
-

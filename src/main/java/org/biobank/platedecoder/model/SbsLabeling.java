@@ -28,6 +28,10 @@ public class SbsLabeling {
     /**
      * Get the row and column position corresponding to the given SBS standard 2 or 3 char string
      * position. Eg. could be A2 or F12.
+     *
+     * @param label  The label to be converted to row and column.
+     *
+     * @return a pair containing the row and column corresponding to the label.
      */
     public static Pair<Integer, Integer> toRowCol(String label) {
         if ((label.length() < 2) || (label.length() > 3)) {

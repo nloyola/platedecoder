@@ -13,6 +13,10 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Contains infomation of the tubes present in the plate.
+ *
+ */
 public class Plate implements PlateWellHandler {
 
     //@SuppressWarnings("unused")

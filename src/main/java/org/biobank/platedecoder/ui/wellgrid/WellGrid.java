@@ -25,15 +25,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class maintains the size of the grid and manages the rectangles corresponding to each
- * well that may contain the image of a tube.
+ * This class maintains the size of the grid and manages the rectangles that could contain an image
+ * of a single 2D barcode.
  *
- * The well grid can be resized and moved using the mouse.
+ * <p>The well grid can be resized and moved using the mouse.
  *
- * For dragging and resizing see:
- *   http://stackoverflow.com/questions/26298873/resizable-and-movable-rectangle
  */
 public class WellGrid extends Rectangle implements ResizeHandler {
+
+   /* For dragging and resizing see:
+    *   http://stackoverflow.com/questions/26298873/resizable-and-movable-rectangle
+    */
 
     @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(WellGrid.class);
@@ -66,6 +68,22 @@ public class WellGrid extends Rectangle implements ResizeHandler {
      * The well grid is superimposed on the image containinig the 2D barcodes. The image is scaled
      * to fit into the window displayed to the user. The {@code scale} is the scaling factor used to
      * display the image.
+     *
+     * @param wellGridHandler The object to inform of changes to the grid.
+     *
+     * @param imageView  The object that contains a view of the image.
+     *
+     * @param plateType How many wells the plate contains. See {@link PlateType}.
+     *
+     * @param x  The X coordinate of the top left corner of the grid.
+     *
+     * @param y  The Y coordinate of the top left corner of the grid.
+     *
+     * @param width  The width of the grid.
+     *
+     * @param height  The height of the grid.
+     *
+     * @param scale  The scale used to display the grid.
      */
     public WellGrid(final WellGridHandler wellGridHandler,
                     ImageView  imageView,

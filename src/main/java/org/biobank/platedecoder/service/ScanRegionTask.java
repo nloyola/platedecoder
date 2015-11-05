@@ -39,7 +39,7 @@ public class ScanRegionTask extends Task<ScanLibResult> {
             throw new IllegalStateException("file not present: "
                                             + PlateDecoder.flatbedImageFilename());
         }
-        return new ScanLibResult(ScanLib.SC_SUCCESS, 0, "");
+        return new ScanLibResult(ScanLib.ResultCode.SC_SUCCESS, 0, "");
     }
 
 }

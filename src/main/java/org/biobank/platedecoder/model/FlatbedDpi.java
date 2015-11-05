@@ -1,5 +1,9 @@
 package org.biobank.platedecoder.model;
 
+/**
+ * The valid DPIs to chose from in the application.
+ *
+ */
 public enum FlatbedDpi {
 
     DPI_300(300),

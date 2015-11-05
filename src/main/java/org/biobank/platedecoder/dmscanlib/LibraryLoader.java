@@ -29,6 +29,8 @@ public class LibraryLoader {
 
     /**
      * Returns true if running on MS Windows.
+     *
+     * @return {@code true} if the operating system is running MS Windows.
      */
     public static boolean runningMsWindows() {
         return IS_MS_WINDOWS;

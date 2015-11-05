@@ -17,6 +17,8 @@ import org.biobank.platedecoder.ui.PlateDecoder;
 import javafx.concurrent.Task;
 import javafx.scene.shape.Rectangle;
 
+import static org.biobank.platedecoder.dmscanlib.ScanLib.ResultCode.*;
+
 public class ScanAndDecodeImageTask extends Task<ScanLibResult> {
 
     private final Rectangle scanRect;
@@ -88,7 +90,7 @@ public class ScanAndDecodeImageTask extends Task<ScanLibResult> {
             throw new IllegalStateException("file not present: "
                                             + PlateDecoder.flatbedPlateImageFilename());
         }
-        return new ScanLibResult(ScanLib.SC_SUCCESS, 0, "");
+        return new ScanLibResult(SC_SUCCESS, 0, "");
     }
 
     protected DecodeResult decode() {
