@@ -29,7 +29,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 
-public class DecodedTubes extends AbstractSceneRoot {
+public class DecodedTubes extends SceneRoot {
 
     //@SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(DecodedTubes.class);

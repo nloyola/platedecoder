@@ -16,7 +16,7 @@ import javafx.scene.layout.Priority;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 
-public class FileChoose extends AbstractSceneRoot {
+public class FileChoose extends SceneRoot {
 
     private TextField filenameField;
     private Optional<File> selectedFile = Optional.empty();

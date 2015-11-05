@@ -21,7 +21,7 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.GridPane;
 import javafx.scene.shape.Rectangle;
 
-public class InitialScene extends AbstractSceneRoot {
+public class InitialScene extends SceneRoot {
 
     //@SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(InitialScene.class);
@@ -125,5 +125,7 @@ public class InitialScene extends AbstractSceneRoot {
     public void unselectAll() {
         filesystemButton.setSelected(false);
         flatbedScanButton.setSelected(false);
+        withPrevParamsButton.setSelected(false);
+        modifyConfiguration.setSelected(false);
     }
 };

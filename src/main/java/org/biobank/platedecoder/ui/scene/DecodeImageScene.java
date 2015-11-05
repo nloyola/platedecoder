@@ -55,7 +55,7 @@ import javafx.scene.text.Text;
 /**
  * Used for decoding the tubes present in an image.
  */
-public class DecodeImageScene extends AbstractSceneRoot implements WellGridHandler {
+public class DecodeImageScene extends SceneRoot implements WellGridHandler {
 
     //@SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(DecodeImageScene.class);

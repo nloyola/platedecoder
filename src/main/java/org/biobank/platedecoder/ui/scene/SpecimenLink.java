@@ -15,7 +15,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 
-public class SpecimenLink extends AbstractSceneRoot {
+public class SpecimenLink extends SceneRoot {
 
     @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(SpecimenLink.class);

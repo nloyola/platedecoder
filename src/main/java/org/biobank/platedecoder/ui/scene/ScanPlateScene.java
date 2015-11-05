@@ -17,7 +17,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
 
-public class ScanPlateScene extends AbstractSceneRoot {
+public class ScanPlateScene extends SceneRoot {
 
     //@SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(ScanPlateScene.class);
