@@ -3,6 +3,7 @@ package org.biobank.platedecoder.ui.scene;
 import java.util.Optional;
 
 import org.biobank.platedecoder.model.FlatbedDpi;
+import org.biobank.platedecoder.model.PlateDecoderDefaults;
 import org.biobank.platedecoder.model.PlateDecoderPreferences;
 import org.biobank.platedecoder.service.ScanPlateTask;
 import org.biobank.platedecoder.ui.FlatbedDpiChooser;
@@ -88,9 +89,9 @@ public class ScanPlateScene extends SceneRoot {
 
     private boolean checkFilePresentLinux() {
         if (PlateDecoder.IS_LINUX) {
-            return PlateDecoder.fileExists(PlateDecoder.flatbedPlateImageFilename());
+            return PlateDecoder.fileExists(PlateDecoderDefaults.FLATBED_PLATE_IMAGE_NAME);
         }
-        return true;
+        throw new IllegalStateException("OS is not Linux");
     }
 
     public void onScanCompleteAction(EventHandler<ActionEvent> scanCompleteHandler) {

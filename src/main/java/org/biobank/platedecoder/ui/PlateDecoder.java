@@ -4,341 +4,289 @@ import static org.biobank.platedecoder.model.PlateDecoderDefaults.*;
 
 import java.io.File;
 import java.util.Map;
-import java.util.Optional;
 
 import org.biobank.platedecoder.dmscanlib.LibraryLoader;
 import org.biobank.platedecoder.model.PlateDecoderPreferences;
-import org.biobank.platedecoder.ui.scene.AbstractSceneRoot;
+import org.biobank.platedecoder.ui.fsm.SceneFsmFactory;
 import org.biobank.platedecoder.ui.scene.DecodeImageScene;
 import org.biobank.platedecoder.ui.scene.DecodedTubes;
-import org.biobank.platedecoder.ui.scene.FileChoose;
-import org.biobank.platedecoder.ui.scene.InitialScene;
-import org.biobank.platedecoder.ui.scene.ScanPlateScene;
 import org.biobank.platedecoder.ui.scene.ScanRegionScene;
+import org.biobank.platedecoder.ui.scene.SceneRoot;
 import org.biobank.platedecoder.ui.scene.SpecimenLink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javafx.application.Application;
-import javafx.application.Platform;
-import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.Region;
-import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
 /**
  * This class manages how all the scenes that make up the application are connected.
+ *
+ * <p>It is the main class for this JavaFX application.
  */
-public class PlateDecoder extends Application implements EventHandler<WindowEvent> {
+public class PlateDecoder extends Application implements SceneChanger {
 
-    //@SuppressWarnings("unused")
-    private static final Logger LOG = LoggerFactory.getLogger(PlateDecoder.class);
+   //@SuppressWarnings("unused")
+   private static final Logger LOG = LoggerFactory.getLogger(PlateDecoder.class);
 
-    public static final boolean IS_LINUX = System.getProperty("os.name").startsWith("Linux");
+   public static final boolean IS_LINUX = System.getProperty("os.name").startsWith("Linux");
 
-    public static final boolean IS_DEBUG_MODE = (System.getProperty("debug") != null);
+   public static final boolean IS_DEBUG_MODE = (System.getProperty("debug") != null);
 
-    private AbstractSceneRoot onBackFromDecodeImage;
+   private Stage stage;
 
-    private Stage stage;
+   private double sceneWidth;
 
-    private double sceneWidth;
+   private double sceneHeight;
 
-    private double sceneHeight;
+   public static void main(String[] args) {
+      LibraryLoader.load();
+      launch(args);
+   }
 
-    public static void main(String[] args) {
-        LibraryLoader.load();
-        launch(args);
-    }
+   @Override
+   public void start(Stage stage) {
+      this.stage = stage;
+      stage.setTitle("Plate decoder");
 
-    @Override
-    public void start(Stage stage) {
-        this.stage = stage;
-        stage.setTitle("Plate decoder");
+      Point2D dimensions = PlateDecoderPreferences.getInstance().getAppWindowSize();
 
-        Point2D dimensions = PlateDecoderPreferences.getInstance().getAppWindowSize();
+      sceneWidth  = dimensions.getX();
+      sceneHeight = dimensions.getY();
 
-        sceneWidth  = dimensions.getX();
-        sceneHeight = dimensions.getY();
+      setStartScene();
+      stage.show();
+   }
 
-        setStartScene();
-        stage.show();
-    }
+   @Override
+   public <T extends SceneRoot> void changeScene(T sceneRoot) {
+      Scene scene = stage.getScene();
+      if (scene != null) {
+         // theprevious scene's root has to be cleared so we dont get an exception when user
+         // enters the scene again
+         scene.setRoot(new Region());
+      }
+      sceneRoot.onDisplay();
+      scene = new Scene(sceneRoot, sceneWidth, sceneHeight);
+      scene.widthProperty().addListener((observable, oldValue, newValue) -> {
+            sceneWidth = newValue.doubleValue();
+         });
+      scene.heightProperty().addListener((observable, oldValue, newValue) -> {
+            sceneHeight = newValue.doubleValue();
+         });
+      stage.setScene(scene);
 
-    /**
-     * Start scene can be set when DEBUB mode is on.
-     */
-    private void setStartScene() {
-        Map<String, String> namedArgs = getParameters().getNamed();
-        String startScene = null;
+      // need to call this whenever the scene is changed
+      stage.setOnCloseRequest(this::handleCloseRequest);
+      LOG.debug("changed scene: {}", sceneRoot.getClass().getSimpleName());
+   }
 
-        if (IS_DEBUG_MODE) {
-            startScene = namedArgs.get("scene");
-        }
+   @Override
+   public void closeApplicationRequest() {
+      saveWindowSize();
+      stage.close();
+   }
 
-        if (startScene == null) {
-            setScene();
-        } else {
-            switch (startScene) {
-                case "testdecode":
-                    setSceneTestDecode();
-                    break;
+   /**
+    * Start scene can be set when DEBUG mode is on.
+    */
+   private void setStartScene() {
+      Map<String, String> namedArgs = getParameters().getNamed();
+      String startScene = null;
 
-                case "scanningregion":
-                    setSceneScanningRegion();
-                    break;
+      if (IS_DEBUG_MODE) {
+         startScene = namedArgs.get("scene");
+      }
 
-                case "specimenlink":
-                    setSceneTestSpecimenLink();
-                    break;
-            }
-        }
-    }
+      if (startScene == null) {
+         setScene();
+      } else {
+         switch (startScene) {
+            case "testdecode":
+               setSceneTestDecode();
+               break;
 
-    private void setSceneTestSpecimenLink() {
-        SpecimenLink.setTestData();
+            case "scanningregion":
+               setSceneScanningRegion();
+               break;
 
-        SpecimenLink specimenLink = new SpecimenLink();
-        changeScene(specimenLink);
+            case "specimenlink":
+               setSceneTestSpecimenLink();
+               break;
+         }
+      }
+   }
 
-        specimenLink.enableFinishAction(e -> {
-                closeApp();
-            });
-    }
+   // DEBGUG code
+   private void setSceneTestSpecimenLink() {
+      SpecimenLink.setTestData();
 
-    private void setSceneTestDecode() {
-        DecodeImageScene decodeImage = new DecodeImageScene();
-        DecodedTubes decodedTubes = new DecodedTubes();
-        SpecimenLink specimenLink = new SpecimenLink();
+      SpecimenLink specimenLink = new SpecimenLink();
+      changeScene(specimenLink);
 
-        decodeImage.onContinueAction(e -> {
-                changeScene(decodedTubes);
-            });
+      specimenLink.enableFinishAction(e -> {
+            closeApplicationRequest();
+         });
+   }
 
-        decodedTubes.enableBackAction(e -> {
-                changeScene(decodeImage);
-            });
+   // DEBGUG code
+   private void setSceneTestDecode() {
+      DecodeImageScene decodeImage = new DecodeImageScene();
+      DecodedTubes decodedTubes = new DecodedTubes();
+      SpecimenLink specimenLink = new SpecimenLink();
 
-        decodedTubes.enableFinishAction(e -> {
-                closeApp();
-            });
+      decodeImage.onContinueAction(e -> {
+            changeScene(decodedTubes);
+         });
 
-        decodedTubes.onSpecimenLinkAction(e -> {
-                changeScene(specimenLink);
-            });
+      decodedTubes.enableBackAction(e -> {
+            changeScene(decodeImage);
+         });
 
-        changeScene(decodeImage);
-        //imageAndGrid.setImageFileURI("file:///home/nelson/Desktop/scanned_ice4_cropped.bmp");
-        decodeImage.setImageFileURI(
-            "file:///home/nelson/Desktop/testImages/8x12/FrozenPalletImages/HP_L1985A/scanned4.bmp");
-        //imageAndGrid.setImageFileURI(
-        //"file:///home/nelson/Dropbox/CBSR/scanlib/testImages/12x12/stanford_12x12_1.jpg");
-    }
+      decodedTubes.enableFinishAction(e -> {
+            closeApplicationRequest();
+         });
 
-    private void setSceneScanningRegion() {
-        ScanRegionScene scanRegion = new ScanRegionScene();
-        changeScene(scanRegion);
-    }
+      decodedTubes.onSpecimenLinkAction(e -> {
+            changeScene(specimenLink);
+         });
 
-    private void setScene() {
-        InitialScene initialScene    = new InitialScene();
-        FileChoose fileChoose        = new FileChoose();
-        ScanRegionScene scanRegion   = new ScanRegionScene();
-        ScanPlateScene scanPlate     = new ScanPlateScene();
-        DecodeImageScene decodeImage = new DecodeImageScene();
-        DecodedTubes decodedTubes    = new DecodedTubes();
+      changeScene(decodeImage);
+      decodeImage.setImageFileURI(
+         "file:///home/nelson/Desktop/testImages/8x12/FrozenPalletImages/HP_L1985A/scanned4.bmp");
+   }
 
-        // TODO: fix back button when flatbed scan is used
+   // DEBGUG code
+   private void setSceneScanningRegion() {
+      ScanRegionScene scanRegion = new ScanRegionScene();
+      changeScene(scanRegion);
+   }
 
-        initialScene.onFilesystemAction(e -> {
-                changeScene(fileChoose);
-            });
+   private void setScene() {
+      SceneFsmFactory.createSceneFsm(this);
+   }
 
-        initialScene.onFlatbedScanAction(e -> {
-                Optional<Rectangle> rectMaybe = PlateDecoderPreferences.getInstance().getScanRegion();
-                if (rectMaybe.isPresent()) {
-                    changeScene(scanPlate);
-                } else {
-                    changeScene(scanRegion);
-                }
-            });
+   private void handleCloseRequest(@SuppressWarnings("unused") WindowEvent event) {
+      saveWindowSize();
+   }
 
-        initialScene.onFlatbedScanWithPreviousParamsAction(e -> {
-                decodeImage.setImageFileURI(flatbedPlateImageFilenameToUrl());
-                changeScene(decodeImage);
-            });
+   private void saveWindowSize() {
+      Scene scene = stage.getScene();
+      if (scene != null) {
+         PlateDecoderPreferences.getInstance().setAppWindowSize(
+            scene.getWidth(), scene.getHeight());
+      }
+   }
 
-        initialScene.modifyConfigrationAction(e -> {
-                scanRegion.onContinueAction(ev -> {
-                        changeScene(initialScene);
-                    });
-                changeScene(scanRegion);
-            });
+   /**
+    * Displays an information dialog.
+    *
+    * @param titleBar the string to display in the dialog box's title bar.
+    *
+    * @param headerMessage the string to display in the title are of the dialog box. When this value
+    * is null, the dialog will not have a title area.
+    *
+    * @param infoMessage the string to display in the body of the dialog box.
+    *
+    */
+   public static void infoDialog(String titleBar,
+                                 String headerMessage,
+                                 String infoMessage) {
+      createDialog(AlertType.INFORMATION, titleBar, headerMessage, infoMessage);
+   }
 
-        fileChoose.enableBackAction(e -> {
-                changeScene(initialScene);
-            });
+   /**
+    * Displays an information dialog without a title are.
+    *
+    * @param titleBar the string to display in the dialog box's title bar.
+    *
+    * @param infoMessage the string to display in the body of the dialog box.
+    *
+    */
+   public static void infoDialog(String infoMessage, String titleBar) {
+      // By specifying a null headerMessage String, we cause the dialog to not have a header
+      createDialog(AlertType.INFORMATION, titleBar, null, infoMessage);
+   }
 
-        fileChoose.onDecodeAction(e -> {
-                onBackFromDecodeImage = fileChoose;
-                decodeImage.setImageFileURI(fileChoose.getSelectedFileURI());
-                changeScene(decodeImage);
-            });
-
-        scanRegion.onContinueAction(e -> {
-                changeScene(scanPlate);
-            });
-
-        scanRegion.enableBackAction(e -> {
-                changeScene(initialScene);
-            });
-
-        scanPlate.onScanCompleteAction(e -> {
-                onBackFromDecodeImage = scanPlate;
-                decodeImage.setImageFileURI(flatbedPlateImageFilenameToUrl());
-                changeScene(decodeImage);
-            });
-
-        scanPlate.enableBackAction(e -> {
-                changeScene(initialScene);
-            });
-
-        decodeImage.enableBackAction(e -> {
-                if (onBackFromDecodeImage == null) {
-                    throw new IllegalStateException("onBackFromDecodeImage is null");
-                }
-                changeScene(onBackFromDecodeImage);
-            });
-
-        decodeImage.onContinueAction(e -> {
-                changeScene(decodedTubes);
-            });
-
-        decodedTubes.enableBackAction(e -> {
-                changeScene(decodeImage);
-            });
-
-        decodedTubes.enableFinishAction(e -> {
-                closeApp();
-            });
-
-        changeScene(initialScene);
-    }
-
-    private <T extends AbstractSceneRoot> void changeScene(T sceneRoot) {
-        Scene scene = stage.getScene();
-        if (scene != null) {
-            // theprevious scene's root has to be cleared so we dont get an exception when user
-            // enters the scene again
-            scene.setRoot(new Region());
-        }
-        sceneRoot.onDisplay();
-        scene = new Scene(sceneRoot, sceneWidth, sceneHeight);
-        scene.widthProperty().addListener((observable, oldValue, newValue) -> {
-                sceneWidth = newValue.doubleValue();
-            });
-        scene.heightProperty().addListener((observable, oldValue, newValue) -> {
-                sceneHeight = newValue.doubleValue();
-            });
-        stage.setScene(scene);
-
-        // need to call this whenever the scene is changed
-        stage.setOnCloseRequest(this);
-        LOG.debug("changed scene: {}", sceneRoot.getClass().getSimpleName());
-    }
-
-    @Override
-    public void handle(WindowEvent we) {
-        saveWindowSize();
-    }
-
-    private void closeApp() {
-        saveWindowSize();
-        Platform.exit();
-    }
-
-    private void saveWindowSize() {
-        Scene scene = stage.getScene();
-        if (scene != null) {
-            PlateDecoderPreferences.getInstance().setAppWindowSize(
-                scene.getWidth(), scene.getHeight());
-        }
-    }
-
-    public static void infoDialog(String infoMessage, String titleBar) {
-        // By specifying a null headerMessage String, we cause the dialog to not have a header
-        infoDialog(infoMessage, titleBar, null);
-    }
-
-    public static void infoDialog(String infoMessage,
+   /**
+    * Displays an error dialog.
+    *
+    * @param titleBar the string to display in the dialog box's title bar.
+    *
+    * @param headerMessage the string to display in the title are of the dialog box. When this value
+    * is null, the dialog will not have a title area.
+    *
+    * @param infoMessage the string to display in the body of the dialog box.
+    *
+    */
+   public static void errorDialog(String infoMessage,
                                   String titleBar,
                                   String headerMessage) {
-        Alert alert = new Alert(AlertType.INFORMATION);
-        alert.setTitle(titleBar);
-        alert.setHeaderText(headerMessage);
-        alert.setContentText(infoMessage);
-        alert.showAndWait();
-    }
+      createDialog(AlertType.ERROR, titleBar, headerMessage, infoMessage);
+   }
 
-    public static void errorDialog(String infoMessage,
-                                   String titleBar,
-                                   String headerMessage) {
-        Alert alert = new Alert(AlertType.ERROR);
-        alert.setTitle(titleBar);
-        alert.setHeaderText(headerMessage);
-        alert.setContentText(infoMessage);
+   /**
+    * The file name used to store the image of the entire flatbed scanning region..
+    *
+    * @return the file name used to store the image of the entire flatbed scanning region.
+    */
+   public static String flatbedImageFilenameToUrl() {
+      return userDirFilenameToUrl(FLATBED_IMAGE_NAME);
+   }
 
-        if (IS_LINUX) {
-            //FIXME: Remove after release 8u40
-            alert.setResizable(true);
-            alert.getDialogPane().setPrefSize(480, 320);
-        }
+   /**
+    * The file name used to store the image of the plate.
+    *
+    * @return the file name used to store the image of the plate.
+    */
+   public static String flatbedPlateImageFilenameToUrl() {
+      return userDirFilenameToUrl(FLATBED_PLATE_IMAGE_NAME);
+   }
 
-        alert.showAndWait();
-    }
+   /**
+    * Checks if a filename exists in the file system.
+    *
+    * @param filename  The filename to check.
+    *
+    * @return true if filename exists and is not a directory.
+    */
+   public static boolean fileExists(String filename) {
+      File f = new File(filename);
+      return (f.exists() && !f.isDirectory());
+   }
 
-    public static String flatbedImageFilename() {
-        return FLATBED_IMAGE_NAME;
-    }
+   private static String userDirFilenameToUrl(String filename) {
+      StringBuffer buf = new StringBuffer();
+      buf.append("file://");
+      buf.append(System.getProperty("user.dir"));
+      buf.append(File.separator);
+      buf.append(filename);
+      return buf.toString();
+   }
 
-    public static String flatbedPlateImageFilename() {
-        return FLATBED_PLATE_IMAGE_NAME;
-    }
+   // common code for creating alert dialog boxes
+   private static void createDialog(Alert.AlertType alertType,
+                                    String titleBar,
+                                    String headerMessage,
+                                    String infoMessage) {
+      Alert alert = new Alert(alertType);
+      alert.setTitle(titleBar);
+      alert.setHeaderText(headerMessage);
+      alert.setContentText(infoMessage);
 
-    private static String userDirFilenameToUrl(String filename) {
-        StringBuffer buf = new StringBuffer();
-        buf.append("file://");
-        buf.append(System.getProperty("user.dir"));
-        buf.append(File.separator);
-        buf.append(filename);
-        return buf.toString();
-    }
+      if (IS_LINUX && (alertType == AlertType.ERROR)) {
+         //FIXME: Remove after release 8u40
+         alert.setResizable(true);
+         alert.getDialogPane().setPrefSize(480, 320);
+      }
 
-    /**
-     * Returns the file name used to store the image of the entire flatbed scanning region.
-     */
-    public static String flatbedImageFilenameToUrl() {
-        return userDirFilenameToUrl(FLATBED_IMAGE_NAME);
-    }
+      alert.showAndWait();
+   }
 
-    /**
-     * Returns the file name used to store the image of the plate.
-     */
-    public static String flatbedPlateImageFilenameToUrl() {
-        return userDirFilenameToUrl(FLATBED_PLATE_IMAGE_NAME);
-    }
-
-
-    /**
-     * Returns true if filename exists and is not a directory.
-     */
-    public static boolean fileExists(String filename) {
-        File f = new File(filename);
-        return (f.exists() && !f.isDirectory());
-    }
 }

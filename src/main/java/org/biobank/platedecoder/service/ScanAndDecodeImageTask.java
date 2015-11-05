@@ -1,5 +1,7 @@
 package org.biobank.platedecoder.service;
 
+import static org.biobank.platedecoder.dmscanlib.ScanLib.ResultCode.SC_SUCCESS;
+
 import java.util.Optional;
 import java.util.Set;
 
@@ -9,6 +11,7 @@ import org.biobank.platedecoder.dmscanlib.DecodeResult;
 import org.biobank.platedecoder.dmscanlib.ScanLib;
 import org.biobank.platedecoder.dmscanlib.ScanLibResult;
 import org.biobank.platedecoder.model.BarcodePosition;
+import org.biobank.platedecoder.model.PlateDecoderDefaults;
 import org.biobank.platedecoder.model.PlateDecoderPreferences;
 import org.biobank.platedecoder.model.PlateOrientation;
 import org.biobank.platedecoder.model.PlateType;
@@ -16,8 +19,6 @@ import org.biobank.platedecoder.ui.PlateDecoder;
 
 import javafx.concurrent.Task;
 import javafx.scene.shape.Rectangle;
-
-import static org.biobank.platedecoder.dmscanlib.ScanLib.ResultCode.*;
 
 public class ScanAndDecodeImageTask extends Task<ScanLibResult> {
 
@@ -86,9 +87,9 @@ public class ScanAndDecodeImageTask extends Task<ScanLibResult> {
 
     private ScanLibResult scanPlateLinux() throws InterruptedException {
         Thread.sleep(500);
-        if (!PlateDecoder.fileExists(PlateDecoder.flatbedPlateImageFilename())) {
-            throw new IllegalStateException("file not present: "
-                                            + PlateDecoder.flatbedPlateImageFilename());
+        if (!PlateDecoder.fileExists(PlateDecoderDefaults.FLATBED_PLATE_IMAGE_NAME)) {
+            throw new IllegalStateException(
+               "file not present: " + PlateDecoderDefaults.FLATBED_PLATE_IMAGE_NAME);
         }
         return new ScanLibResult(SC_SUCCESS, 0, "");
     }

@@ -30,14 +30,14 @@ public class ScanRegionTask extends Task<ScanLibResult> {
                                                  PlateDecoderDefaults.FLATBED_IMAGE_DPI,
                                                  0,
                                                  0,
-                                                 PlateDecoder.flatbedImageFilename());
+                                                 PlateDecoderDefaults.FLATBED_IMAGE_NAME);
     }
 
     private ScanLibResult scanFlatbedLinux() throws InterruptedException {
         Thread.sleep(500);
-        if (!PlateDecoder.fileExists(PlateDecoder.flatbedImageFilename())) {
-            throw new IllegalStateException("file not present: "
-                                            + PlateDecoder.flatbedImageFilename());
+        if (!PlateDecoder.fileExists(PlateDecoderDefaults.FLATBED_IMAGE_NAME)) {
+            throw new IllegalStateException(
+               "file not present: " + PlateDecoderDefaults.FLATBED_IMAGE_NAME);
         }
         return new ScanLibResult(ScanLib.ResultCode.SC_SUCCESS, 0, "");
     }

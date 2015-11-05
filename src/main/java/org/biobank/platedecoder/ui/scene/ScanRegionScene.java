@@ -223,9 +223,9 @@ public class ScanRegionScene extends SceneRoot implements ScanRegionHandler {
 
     private boolean checkFilePresentLinux() {
         if (PlateDecoder.IS_LINUX) {
-            return PlateDecoder.fileExists(PlateDecoder.flatbedImageFilename());
+            return PlateDecoder.fileExists(PlateDecoderDefaults.FLATBED_IMAGE_NAME);
         }
-        return true;
+        throw new IllegalStateException("OS is not Linux");
     }
 
     public void onContinueAction(EventHandler<ActionEvent> continueHandler) {

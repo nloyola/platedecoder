@@ -168,4 +168,3 @@ public class DecodedTubes extends SceneRoot {
         PlateDecoder.infoDialog("To be completed", "Under construction");
     }
 }
-
