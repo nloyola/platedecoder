@@ -48,7 +48,7 @@ public class FsmTest {
    }
 
    @Test
-   public void runnersExecuted() {
+   public void runnablesExecuted() {
       List<StateId> stateCheck = new ArrayList<>();
       Fsm<StateId, ChoicePointId, Event> fsm = createFsm(stateCheck);
 

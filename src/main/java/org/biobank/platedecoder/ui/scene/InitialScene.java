@@ -13,13 +13,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.control.RadioButton;
-import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Region;
 import javafx.scene.shape.Rectangle;
 
 public class InitialScene extends SceneRoot {
@@ -33,9 +31,11 @@ public class InitialScene extends SceneRoot {
 
 	private RadioButton withPrevParamsButton;
 
-	private RadioButton modifyConfiguration;
+	private RadioButton modifyFlatbedConfiguration;
 
-    private Optional<EventHandler<ActionEvent>> withPrevParamsHandlerMaybe = Optional.empty();
+	private RadioButton modifyDecodingConfiguration;
+
+    private Optional<Runnable> withPrevParamsRunnableMaybe = Optional.empty();
 
 	public InitialScene() {
         super("Choose an action");
@@ -47,17 +47,16 @@ public class InitialScene extends SceneRoot {
     }
 
     @Override
-    protected Node creatContents() {
+    protected Region createContents() {
         filesystemButton = new RadioButton("Decode image - decode tubes in an image from the filesystem");
         flatbedScanButton = new RadioButton("Scan and decode - using the flatbed scanner");
         withPrevParamsButton = new RadioButton("Scan and decode with my previous settings");
-        modifyConfiguration = new RadioButton("Modify configuration");
+        modifyFlatbedConfiguration = new RadioButton("Modify flatbed scanner configuration");
+        modifyDecodingConfiguration = new RadioButton("Modify 2D barcode decoding configuration");
+
+        modifyFlatbedConfiguration.setPadding(new Insets(20, 0, 0, 0));
 
         withPrevParamsButton.setOnAction(this::withPrevParamsAction);
-
-        final ToggleGroup toggleGroup = new ToggleGroup();
-        filesystemButton.setToggleGroup(toggleGroup);
-        flatbedScanButton.setToggleGroup(toggleGroup);
 
         final GridPane grid = new GridPane();
         grid.setPadding(new Insets(20, 5, 5, 5));
@@ -67,29 +66,31 @@ public class InitialScene extends SceneRoot {
         grid.add(filesystemButton, 0, 0);
         grid.add(flatbedScanButton, 0, 1);
         grid.add(withPrevParamsButton, 0, 2);
-        grid.add(modifyConfiguration, 0, 3);
+        grid.add(modifyFlatbedConfiguration, 0, 3);
+        grid.add(modifyDecodingConfiguration, 0, 4);
         grid.setAlignment(Pos.TOP_CENTER);
         return grid;
     }
 
-    public void onFilesystemAction(EventHandler<ActionEvent> handler) {
-        filesystemButton.setOnAction(handler);
+    public void onFilesystemAction(Runnable runnable) {
+       filesystemButton.setOnAction(e -> runnable.run());
     }
 
-    public void onFlatbedScanAction(EventHandler<ActionEvent> handler) {
-        flatbedScanButton.setOnAction(handler);
+    public void onFlatbedScanAction(Runnable runnable) {
+        flatbedScanButton.setOnAction(e -> runnable.run());
     }
 
-    public void onFlatbedScanWithPreviousParamsAction(EventHandler<ActionEvent> handler) {
-        withPrevParamsHandlerMaybe = Optional.of(handler);
+    public void onFlatbedScanWithPreviousParamsAction(Runnable runnable) {
+        withPrevParamsRunnableMaybe = Optional.of(runnable);
     }
 
-    public void modifyConfigrationAction(EventHandler<ActionEvent> handler) {
-        modifyConfiguration.setOnAction(handler);
+    public void modifyConfigrationAction(Runnable runnable) {
+       modifyFlatbedConfiguration.setOnAction(e -> runnable.run());
     }
 
-    private void withPrevParamsAction(ActionEvent event) {
-        Rectangle scanRect = PlateDecoderPreferences.getInstance().getWellRectangle(model.getPlateType());
+   private void withPrevParamsAction(@SuppressWarnings("unused") ActionEvent event) {
+        Rectangle scanRect =
+           PlateDecoderPreferences.getInstance().getWellRectangle(model.getPlateType());
         ScanAndDecodeImageTask worker =
             new ScanAndDecodeImageTask(scanRect,
                                        model.getFlatbedDpi().getValue(),
@@ -111,12 +112,12 @@ public class InitialScene extends SceneRoot {
                         well ->
                         plate.setWellInventoryId(well.getLabel(), well.getMessage()));
                 }
-                withPrevParamsHandlerMaybe.ifPresent(handler -> handler.handle(event));
+                withPrevParamsRunnableMaybe.ifPresent(runnable -> runnable.run());
             });
 
         worker.setOnFailed(e -> {
                 LOG.error("The task failed: {}", e);
-                withPrevParamsHandlerMaybe.ifPresent(handler -> handler.handle(event));
+                withPrevParamsRunnableMaybe.ifPresent(runnable -> runnable.run());
             });
 
         Thread th = new Thread(worker);
@@ -128,6 +129,6 @@ public class InitialScene extends SceneRoot {
         filesystemButton.setSelected(false);
         flatbedScanButton.setSelected(false);
         withPrevParamsButton.setSelected(false);
-        modifyConfiguration.setSelected(false);
+        modifyFlatbedConfiguration.setSelected(false);
     }
 };

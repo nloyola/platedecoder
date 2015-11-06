@@ -6,10 +6,12 @@ import org.biobank.platedecoder.model.ImageSourceFileSystem;
 import org.biobank.platedecoder.model.ImageSourceFlatbedScanner;
 import org.biobank.platedecoder.model.PlateDecoderPreferences;
 import org.biobank.platedecoder.service.fsm.Fsm;
+import org.biobank.platedecoder.service.fsm.TransitionRunnable;
 import org.biobank.platedecoder.ui.SceneChanger;
 import org.biobank.platedecoder.ui.scene.DecodeImageScene;
 import org.biobank.platedecoder.ui.scene.DecodedTubes;
 import org.biobank.platedecoder.ui.scene.FileChoose;
+import org.biobank.platedecoder.ui.scene.FlatbedScannerSettings;
 import org.biobank.platedecoder.ui.scene.InitialScene;
 import org.biobank.platedecoder.ui.scene.ScanPlateScene;
 import org.biobank.platedecoder.ui.scene.ScanRegionScene;
@@ -34,6 +36,7 @@ class SceneFsm extends Fsm<StateId, ChoicepointId, Event> {
    private final ScanPlateScene scanPlate     = new ScanPlateScene();
    private final DecodeImageScene decodeImage = new DecodeImageScene();
    private final DecodedTubes decodedTubes    = new DecodedTubes();
+   private final FlatbedScannerSettings scannerSettings = new FlatbedScannerSettings();
 
    private final SceneChanger sceneChanger;
 
@@ -50,23 +53,22 @@ class SceneFsm extends Fsm<StateId, ChoicepointId, Event> {
       addState(StateId.SCAN_PLATE, StateId.USE_FLATBED_IMAGE);
       addState(StateId.DECODE_IMAGE);
       addState(StateId.DECODED_IMAGE_TUBES);
+      addState(StateId.FLATBED_SETTINGS_SCANNER);
+      addState(StateId.FLATBED_SETTINGS_REGION);
 
       addChoicepoint(
          ChoicepointId.FLATBED_IMAGE_SELECTED,
-         () -> {
-            return flatbedScannerUsed;
-         });
+         () -> { return flatbedScannerUsed; });
       addChoicepoint(
          ChoicepointId.FLATBED_IMAGE_SELECTED_WITH_PREV_SETTINGS,
-         () -> {
-            return decodeWithPreviousSettings;
-         });
+         () -> { return decodeWithPreviousSettings; });
 
       createInitialSceneTransitions();
       createFileChooserSceneTransitions();
       createUseFlatbedImageTransitions();
       createDecodeImageSceneTransitions();
       createDecodedTubesSceneTransitions();
+      createFlatbedScannerSettingsTransitions();
 
       validate();
 
@@ -74,22 +76,21 @@ class SceneFsm extends Fsm<StateId, ChoicepointId, Event> {
    }
 
    private void createInitialSceneTransitions() {
+      TransitionRunnable r = () -> {
+         flatbedScannerUsed = true;
+         decodeWithPreviousSettings = false;
+         sceneChanger.changeScene(scanRegion);
+      };
+
       addTransition(Event.SCAN_REGION_DEFINE,
                     StateId.INITIAL_SCENE,
                     StateId.SCAN_REGION,
-                    () -> {
-                       flatbedScannerUsed = true;
-                       sceneChanger.changeScene(scanRegion);
-                    });
+                    r);
       addTransition(Event.SCAN_REGION_DEFINE,
                     StateId.INITIAL_SCENE,
                     StateId.SCAN_REGION,
-                    () -> {
-                       flatbedScannerUsed = true;
-                       decodeWithPreviousSettings = false;
-                       sceneChanger.changeScene(scanRegion);
-                    });
-      addTransition(Event.SCAN_AND_DECODE,
+                    r);
+      addTransition(Event.CONTINUE_SELECTED,
                     StateId.INITIAL_SCENE,
                     StateId.SCAN_PLATE,
                     () -> {
@@ -112,108 +113,88 @@ class SceneFsm extends Fsm<StateId, ChoicepointId, Event> {
                        decodeWithPreviousSettings = false;
                        sceneChanger.changeScene(fileChoose);
                     });
+      addTransition(Event.MODIFY_CONFIG,
+                    StateId.INITIAL_SCENE,
+                    StateId.FLATBED_SETTINGS_SCANNER,
+                    () -> sceneChanger.changeScene(scannerSettings));
 
-      initialScene.onFilesystemAction(e -> {
-            feedEvent(Event.FILE_CHOSEN);
-         });
+      initialScene.onFilesystemAction(() -> feedEvent(Event.FILE_CHOSEN));
 
-      initialScene.onFlatbedScanAction(e -> {
+      initialScene.onFlatbedScanAction(() -> {
             Optional<Rectangle> rectMaybe =
                PlateDecoderPreferences.getInstance().getScanRegion();
             if (rectMaybe.isPresent()) {
-               feedEvent(Event.SCAN_AND_DECODE);
+               feedEvent(Event.CONTINUE_SELECTED);
             } else {
                feedEvent(Event.SCAN_REGION_DEFINE);
             }
          });
 
-      initialScene.onFlatbedScanWithPreviousParamsAction(e -> {
+      initialScene.onFlatbedScanWithPreviousParamsAction(() -> {
             decodeImage.setImageSource(ImageSourceFlatbedScanner.getInstance());
             feedEvent(Event.SCAN_AND_DECODE_WITH_PREVIOUS);
          });
 
-      initialScene.modifyConfigrationAction(e -> {
-            feedEvent(Event.MODIFY_CONFIG);
-         });
+      initialScene.modifyConfigrationAction(() -> feedEvent(Event.MODIFY_CONFIG));
    }
 
    private void createFileChooserSceneTransitions() {
-      addTransition(Event.IMAGE_SELECTED,
+      addTransition(Event.CONTINUE_SELECTED,
                     StateId.USE_FILESYSTEM_IMAGE,
                     StateId.DECODE_IMAGE,
-                    () -> {
-                       sceneChanger.changeScene(decodeImage);
-                    });
+                    () -> sceneChanger.changeScene(decodeImage));
       addTransition(Event.BACK_SELECTED,
                     StateId.USE_FILESYSTEM_IMAGE,
                     StateId.INITIAL_SCENE,
-                    () -> {
-                       sceneChanger.changeScene(initialScene);
-                    });
+                    () -> sceneChanger.changeScene(initialScene));
       addTransition(Event.FINISH_SELECTED,
                     StateId.USE_FILESYSTEM_IMAGE,
                     StateId.INITIAL_SCENE,
-                    () -> {
-                       sceneChanger.closeApplicationRequest();
-                    });
+                    () -> sceneChanger.closeApplicationRequest());
 
-      fileChoose.enableBackAction(e -> {
-            feedEvent(Event.BACK_SELECTED);
-         });
+      fileChoose.enableBackAction(() -> feedEvent(Event.BACK_SELECTED));
 
-      fileChoose.onDecodeAction(e -> {
+      fileChoose.onDecodeAction(() -> {
             ImageSourceFileSystem imageSource =
                new ImageSourceFileSystem(fileChoose.getSelectedFileURI());
             decodeImage.setImageSource(imageSource);
-            feedEvent(Event.IMAGE_SELECTED);
+            feedEvent(Event.CONTINUE_SELECTED);
          });
 
    }
 
    private void createUseFlatbedImageTransitions() {
-      addTransition(Event.SCAN_AND_DECODE,
+      addTransition(Event.CONTINUE_SELECTED,
                     StateId.SCAN_REGION,
                     StateId.SCAN_PLATE,
-                    () -> {
-                       sceneChanger.changeScene(scanPlate);
-                    });
+                    () -> sceneChanger.changeScene(scanPlate));
 
       addTransition(Event.BACK_SELECTED,
                     StateId.USE_FLATBED_IMAGE,
                     StateId.INITIAL_SCENE,
-                    () -> {
-                       sceneChanger.changeScene(initialScene);
-                    });
+                    () -> sceneChanger.changeScene(initialScene));
 
-      addTransition(Event.IMAGE_SCANNED,
+      addTransition(Event.CONTINUE_SELECTED,
                     StateId.SCAN_PLATE,
                     StateId.DECODE_IMAGE,
                     () -> {
                        sceneChanger.changeScene(decodeImage);
                     });
 
-      scanRegion.onContinueAction(e -> {
-            feedEvent(Event.SCAN_AND_DECODE);
-         });
-      scanRegion.enableBackAction(e -> {
-            feedEvent(Event.BACK_SELECTED);
-         });
-      scanPlate.onScanCompleteAction(e -> {
+      scanRegion.enableBackAction(() -> feedEvent(Event.BACK_SELECTED));
+      scanRegion.enableNextAction(() -> feedEvent(Event.CONTINUE_SELECTED));
+      scanPlate.enableNextAction(() -> {
             decodeImage.setImageSource(ImageSourceFlatbedScanner.getInstance());
-            feedEvent(Event.IMAGE_SCANNED);
+            feedEvent(Event.CONTINUE_SELECTED);
          });
-      scanPlate.enableBackAction(e -> {
-            feedEvent(Event.BACK_SELECTED);
-         });
+      scanPlate.enableBackAction(() -> feedEvent(Event.BACK_SELECTED));
    }
 
    private void createDecodeImageSceneTransitions() {
-      addTransition(Event.TUBES_DECODED,
+      addTransition(Event.CONTINUE_SELECTED,
                     StateId.DECODE_IMAGE,
                     StateId.DECODED_IMAGE_TUBES,
-                    () -> {
-                       sceneChanger.changeScene(decodedTubes);
-                    });
+                    () -> sceneChanger.changeScene(decodedTubes));
       addTransitionToChoice(
          Event.BACK_SELECTED,
          StateId.DECODE_IMAGE,
@@ -228,54 +209,64 @@ class SceneFsm extends Fsm<StateId, ChoicepointId, Event> {
          ChoicepointId.FLATBED_IMAGE_SELECTED_WITH_PREV_SETTINGS,
          true,
          StateId.INITIAL_SCENE,
-         () -> {
-            sceneChanger.changeScene(initialScene);
-         });
+         () -> sceneChanger.changeScene(initialScene));
       addTransitionFromChoiceToState(
          ChoicepointId.FLATBED_IMAGE_SELECTED,
          false,
          StateId.USE_FILESYSTEM_IMAGE,
-         () -> {
-            sceneChanger.changeScene(fileChoose);
-         });
+         () -> sceneChanger.changeScene(fileChoose));
       addTransitionFromChoiceToState(
          ChoicepointId.FLATBED_IMAGE_SELECTED,
          true,
          StateId.SCAN_PLATE,
-         () -> {
-            sceneChanger.changeScene(scanPlate);
-         });
+         () -> sceneChanger.changeScene(scanPlate));
 
-      decodeImage.onContinueAction(e -> {
-            feedEvent(Event.TUBES_DECODED);
-         });
-
-      decodeImage.enableBackAction(e -> {
-            feedEvent(Event.BACK_SELECTED);
-         });
-
+      decodeImage.enableBackAction(() -> feedEvent(Event.BACK_SELECTED));
+      decodeImage.enableNextAction(() -> feedEvent(Event.CONTINUE_SELECTED));
    }
 
    private void createDecodedTubesSceneTransitions() {
       addTransition(Event.BACK_SELECTED,
                     StateId.DECODED_IMAGE_TUBES,
                     StateId.DECODE_IMAGE,
-                    () -> {
-                       sceneChanger.changeScene(decodeImage);
-                    });
+                    () -> sceneChanger.changeScene(decodeImage));
       addTransition(Event.FINISH_SELECTED,
                     StateId.DECODED_IMAGE_TUBES,
                     StateId.INITIAL_SCENE,
-                    () -> {
-                       sceneChanger.closeApplicationRequest();
-                    });
+                    () -> sceneChanger.closeApplicationRequest());
 
-      decodedTubes.enableBackAction(e -> {
-            feedEvent(Event.BACK_SELECTED);
-         });
+      decodedTubes.enableBackAction(() -> feedEvent(Event.BACK_SELECTED));
+      decodedTubes.enableFinishAction(() -> feedEvent(Event.FINISH_SELECTED));
+   }
 
-      decodedTubes.enableFinishAction(e -> {
-            feedEvent(Event.FINISH_SELECTED);
-         });
+   private void createFlatbedScannerSettingsTransitions() {
+      TransitionRunnable backToInitialSceneRunnable =
+         () -> sceneChanger.changeScene(initialScene);
+
+      addTransition(Event.FINISH_SELECTED,
+                    StateId.FLATBED_SETTINGS_SCANNER,
+                    StateId.INITIAL_SCENE,
+                    backToInitialSceneRunnable
+                    );
+      addTransition(Event.BACK_SELECTED,
+                    StateId.FLATBED_SETTINGS_SCANNER,
+                    StateId.INITIAL_SCENE,
+                    backToInitialSceneRunnable);
+      addTransition(Event.SCAN_REGION_DEFINE,
+                    StateId.FLATBED_SETTINGS_SCANNER,
+                    StateId.FLATBED_SETTINGS_REGION,
+                    () -> sceneChanger.changeScene(scanRegion));
+      addTransition(Event.SCAN_REGION_DEFINE,
+                    StateId.FLATBED_SETTINGS_SCANNER,
+                    StateId.FLATBED_SETTINGS_REGION,
+                    () -> sceneChanger.changeScene(scanRegion));
+      addTransition(Event.CONTINUE_SELECTED,
+                    StateId.FLATBED_SETTINGS_REGION,
+                    StateId.FLATBED_SETTINGS_SCANNER,
+                    () -> sceneChanger.changeScene(scannerSettings));
+
+      scannerSettings.enableBackAction(() -> feedEvent(Event.BACK_SELECTED));
+      scannerSettings.enableNextAction(() -> feedEvent(Event.FINISH_SELECTED));
+      scannerSettings.onDefineScanRegionAction(() -> feedEvent(Event.SCAN_REGION_DEFINE));
    }
 }

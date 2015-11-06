@@ -16,8 +16,8 @@ class ChoicepointTransition<C> extends Transition {
    <A extends Component> ChoicepointTransition(Choicepoint<C>             fromChoicepoint,
                                                boolean                    startChoiceBranch,
                                                A                          toComponent,
-                                               Optional<TransitionRunner> runnerMaybe) {
-      super(fromChoicepoint, toComponent, runnerMaybe);
+                                               Optional<TransitionRunnable> runnableMaybe) {
+      super(fromChoicepoint, toComponent, runnableMaybe);
       this.startChoiceBranch = startChoiceBranch;
    }
 

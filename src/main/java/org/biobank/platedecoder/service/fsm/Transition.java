@@ -6,16 +6,16 @@ import java.util.Optional;
 abstract class Transition {
    final Component fromComponent;
    final Component toComponent;
-   final Optional<TransitionRunner> runnerMaybe;
+   final Optional<TransitionRunnable> runnableMaybe;
 
    <A extends Component, B extends Component> Transition(
       A                          fromComponent,
       B                          toComponent,
-      Optional<TransitionRunner> runnerMaybe) {
+      Optional<TransitionRunnable> runnableMaybe) {
 
       this.fromComponent = fromComponent;
       this.toComponent   = toComponent;
-      this.runnerMaybe   =  runnerMaybe;
+      this.runnableMaybe   =  runnableMaybe;
    }
 
    @Override

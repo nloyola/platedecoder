@@ -1,7 +1,5 @@
 package org.biobank.platedecoder.ui.scene;
 
-import java.util.Optional;
-
 import org.biobank.platedecoder.model.FlatbedDpi;
 import org.biobank.platedecoder.model.PlateDecoderDefaults;
 import org.biobank.platedecoder.model.PlateDecoderPreferences;
@@ -12,92 +10,78 @@ import org.controlsfx.dialog.ProgressDialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
-import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Region;
 
 public class ScanPlateScene extends SceneRoot {
 
-    //@SuppressWarnings("unused")
-    private static final Logger LOG = LoggerFactory.getLogger(ScanPlateScene.class);
+   //@SuppressWarnings("unused")
+   private static final Logger LOG = LoggerFactory.getLogger(ScanPlateScene.class);
 
-    private Optional<EventHandler<ActionEvent>> scanCompleteHandlerMaybe = Optional.empty();
+   public ScanPlateScene() {
+      super("Scanning options");
+   }
 
-    public ScanPlateScene() {
-        super("Scanning options");
-    }
+   @Override
+   public void onDisplay() {
+      // do nothing
+   }
 
-    @Override
-    public void onDisplay() {
-        // do nothing
-    }
+   @Override
+   protected Region createContents() {
+      FlatbedDpiChooser dpiChooser = new FlatbedDpiChooser(model.getFlatbedDpiProperty());
 
-    @Override
-    protected Node creatContents() {
-        FlatbedDpiChooser dpiChooser = new FlatbedDpiChooser();
+      GridPane grid = new GridPane();
+      grid.setPadding(new Insets(20, 5, 5, 5));
+      grid.setVgap(10);
+      grid.setHgap(10);
+      grid.add(dpiChooser, 0, 0);
+      grid.setAlignment(Pos.TOP_CENTER);
+      return grid;
+   }
 
-        Button scanButton = createScanButton();
+   @Override
+   protected boolean allowNextButtonAction() {
+      if (!checkFilePresentLinux()) {
+         PlateDecoder.errorDialog(
+            "Simulating the flatbed scan of a plate will not work. "
+            + "To correct this, please copy an image to: "
+            + PlateDecoder.flatbedPlateImageFilenameToUrl(),
+            "Unable to simulate action",
+            "File is missing.");
+         return true;
+      }
 
-        GridPane grid = new GridPane();
-        grid.setPadding(new Insets(20, 5, 5, 5));
-        grid.setVgap(10);
-        grid.setHgap(10);
-        grid.add(dpiChooser, 0, 0);
-        grid.add(scanButton, 0, 1);
-        grid.setAlignment(Pos.TOP_CENTER);
-        return grid;
-    }
+      ScanPlateTask worker = new ScanPlateTask(model.getFlatbedDpi().getValue());
+      ProgressDialog dlg = new ProgressDialog(worker);
+      dlg.setTitle("Scanning plate");
+      dlg.setHeaderText("Scanning plate");
 
-    private Button createScanButton() {
-        Button button = new Button("Continue");
-        button.setOnAction(this::scanPlate);
-        button.setMaxWidth(Double.MAX_VALUE);
-        return button;
-    }
-
-    private void scanPlate(ActionEvent event) {
-        if (!checkFilePresentLinux()) {
-            PlateDecoder.errorDialog(
-                "Simulating the flatbed scan of a plate will not work. "
-                + "To correct this, please copy an image to: "
-                + PlateDecoder.flatbedPlateImageFilenameToUrl(),
-                "Unable to simulate action",
-                "File is missing.");
-            return;
-        }
-
-        ScanPlateTask worker = new ScanPlateTask(model.getFlatbedDpi().getValue());
-        ProgressDialog dlg = new ProgressDialog(worker);
-        dlg.setTitle("Scanning plate");
-        dlg.setHeaderText("Scanning plate");
-
-        worker.setOnSucceeded(e -> {
+      worker.setOnSucceeded(e -> {
             FlatbedDpi dpi = model.getFlatbedDpi();
             PlateDecoderPreferences.getInstance().setFlatbedDpi(dpi);
-            scanCompleteHandlerMaybe.ifPresent(handler -> handler.handle(event));
-        });
+            performNextButtonAction();
+         });
 
-        worker.setOnFailed(e -> {
+      worker.setOnFailed(e -> {
             LOG.error("The task failed: {}", e);
-        });
+         });
 
-        Thread th = new Thread(worker);
-        th.setDaemon(true);
-        th.start();
-    }
+      Thread th = new Thread(worker);
+      th.setDaemon(true);
+      th.start();
 
-    private boolean checkFilePresentLinux() {
-        if (PlateDecoder.IS_LINUX) {
-            return PlateDecoder.fileExists(PlateDecoderDefaults.FLATBED_PLATE_IMAGE_NAME);
-        }
-        throw new IllegalStateException("OS is not Linux");
-    }
+      // return false here so that the action is not take, it is taken if the worker succeeds
+      return false;
+   }
 
-    public void onScanCompleteAction(EventHandler<ActionEvent> scanCompleteHandler) {
-        scanCompleteHandlerMaybe = Optional.of(scanCompleteHandler);
-    }
+   private boolean checkFilePresentLinux() {
+      if (PlateDecoder.IS_LINUX) {
+         return PlateDecoder.fileExists(PlateDecoderDefaults.FLATBED_PLATE_IMAGE_NAME);
+      }
+      throw new IllegalStateException("OS is not Linux");
+   }
+
 }

@@ -2,14 +2,14 @@ package org.biobank.platedecoder.service.fsm;
 
 // represents a choicepoint
 class Choicepoint<C> extends Component {
-   final C                  id;
-   final ChoicepointRunner  runner;
-   ChoicepointTransition<C> trueBranchTransition;
-   ChoicepointTransition<C> falseBranchTransition;
+   final C                   id;
+   final ChoicepointRunnable runnable;
+   ChoicepointTransition<C>  trueBranchTransition;
+   ChoicepointTransition<C>  falseBranchTransition;
 
-   public Choicepoint(C id, ChoicepointRunner runner) {
+   public Choicepoint(C id, ChoicepointRunnable runnable) {
       this.id = id;
-      this.runner = runner;
+      this.runnable = runnable;
    }
 
    public void addTransition(boolean branch, ChoicepointTransition<C> transition) {

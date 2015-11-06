@@ -124,28 +124,28 @@ public class Fsm<S, C, E> {
     *
     * <p>Choicepoints are points of execution where the FSM decides two go one of two directions,
     * along the {@code true} branch or the {@code false} branch. A callback handler,
-    * {@code runner}, is attached to the choicepoint, and it is the block of code which makes
+    * {@code runnable}, is attached to the choicepoint, and it is the block of code which makes
     * the decision which direction the choicepoint should take. Choicepoints may be chained
     * together, with intermediate transitions, to any level.
     *
     * @param choicepointId  The ID associated with this choicepoint.
     *
-    * @param runner The block of code to execute when this choicepoint is transitioned to. A lambda
+    * @param runnable The block of code to execute when this choicepoint is transitioned to. A lambda
     * expression can be used or a method reference.
     */
-   public void addChoicepoint(C choicepointId, ChoicepointRunner runner) {
+   public void addChoicepoint(C choicepointId, ChoicepointRunnable runnable) {
       Choicepoint<C> choicePointExists = choicepoints.get(choicepointId);
       if (choicePointExists != null) {
          throw new IllegalArgumentException("choice point already exists with id " + choicepointId);
       }
-      choicepoints.put(choicepointId, new Choicepoint<C>(choicepointId, runner));
+      choicepoints.put(choicepointId, new Choicepoint<C>(choicepointId, runnable));
    }
 
    /**
     * Adds a transition, from a state to a state, to the state machine.
     *
     * <p>Transitions connect states and choicepoints to other states and choicepoints. Transitions
-    * usually, but not always, have a block of code attached, {@code runner}, which executes
+    * usually, but not always, have a block of code attached, {@code runnable}, which executes
     * actions required of the FSM as it changes state. Transitions are not restricted to going
     * between states at the same level, and so may cross states' parent-child boundaries.
     *
@@ -163,7 +163,7 @@ public class Fsm<S, C, E> {
     *
     * @param toStateId  the state this transition terminates at.
     *
-    * @param runner  The block of code to execute when this transition is triggered.
+    * @param runnable  The block of code to execute when this transition is triggered.
     *
     * @throws NoSuchElementException If the state associated with {@code fromStateId} does not
     * exist, or if the state assiciated with {@code toStateId} does not exist.
@@ -172,13 +172,13 @@ public class Fsm<S, C, E> {
    public void addTransition(E event,
                              S fromStateId,
                              S toStateId,
-                             TransitionRunner runner) {
+                             TransitionRunnable runnable) {
       State<S, E> fromState = getState(fromStateId);
       State<S, E> toState   = getState(toStateId);
       fromState.addTransition(new StateTransition<S, E>(event,
                                                         fromState,
                                                         toState,
-                                                        Optional.of(runner)));
+                                                        Optional.of(runnable)));
    }
 
    /**
@@ -191,7 +191,7 @@ public class Fsm<S, C, E> {
     *
     * @param toChoicepointId  the choicepoint this transition terminates at.
     *
-    * @param runner  The block of code to execute when this transition is triggered.
+    * @param runnable  The block of code to execute when this transition is triggered.
     *
     * @throws NoSuchElementException If the state associated with {@code fromStateId} does not
     * exist, or if the choicepoint assiciated with {@code toChoicepointId} does not exist.
@@ -201,11 +201,11 @@ public class Fsm<S, C, E> {
    public void addTransitionToChoice(E event,
                                      S fromStateId,
                                      C toChoicepointId,
-                                     TransitionRunner runner) {
+                                     TransitionRunnable runnable) {
       addTransitionToChoice(event,
                             fromStateId,
                             toChoicepointId,
-                            Optional.of(runner));
+                            Optional.of(runnable));
    }
 
    /**
@@ -242,7 +242,7 @@ public class Fsm<S, C, E> {
     *
     * @param toStateId  the state this transition terminates at.
     *
-    * @param runner  The block of code to execute when this transition is triggered.
+    * @param runnable  The block of code to execute when this transition is triggered.
     *
     * @throws NoSuchElementException If the choicepoint associated with {@code fromStateId} does not
     * exist, or if the state assiciated with {@code toStateId} does not exist.
@@ -252,12 +252,12 @@ public class Fsm<S, C, E> {
    public void addTransitionFromChoiceToState(C fromChoicepointId,
                                               boolean startChoiceBranch,
                                               S toStateId,
-                                              TransitionRunner runner) {
+                                              TransitionRunnable runnable) {
 
       addTransitionFromChoiceToState(fromChoicepointId,
                                      startChoiceBranch,
                                      toStateId,
-                                     Optional.of(runner));
+                                     Optional.of(runnable));
    }
 
    /**
@@ -432,26 +432,26 @@ public class Fsm<S, C, E> {
    private void addTransitionToChoice(E event,
                                       S fromStateId,
                                       C toChoicepointId,
-                                      Optional<TransitionRunner> runnerMaybe) {
+                                      Optional<TransitionRunnable> runnableMaybe) {
       State<S, E> fromState = getState(fromStateId);
       Choicepoint<C> choicepoint = getChoicepoint(toChoicepointId);
       fromState.addTransition(new StateTransition<S, E>(event,
                                                         fromState,
                                                         choicepoint,
-                                                        runnerMaybe));
+                                                        runnableMaybe));
    }
 
    private void addTransitionFromChoiceToState(C fromChoicepointId,
                                                boolean startChoiceBranch,
                                                S toStateId,
-                                               Optional<TransitionRunner> runnerMaybe) {
+                                               Optional<TransitionRunnable> runnableMaybe) {
       Choicepoint<C> choicepoint = getChoicepoint(fromChoicepointId);
       State<S, E> toState = getState(toStateId);
       choicepoint.addTransition(startChoiceBranch,
                                 new ChoicepointTransition<C>(choicepoint,
                                                              startChoiceBranch,
                                                              toState,
-                                                             runnerMaybe));
+                                                             runnableMaybe));
    }
 
    /*
@@ -460,13 +460,13 @@ public class Fsm<S, C, E> {
    @SuppressWarnings("unchecked")
    private void invokeTransitionComponent(Transition transition) {
       LOG.debug("transition found: {}", transition);
-      transition.runnerMaybe.ifPresent(runner -> runner.run());
+      transition.runnableMaybe.ifPresent(runnable -> runnable.run());
       if (transition.toComponent instanceof State) {
          currentStateMaybe = Optional.of((State<S, E>) transition.toComponent);
       } else if (transition.toComponent instanceof Choicepoint) {
          Choicepoint<C> choicepoint = (Choicepoint<C>) transition.toComponent;
 
-         Transition nextTransition = choicepoint.runner.run()
+         Transition nextTransition = choicepoint.runnable.getAsBoolean()
             ? choicepoint.trueBranchTransition : choicepoint.falseBranchTransition;
 
          invokeTransitionComponent(nextTransition);

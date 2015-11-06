@@ -14,6 +14,12 @@ public class PlateDecoderDefaults {
    /** The default DPI used when scanning a plate image with the flatbed scanner. */
    public static final long FLATBED_IMAGE_DPI = 300;
 
+   /** The default brightness used when scanning a plate image with the flatbed scanner. */
+   public static final long DEFAULT_FLATBED_BRIGHTNESS = 0;
+
+   /** The default contrast used when scanning a plate image with the flatbed scanner. */
+   public static final long DEFAULT_FLATBED_CONTRAST = 0;
+
    /** The name of the file scanned images are saved to. */
    public static final String FLATBED_IMAGE_NAME = "flatbed.png";
 

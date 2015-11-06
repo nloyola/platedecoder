@@ -9,8 +9,8 @@ class StateTransition<S, E> extends Transition {
    <A extends Component> StateTransition(E                          event,
                                          State<S, E>                fromState,
                                          A                          toComponent,
-                                         Optional<TransitionRunner> runnerMaybe) {
-      super(fromState, toComponent, runnerMaybe);
+                                         Optional<TransitionRunnable> runnableMaybe) {
+      super(fromState, toComponent, runnableMaybe);
       this.event = event;
    }
 

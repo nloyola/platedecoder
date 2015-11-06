@@ -29,8 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.Node;
@@ -45,6 +43,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 
@@ -73,11 +72,7 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
 
    private Label filenameLabel;
 
-   private Button continueBtn;
-
    private Optional<Set<DecodedWell>> decodedWellsMaybe = Optional.empty();
-
-   private Optional<EventHandler<ActionEvent>> continueHandlerMaybe = Optional.empty();
 
    public DecodeImageScene() {
       super("Align grid with barcodes");
@@ -116,12 +111,15 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
          updateWellGrid();
          wellGrid.update();
       }
-      continueBtn.setDisable(decodedWells.isEmpty());
+      disableNextButton(decodedWells.isEmpty());
    }
 
    /**
     * Used to specify the source of the image.
     *
+    * @param <T> a subclass of {@link ImageSource}.
+    *
+    * @param imageSource the image source object.
     */
    public <T extends ImageSource> void setImageSource(T imageSource) {
       this.imageSource = imageSource;
@@ -175,7 +173,7 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
    }
 
    @Override
-   protected Node creatContents() {
+   protected Region createContents() {
       Node controls = createControlsPane();
       Node imagePane = createImagePane();
 
@@ -189,57 +187,8 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
       return borderPane;
    }
 
-   private Node createControlsPane() {
-      PlateTypeChooser plateTypeChooser = new PlateTypeChooser();
-
-      Button decodeButton = createDecodeButton();
-      continueBtn = createContinueButton();
-
-      GridPane grid = new GridPane();
-      grid.setVgap(2);
-      grid.setHgap(2);
-      grid.add(plateTypeChooser, 0, 0, 2, 1);
-      grid.add(new PlateOrientationChooser(), 0, 1, 2, 1);
-      grid.add(new BarcodePositionChooser(), 0, 2, 2, 1);
-      grid.add(createInstructionsArea(), 0, 3, 2, 1);
-      grid.add(decodeButton, 0, 4);
-      grid.add(continueBtn, 1, 4);
-
-      GridPane.setHalignment(continueBtn, HPos.RIGHT);
-
-      return grid;
-   }
-
-   private Node createInstructionsArea() {
-      StringBuffer buf = new StringBuffer();
-      buf.append("Align grid so that each cell contains a 2D barcode, and then press the Decode button.\n\n");
-      buf.append("If there are missed cells, double click one to decode it with a hand held scanner.\n\n");
-      buf.append("Press the Continue button once all cells are decoded.");
-
-      Text text = new Text();
-      text.setText(buf.toString());
-      text.setWrappingWidth(200);
-
-      return Borders.wrap(text)
-         .etchedBorder().build()
-         .build();
-   }
-
-   private Button createDecodeButton() {
-      Button button = new Button("Decode");
-      button.setOnAction(this::decodeImageAction);
-      button.setMaxWidth(Double.MAX_VALUE);
-      return button;
-   }
-
-   private Button createContinueButton() {
-      Button continueBtn = new Button("Continue");
-      continueBtn.setDisable(true);
-      continueBtn.setOnAction(this::continueButtonAction);
-      return continueBtn;
-   }
-
-   private void continueButtonAction(ActionEvent event) {
+   @Override
+   protected boolean allowNextButtonAction() {
       if (!decodedWellsMaybe.isPresent()) {
          throw new IllegalStateException("missing decoded wells");
       }
@@ -255,7 +204,48 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
       // save current dimensions of plate to preferences so they are used next time
       PlateDecoderPreferences.getInstance().setWellRectangle(
          model.getPlateType(), wellGrid);
-      continueHandlerMaybe.ifPresent(handler -> handler.handle(event));
+      return true;
+   }
+
+   private Node createControlsPane() {
+      PlateTypeChooser plateTypeChooser = new PlateTypeChooser();
+
+      Button decodeButton = createDecodeButton();
+
+      GridPane grid = new GridPane();
+      grid.setVgap(2);
+      grid.setHgap(2);
+      grid.add(plateTypeChooser, 0, 0, 2, 1);
+      grid.add(new PlateOrientationChooser(model.getPlateOrientationProperty()), 0, 1, 2, 1);
+      grid.add(new BarcodePositionChooser(model.getBarcodePositionProperty()), 0, 2, 2, 1);
+      grid.add(createInstructionsArea(), 0, 3, 2, 1);
+      grid.add(decodeButton, 0, 4);
+
+      return grid;
+   }
+
+   private Node createInstructionsArea() {
+      StringBuffer buf = new StringBuffer();
+      buf.append(
+         "Align grid so that each cell contains a 2D barcode, and then press the Decode button.\n\n");
+      buf.append(
+         "If there are missed cells, double click one to decode it with a hand held scanner.\n\n");
+      buf.append("Press the Next button once all cells are decoded.");
+
+      Text text = new Text();
+      text.setText(buf.toString());
+      text.setWrappingWidth(200);
+
+      return Borders.wrap(text)
+         .etchedBorder().build()
+         .build();
+   }
+
+   private Button createDecodeButton() {
+      Button button = new Button("Decode");
+      button.setOnAction(this::decodeImageAction);
+      button.setMaxWidth(Double.MAX_VALUE);
+      return button;
    }
 
    private Pane createImagePane() {
@@ -351,7 +341,7 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
                }
 
                updateWellGrid();
-               continueBtn.setDisable(false);
+               disableNextButton(false);
             } else {
                LOG.error("decode failed: {}", result.getResultCode());
             }
@@ -373,10 +363,6 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
                wellGrid.setWellCellInventoryId(well.getLabel(), well.getMessage()));
             wellGrid.update();
          });
-   }
-
-   public void onContinueAction(EventHandler<ActionEvent> continueHandler) {
-      continueHandlerMaybe = Optional.of(continueHandler);
    }
 
    private void updateDecodedWellCount(Set<DecodedWell> decodedWells) {

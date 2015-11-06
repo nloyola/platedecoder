@@ -128,13 +128,9 @@ public class PlateDecoder extends Application implements SceneChanger {
    // DEBGUG code
    private void setSceneTestSpecimenLink() {
       SpecimenLink.setTestData();
-
       SpecimenLink specimenLink = new SpecimenLink();
       changeScene(specimenLink);
-
-      specimenLink.enableFinishAction(e -> {
-            closeApplicationRequest();
-         });
+      specimenLink.enableFinishAction(() -> closeApplicationRequest());
    }
 
    // DEBGUG code
@@ -143,21 +139,10 @@ public class PlateDecoder extends Application implements SceneChanger {
       DecodedTubes decodedTubes = new DecodedTubes();
       SpecimenLink specimenLink = new SpecimenLink();
 
-      decodeImage.onContinueAction(e -> {
-            changeScene(decodedTubes);
-         });
-
-      decodedTubes.enableBackAction(e -> {
-            changeScene(decodeImage);
-         });
-
-      decodedTubes.enableFinishAction(e -> {
-            closeApplicationRequest();
-         });
-
-      decodedTubes.onSpecimenLinkAction(e -> {
-            changeScene(specimenLink);
-         });
+      decodeImage.enableNextAction(() -> changeScene(decodedTubes));
+      decodedTubes.enableBackAction(() -> changeScene(decodeImage));
+      decodedTubes.enableFinishAction(() -> closeApplicationRequest());
+      decodedTubes.onSpecimenLinkAction(() -> changeScene(specimenLink));
 
       changeScene(decodeImage);
       decodeImage.setImageSource(
@@ -165,7 +150,7 @@ public class PlateDecoder extends Application implements SceneChanger {
             "file:///home/nelson/Desktop/testImages/8x12/FrozenPalletImages/HP_L1985A/scanned4.bmp"));
    }
 
-   // DEBGUG code
+   // DEBUG code
    private void setSceneScanningRegion() {
       ScanRegionScene scanRegion = new ScanRegionScene();
       changeScene(scanRegion);
@@ -188,6 +173,38 @@ public class PlateDecoder extends Application implements SceneChanger {
    }
 
    /**
+    * Displays an alert dialog.
+    *
+    * @param alertType The type of alert dialog to display.
+    *
+    * @param titleBar the string to display in the dialog box's title bar.
+    *
+    * @param headerMessage the string to display in the title are of the dialog box. When this value
+    * is null, the dialog will not have a title area.
+    *
+    * @param infoMessage the string to display in the body of the dialog box.
+    *
+    * @return the dialog box.
+    */
+   public static Alert createDialog(Alert.AlertType alertType,
+                                    String titleBar,
+                                    String headerMessage,
+                                    String infoMessage) {
+      Alert alert = new Alert(alertType);
+      alert.setTitle(titleBar);
+      alert.setHeaderText(headerMessage);
+      alert.setContentText(infoMessage);
+
+      if (IS_LINUX) {
+         //FIXME: Remove after release 8u40
+         alert.setResizable(true);
+         alert.getDialogPane().setPrefSize(480, 320);
+      }
+
+      return alert;
+   }
+
+   /**
     * Displays an information dialog.
     *
     * @param titleBar the string to display in the dialog box's title bar.
@@ -201,7 +218,8 @@ public class PlateDecoder extends Application implements SceneChanger {
    public static void infoDialog(String titleBar,
                                  String headerMessage,
                                  String infoMessage) {
-      createDialog(AlertType.INFORMATION, titleBar, headerMessage, infoMessage);
+      Alert alert = createDialog(AlertType.INFORMATION, titleBar, headerMessage, infoMessage);
+      alert.showAndWait();
    }
 
    /**
@@ -214,7 +232,8 @@ public class PlateDecoder extends Application implements SceneChanger {
     */
    public static void infoDialog(String infoMessage, String titleBar) {
       // By specifying a null headerMessage String, we cause the dialog to not have a header
-      createDialog(AlertType.INFORMATION, titleBar, null, infoMessage);
+      Alert alert = createDialog(AlertType.INFORMATION, titleBar, null, infoMessage);
+      alert.showAndWait();
    }
 
    /**
@@ -231,7 +250,8 @@ public class PlateDecoder extends Application implements SceneChanger {
    public static void errorDialog(String infoMessage,
                                   String titleBar,
                                   String headerMessage) {
-      createDialog(AlertType.ERROR, titleBar, headerMessage, infoMessage);
+      Alert alert = createDialog(AlertType.ERROR, titleBar, headerMessage, infoMessage);
+      alert.showAndWait();
    }
 
    /**
@@ -271,25 +291,6 @@ public class PlateDecoder extends Application implements SceneChanger {
       buf.append(File.separator);
       buf.append(filename);
       return buf.toString();
-   }
-
-   // common code for creating alert dialog boxes
-   private static void createDialog(Alert.AlertType alertType,
-                                    String titleBar,
-                                    String headerMessage,
-                                    String infoMessage) {
-      Alert alert = new Alert(alertType);
-      alert.setTitle(titleBar);
-      alert.setHeaderText(headerMessage);
-      alert.setContentText(infoMessage);
-
-      if (IS_LINUX && (alertType == AlertType.ERROR)) {
-         //FIXME: Remove after release 8u40
-         alert.setResizable(true);
-         alert.getDialogPane().setPrefSize(480, 320);
-      }
-
-      alert.showAndWait();
    }
 
 }

@@ -1,11 +1,12 @@
 package org.biobank.platedecoder.ui.scene;
 
+import java.util.Optional;
+
 import org.biobank.platedecoder.model.PlateModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -14,6 +15,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 /**
@@ -27,127 +29,216 @@ import javafx.scene.layout.VBox;
  */
 public abstract class SceneRoot extends BorderPane {
 
-    @SuppressWarnings("unused")
-    private static final Logger LOG = LoggerFactory.getLogger(SceneRoot.class);
+   @SuppressWarnings("unused")
+   private static final Logger LOG = LoggerFactory.getLogger(SceneRoot.class);
 
-    /**
-     * A reference to the application's model where settings are stored.
-     */
-    protected PlateModel model = PlateModel.getInstance();
+   /**
+    * A reference to the application's model where settings are stored.
+    */
+   protected PlateModel model = PlateModel.getInstance();
 
-    private final String title;
+   private final String title;
 
-    private Button backBtn;
+   private Button backBtn;
 
-    private Button finishBtn;
+   private Button nextBtn;
 
-    /**
-     * Creates a scene.
-     *
-     * <p>The {@code title} is displayed in the title area. The UI components are created by
-     * overriding {@link #createContentsArea}.
-     *
-     * @param title  The title to display at the top of this scene.
-     */
-    public SceneRoot(String title) {
-        this.title = title;
-        setTop(createTitle());
-        setCenter(createContentsArea());
-        setBottom(createBottomArea());
-    }
+   private Button finishBtn;
 
-    private Node createContentsArea() {
-        final Node node = creatContents();
-        return node;
-    }
+   private Optional<Runnable> backButtonActionRunnableMaybe = Optional.empty();
 
-    /**
-     * Invoked on initialization so that the subclass can create it's UI elements.
-     *
-     * @return This method should return the root UI element. This element is then added to the scene.
-     */
-    protected abstract Node creatContents();
+   private Optional<Runnable> nextButtonActionRunnableMaybe = Optional.empty();
 
-    /**
-     * Called when the scene is diplayed.
-     *
-     * <p>The scen could be displayed for the first time as a result of an action in another scene,
-     * or when the user presses the {@code Back} button in another scene.
-     *
-     * <p>This method is meant to refresh the UI elements.
-     */
-    public abstract void onDisplay();
+   /**
+    * Creates a scene.
+    *
+    * <p>The {@code title} is displayed in the title area. The UI components are created by
+    * overriding {@link #createContentsArea}.
+    *
+    * @param title  The title to display at the top of this scene.
+    */
+   public SceneRoot(String title) {
+      this.title = title;
+      setTop(createTitle());
 
-    /**
-     * Used to enable the {@code Finish} button and bind code to execute when the user presses the
-     * button.
-     *
-     * <p>By default this button is disabled. The subclass should call this method if it wants to
-     * display the button.
-     *
-     * @param actionHandler  The block of code to execute when this button is pressed.
-     */
-    public void enableBackAction(EventHandler<ActionEvent> actionHandler) {
-        backBtn.setVisible(true);
-        backBtn.setOnAction(actionHandler);
-    }
+      Region contentsRegion = createContentsArea();
+      setCenter(contentsRegion);
 
-    /**
-     * Used to enable the {@code Finish} button and bind code to execute when the user presses the
-     * button.
-     *
-     * <p>By default this button is disabled. The subclass should call this method if it wants to
-     * display the button. Usually this button will terminate the application.
-     *
-     * @param actionHandler  The block of code to execute when this button is pressed.
-     */
-    public void enableFinishAction(EventHandler<ActionEvent> actionHandler) {
-        finishBtn.setVisible(true);
-        finishBtn.setOnAction(actionHandler);
-    }
+      setBottom(createBottomArea());
+   }
 
-    private Node createTitle() {
-        final VBox titleBox = new VBox();
-        titleBox.setMaxHeight(Double.MAX_VALUE);
-        titleBox.setPadding(new Insets(5, 5, 20, 5));
+   private Region createContentsArea() {
+      final Region node = createContents();
+      return node;
+   }
 
-        final Label titleLabel = new Label(title);
-        titleLabel.setStyle("-fx-font-size:18; -fx-font-weight:bold;");
-        titleBox.getChildren().add(titleLabel);
+   /**
+    * Invoked on initialization so that the subclass can create it's UI elements.
+    *
+    * @return This method should return the root UI element. This element is then added to the scene.
+    */
+   protected abstract Region createContents();
 
-        final ScrollPane scrollPane = new ScrollPane(titleBox);
-        scrollPane.setMaxHeight(Double.MAX_VALUE);
-        scrollPane.setFitToWidth(true);
-        scrollPane.setFitToHeight(true);
+   /**
+    * Called when the scene is displayed.
+    *
+    * <p>The scen could be displayed for the first time as a result of an action in another scene,
+    * or when the user presses the {@code Back} button in another scene.
+    *
+    * <p>This method is meant to refresh the UI elements.
+    */
+   public abstract void onDisplay();
 
-        return scrollPane;
-    }
+   /**
+    * Used to enable the {@code Back} button and bind a runnable to execute when the user presses
+    * the button.
+    *
+    * <p>By default this button is disabled. The subclass should call this method if it wants to
+    * display the button.
+    *
+    * @param runnable  The runnable to execute when this button is pressed.
+    */
+   public void enableBackAction(Runnable runnable) {
+      backBtn.setVisible(true);
+      backButtonActionRunnableMaybe = Optional.of(runnable);
+   }
 
-    private Node createBottomArea() {
-        final AnchorPane pane = new AnchorPane();
-        pane.setPadding(new Insets(5, 5, 5, 5));
+   /**
+    * Used to enable the {@code Next} button and bind runnable to to execute when the user presses
+    * the button.
+    *
+    * <p>By default this button is disabled. The subclass should call this method if it wants to
+    * display the button.
+    *
+    * @param runnable  The runnable to execute when this button is pressed.
+    */
+   public void enableNextAction(Runnable runnable) {
+      nextBtn.setVisible(true);
+      nextButtonActionRunnableMaybe = Optional.of(runnable);
+   }
 
-        backBtn = new Button("Back");
-        backBtn.managedProperty().bind(backBtn.visibleProperty());
-        backBtn.setVisible(false);
+   /**
+    * Used to disable or enable the next button.
+    *
+    * @param disable When TRUE the button is disabled.
+    */
+   protected void disableNextButton(boolean disable) {
+      nextBtn.setDisable(disable);
+   }
 
-        finishBtn = new Button("Finish");
-        finishBtn.managedProperty().bind(finishBtn.visibleProperty());
-        finishBtn.setVisible(false);
+   /**
+    * Sub classes should override this method if they want to prevent the back action from taking
+    * place.
+    *
+    * <p>A good use for this is if the scene wants to remind the user to perform an Action
+    * prior to pressing the back button.
+    *
+    * @return TRUE if the action should be allowed.
+    */
+   protected boolean allowBackButtonAction() {
+      return true;
+   }
 
-        HBox hbox = new HBox(5);
-        hbox.getChildren().addAll(backBtn, finishBtn);
+   /**
+    * Sub classes should override this method if they want to prevent the next action from taking
+    * place.
+    *
+    * <p>A good use for this is if the scene wants to remind the user to perform an Action
+    * prior to pressing the next button.
+    *
+    * @return TRUE if the action should be allowed.
+    */
+   protected boolean allowNextButtonAction() {
+      return true;
+   }
 
-        AnchorPane.setTopAnchor(hbox, 0.0);
-        AnchorPane.setRightAnchor(hbox, 0.0);
+   /**
+    * The sub class may want finer control when the {@code Next} button is pressed.
+    *
+    * <p>This button allows for the action to be taken.
+    */
+   protected void performNextButtonAction() {
+      nextButtonActionRunnableMaybe.ifPresent(runnable -> runnable.run());
+   }
 
-        pane.getChildren().add(hbox);
+   /**
+    * Used to enable the {@code Finish} button and bind code to execute when the user presses the
+    * button.
+    *
+    * <p>By default this button is disabled. The subclass should call this method if it wants to
+    * display the button. Usually this button will terminate the application.
+    *
+    * @param runnable  The runnable to execute when this button is pressed.
+    */
+   public void enableFinishAction(Runnable runnable) {
+      finishBtn.setVisible(true);
+      finishBtn.setOnAction(e -> runnable.run());
+   }
 
-        final ScrollPane scrollPane = new ScrollPane(pane);
-        scrollPane.setMaxHeight(Double.MAX_VALUE);
-        scrollPane.setFitToWidth(true);
-        scrollPane.setFitToHeight(true);
-        return scrollPane;
-    }
+   private Node createTitle() {
+      final VBox titleBox = new VBox();
+      titleBox.setMaxHeight(Double.MAX_VALUE);
+      titleBox.setPadding(new Insets(5, 5, 20, 5));
+
+      final Label titleLabel = new Label(title);
+      titleLabel.setStyle("-fx-font-size:18; -fx-font-weight:bold;");
+      titleBox.getChildren().add(titleLabel);
+
+      final ScrollPane scrollPane = new ScrollPane(titleBox);
+      scrollPane.setMaxHeight(Double.MAX_VALUE);
+      scrollPane.setFitToWidth(true);
+      scrollPane.setFitToHeight(true);
+
+      return scrollPane;
+   }
+
+   private Node createBottomArea() {
+      final AnchorPane pane = new AnchorPane();
+      pane.setPadding(new Insets(5, 5, 5, 5));
+
+      backBtn = new Button("Back");
+      backBtn.managedProperty().bind(backBtn.visibleProperty());
+      backBtn.setOnAction(this::backButtonAction);
+      backBtn.setVisible(false);
+
+      nextBtn = new Button("Next");
+      nextBtn.managedProperty().bind(nextBtn.visibleProperty());
+      nextBtn.setOnAction(this::nextButtonAction);
+      nextBtn.setVisible(false);
+
+      finishBtn = new Button("Finish");
+      finishBtn.managedProperty().bind(finishBtn.visibleProperty());
+      finishBtn.setVisible(false);
+
+      HBox hbox = new HBox(5);
+      hbox.getChildren().addAll(backBtn, nextBtn, finishBtn);
+
+      AnchorPane.setTopAnchor(hbox, 0.0);
+      AnchorPane.setRightAnchor(hbox, 0.0);
+
+      pane.getChildren().add(hbox);
+
+      final ScrollPane scrollPane = new ScrollPane(pane);
+      scrollPane.setMaxHeight(Double.MAX_VALUE);
+      scrollPane.setFitToWidth(true);
+      scrollPane.setFitToHeight(true);
+      return scrollPane;
+   }
+
+   private void backButtonAction(@SuppressWarnings("unused") ActionEvent event) {
+      backButtonActionRunnableMaybe.ifPresent(runnable -> {
+            if (allowBackButtonAction()) {
+               runnable.run();
+            }
+         });
+   }
+
+   private void nextButtonAction(@SuppressWarnings("unused") ActionEvent event) {
+      nextButtonActionRunnableMaybe.ifPresent(runnable -> {
+            if (allowNextButtonAction()) {
+               runnable.run();
+            }
+         });
+   }
 
 }

@@ -10,6 +10,10 @@ enum StateId {
 
    // child states for USE_FLATBED_IMAGE
    SCAN_REGION,
-   SCAN_PLATE;
+   SCAN_PLATE,
+
+   // settings
+   FLATBED_SETTINGS_SCANNER,
+   FLATBED_SETTINGS_REGION;
 
 }

@@ -53,6 +53,10 @@ public class PlateDecoderPreferences {
 
    private static final String PREFS_FLATBED_LAST_USED_DPI = "PREFS_FLATBED_LAST_USED_DPI";
 
+   private static final String PREFS_FLATBED_BRIGHTNESS = "PREFS_FLATBED_BRIGHTNESS";
+
+   private static final String PREFS_FLATBED_CONTRAST = "PREFS_FLATBED_CONTRAST";
+
    private static final String PREFS_SPECIMEN_LINK_DIVIDER_POSITION =
       "PREFS_SPECIMEN_LINK_DIVIDER_POSITION";
 
@@ -106,7 +110,7 @@ public class PlateDecoderPreferences {
     *
     * @param driverType The driver type to save in the preferences.
     */
-   public void setDriverType(DriverType driverType) {
+   public void setFlatbedDriverType(DriverType driverType) {
       prefs.put(PREFS_DRIVER_TYPE, driverType.name());
    }
 
@@ -265,6 +269,32 @@ public class PlateDecoderPreferences {
 
    public void setFlatbedDpi(FlatbedDpi dpi) {
       prefs.put(PREFS_FLATBED_LAST_USED_DPI, dpi.name());
+   }
+
+   /**
+    * The brightness value stored in the preferences, used with the flatbed scanner.
+    *
+    * @return The brightness value stored in the preferences.
+    */
+   public long getFlatbedBrightness() {
+      return prefs.getLong(PREFS_FLATBED_BRIGHTNESS, DEFAULT_FLATBED_BRIGHTNESS);
+   }
+
+   public void setFlatbedBrightness(long brightness) {
+      prefs.put(PREFS_FLATBED_BRIGHTNESS, String.valueOf(brightness));
+   }
+
+   /**
+    * The contrast value stored in the preferences, used with the flatbed scanner.
+    *
+    * @return The contrast value stored in the preferences.
+    */
+   public long getFlatbedContrast() {
+      return prefs.getLong(PREFS_FLATBED_CONTRAST, DEFAULT_FLATBED_CONTRAST);
+   }
+
+   public void setFlatbedContrast(long contrast) {
+      prefs.put(PREFS_FLATBED_CONTRAST, String.valueOf(contrast));
    }
 
    //--

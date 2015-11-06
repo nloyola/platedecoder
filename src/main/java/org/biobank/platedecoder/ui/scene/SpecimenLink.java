@@ -13,6 +13,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 public class SpecimenLink extends SceneRoot {
@@ -34,7 +35,7 @@ public class SpecimenLink extends SceneRoot {
     }
 
     @Override
-    protected Node creatContents() {
+    protected Region createContents() {
         sp = new SplitPane();
         final VBox leftPane = new VBox(5);
         plateRegion = new PlateRegion(model.getPlateType());

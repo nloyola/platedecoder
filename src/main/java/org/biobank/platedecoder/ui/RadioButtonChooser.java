@@ -3,6 +3,7 @@ package org.biobank.platedecoder.ui;
 import org.biobank.platedecoder.model.PlateModel;
 import org.controlsfx.tools.Borders;
 
+import javafx.beans.property.ObjectProperty;
 import javafx.scene.Node;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
@@ -25,14 +26,25 @@ public abstract class RadioButtonChooser<T> extends VBox {
     * <p>The user can select one of these options.
     *
     * @param title The label to display in the border that surrounds the radio buttons.
+    *
+    * @param property The property that should be updated when the user selects a radio button.
     */
    @SuppressWarnings("unchecked")
-   public RadioButtonChooser(String title) {
+   public RadioButtonChooser(String title, ObjectProperty<T> property) {
       super();
 
       toggleGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
             if (toggleGroup.getSelectedToggle() != null) {
-               setValue((T) newValue.getUserData());
+               property.setValue((T) newValue.getUserData());
+            }
+         });
+
+      property.addListener((observable, oldValue, newValue) -> {
+            for (Node node : toggleGroupContainer.getChildren()) {
+               if (node instanceof RadioButton) {
+                  RadioButton button = (RadioButton) node;
+                  button.setSelected(button.getUserData() == newValue);
+               }
             }
          });
 
@@ -41,19 +53,10 @@ public abstract class RadioButtonChooser<T> extends VBox {
    }
 
    /**
-    * This method is called when the user selects one of the radio buttons.
-    *
-    * <p>Subclasses must implement this method to record the user's selection.
-    *
-    * @param obj The object that represents the selection.
-    */
-   protected abstract void setValue(T obj);
-
-   /**
     * Subclasses should call this method to add radio buttons to the widget.
     *
-    * <p>When the button is selected by the user, {@link #setValue setValue} is invoked with {@code
-    * userDataObj}.
+    * <p>When the button is selected by the user, the property given in the call to the constructor
+    * is assigned the new value.
     *
     * @param label The string to be displayed with this button.
     *

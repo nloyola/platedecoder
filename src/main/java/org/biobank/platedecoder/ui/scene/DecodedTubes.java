@@ -17,15 +17,14 @@ import org.slf4j.LoggerFactory;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 
@@ -56,7 +55,7 @@ public class DecodedTubes extends SceneRoot {
 
    private List<PlateWell> sortedList;
 
-   private Optional<EventHandler<ActionEvent>> specimenLinkHandlerMaybe = Optional.empty();
+   private Optional<Runnable> specimenLinkRunnableMaybe = Optional.empty();
 
    /**
     * Creates the scene.
@@ -77,7 +76,7 @@ public class DecodedTubes extends SceneRoot {
    }
 
    @Override
-   protected Node creatContents() {
+   protected Region createContents() {
       table = new TableView<>();
 
       labelColumn = new TableColumn<>("Label");
@@ -114,10 +113,10 @@ public class DecodedTubes extends SceneRoot {
    /**
     * Allows for an action handler to be called when the user presses the specimen link button.
     *
-    * @param handler The handler to be invoked when the user presses the button.
+    * @param runnable The runnable to invoked when the user presses the button.
     */
-   public void onSpecimenLinkAction(EventHandler<ActionEvent> handler) {
-      specimenLinkHandlerMaybe = Optional.of(handler);
+   public void onSpecimenLinkAction(Runnable runnable) {
+      specimenLinkRunnableMaybe = Optional.of(runnable);
    }
 
    private Button [] createButtons() {
@@ -184,8 +183,8 @@ public class DecodedTubes extends SceneRoot {
       }
    }
 
-   private void specimenLinkAction(ActionEvent event) {
-      specimenLinkHandlerMaybe.ifPresent(handler -> handler.handle(event));
+   private void specimenLinkAction(@SuppressWarnings("unused") ActionEvent event) {
+      specimenLinkRunnableMaybe.ifPresent(runnable -> runnable.run());
    }
 
    @SuppressWarnings("unused")
