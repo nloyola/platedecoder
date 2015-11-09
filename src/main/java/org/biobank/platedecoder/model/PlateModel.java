@@ -5,8 +5,10 @@ import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
@@ -56,6 +58,7 @@ public class PlateModel {
    public ObservableList<PlateType> plateTypes =
       FXCollections.observableArrayList(Arrays.asList(PlateType.values()));
 
+   private PlateDecoderPreferences preferences = PlateDecoderPreferences.getInstance();
 
    // The type of plate currently selected. I.e. the number of wells it contains.
    private ObjectProperty<PlateType> plateTypeProperty;
@@ -78,50 +81,99 @@ public class PlateModel {
    // The contrast setting for the flatbed scanner
    private LongProperty flatbedContrastProperty;
 
+   private final LongProperty decoderDebugLevelProperty;
+   private final DoubleProperty minEdgeFactorProperty;
+   private final DoubleProperty maxEdgeFactorProperty;
+   private final DoubleProperty scanGapFactorProperty;
+   private final LongProperty squareDeviationProperty;
+   private final LongProperty edgeThresholdProperty;
+   private final LongProperty correctionsProperty;
+
    private PlateModel() {
-      plateTypeProperty = new SimpleObjectProperty<PlateType>(
-         PlateDecoderPreferences.getInstance().getPlateType());
+      plateTypeProperty = new SimpleObjectProperty<PlateType>(preferences.getPlateType());
       plateTypeProperty.addListener((observable, oldValue, newValue) -> {
-            PlateDecoderPreferences.getInstance().setPlateType(newValue);
+            preferences.setPlateType(newValue);
             createNewPlate();
          });
 
-      barcodePositionProperty = new SimpleObjectProperty<BarcodePosition>(
-         PlateDecoderPreferences.getInstance().getBarcodePosition());
+      barcodePositionProperty =
+         new SimpleObjectProperty<BarcodePosition>(preferences.getBarcodePosition());
       barcodePositionProperty.addListener((observable, oldValue, newValue) -> {
-            PlateDecoderPreferences.getInstance().setBarcodePosition((newValue));
+            preferences.setBarcodePosition((newValue));
             createNewPlate();
          });
 
-      plateOrientationProperty = new SimpleObjectProperty<PlateOrientation>(
-         PlateDecoderPreferences.getInstance().getPlateOrietation());
+      plateOrientationProperty =
+         new SimpleObjectProperty<PlateOrientation>(preferences.getPlateOrietation());
       plateOrientationProperty.addListener((observable, oldValue, newValue) -> {
-            PlateDecoderPreferences.getInstance().setPlateOrientation(newValue);
+            preferences.setPlateOrientation(newValue);
             createNewPlate();
          });
 
-      driverTypeProperty = new SimpleObjectProperty<DriverType>(
-         PlateDecoderPreferences.getInstance().getDriverType());
+      driverTypeProperty =
+         new SimpleObjectProperty<DriverType>(preferences.getDriverType());
       driverTypeProperty.addListener((observable, oldValue, newValue) -> {
-            PlateDecoderPreferences.getInstance().setFlatbedDriverType(newValue);
+            preferences.setFlatbedDriverType(newValue);
          });
 
-      flatbedDpiProperty = new SimpleObjectProperty<FlatbedDpi>(
-         PlateDecoderPreferences.getInstance().getFlatbedDpi());
+      flatbedDpiProperty =
+         new SimpleObjectProperty<FlatbedDpi>(preferences.getFlatbedDpi());
       flatbedDpiProperty.addListener((observable, oldValue, newValue) -> {
-            PlateDecoderPreferences.getInstance().setFlatbedDpi(newValue);
+            preferences.setFlatbedDpi(newValue);
          });
 
-      flatbedBrightnessProperty = new SimpleLongProperty(
-         PlateDecoderPreferences.getInstance().getFlatbedBrightness());
+      flatbedBrightnessProperty =
+         new SimpleLongProperty(preferences.getFlatbedBrightness());
       flatbedBrightnessProperty.addListener((observable, oldValue, newValue) -> {
-            PlateDecoderPreferences.getInstance().setFlatbedBrightness(newValue.longValue());
+            preferences.setFlatbedBrightness(newValue.longValue());
          });
 
-      flatbedContrastProperty = new SimpleLongProperty(
-         PlateDecoderPreferences.getInstance().getFlatbedContrast());
+      flatbedContrastProperty =
+         new SimpleLongProperty(preferences.getFlatbedContrast());
       flatbedContrastProperty.addListener((observable, oldValue, newValue) -> {
-            PlateDecoderPreferences.getInstance().setFlatbedContrast(newValue.longValue());
+            preferences.setFlatbedContrast(newValue.longValue());
+         });
+
+      decoderDebugLevelProperty =
+         new SimpleLongProperty(preferences.getDecoderDebugLevel());
+      decoderDebugLevelProperty.addListener((observable, oldValue, newValue) -> {
+            preferences.setDecoderDebugLevel(newValue.longValue());
+         });
+
+      minEdgeFactorProperty =
+         new SimpleDoubleProperty(preferences.getMinEdgeFactor());
+      minEdgeFactorProperty.addListener((observable, oldValue, newValue) -> {
+            preferences.setMinEdgeFactor(newValue.doubleValue());
+         });
+
+      maxEdgeFactorProperty =
+         new SimpleDoubleProperty(preferences.getMaxEdgeFactor());
+      maxEdgeFactorProperty.addListener((observable, oldValue, newValue) -> {
+            preferences.setMaxEdgeFactor(newValue.doubleValue());
+         });
+
+      scanGapFactorProperty =
+         new SimpleDoubleProperty(preferences.getScanGapFactor());
+      scanGapFactorProperty.addListener((observable, oldValue, newValue) -> {
+            preferences.setScanGapFactor(newValue.doubleValue());
+         });
+
+      squareDeviationProperty =
+         new SimpleLongProperty(preferences.getSquareDeviation());
+      squareDeviationProperty.addListener((observable, oldValue, newValue) -> {
+            preferences.setSquareDeviation(newValue.longValue());
+         });
+
+      edgeThresholdProperty =
+         new SimpleLongProperty(preferences.getEdgeThreshold());
+      edgeThresholdProperty.addListener((observable, oldValue, newValue) -> {
+            preferences.setEdgeThreshold(newValue.longValue());
+         });
+
+      correctionsProperty =
+         new SimpleLongProperty(preferences.getDecoderCorrections());
+      correctionsProperty.addListener((observable, oldValue, newValue) -> {
+            preferences.setDecoderCorrections(newValue.longValue());
          });
 
       createNewPlate();
@@ -343,6 +395,62 @@ public class PlateModel {
          throw new IllegalArgumentException("invalid value for contrast: " + contrast);
       }
       flatbedContrastProperty.set(contrast);
+   }
+
+   public long getDecoderDebugLevel() {
+      return decoderDebugLevelProperty.getValue();
+   }
+
+   public void setDecoderDebugLevel(long value) {
+      decoderDebugLevelProperty.setValue(value);
+   }
+
+   public double getMinEdgeFactor() {
+      return minEdgeFactorProperty.getValue();
+   }
+
+   public void setMinEdgeFactor(double value) {
+      minEdgeFactorProperty.setValue(value);
+   }
+
+   public double getMaxEdgeFactor() {
+      return maxEdgeFactorProperty.getValue();
+   }
+
+   public void setMaxEdgeFactor(double value) {
+      maxEdgeFactorProperty.setValue(value);
+   }
+
+   public double getScanGapFactor() {
+      return scanGapFactorProperty.getValue();
+   }
+
+   public void setScanGapFactor(double value) {
+      scanGapFactorProperty.setValue(value);
+   }
+
+   public long getSquareDeviation() {
+      return squareDeviationProperty.getValue();
+   }
+
+   public void setSquareDeviation(long value) {
+      squareDeviationProperty.setValue(value);
+   }
+
+   public long getEdgeThreshold() {
+      return edgeThresholdProperty.getValue();
+   }
+
+   public void setEdgeThreshold(long value) {
+      edgeThresholdProperty.setValue(value);
+   }
+
+   public long getDecoderCorrections() {
+      return correctionsProperty.getValue();
+   }
+
+   public void setDecoderCorrections(long value) {
+      correctionsProperty.setValue(value);
    }
 
    // --

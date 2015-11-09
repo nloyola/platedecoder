@@ -24,7 +24,7 @@ public class DecodeOptions {
    /**
     * The default value for the scan gap factor.
     *
-    * <p>The scan gap defines the gap, in inches, of the between lines in the scan grid used to
+    * <p>The scan gap defines the gap, in inches, between lines in the scan grid used to
     * examine the image.
     */
    public static final double DEFAULT_SCAN_GAP_FACTOR = 0.1;
@@ -32,7 +32,7 @@ public class DecodeOptions {
    /**
     * The default value for square deviation.
     *
-    * <p>The maximu deviation, in degrees, from squareness between adjacent barcode sides. This is
+    * <p>The maximum deviation, in degrees, from squareness between adjacent barcode sides. This is
     * the recommened value for flat images.
     */
    public static final long DEFAULT_SQUARE_DEV = 10;
@@ -103,6 +103,11 @@ public class DecodeOptions {
       this.shrink = shrink;
    }
 
+
+   public DecodeOptions() {
+      this(0.0, 0.0, 0.0, 0, 0, 0, 0);
+   }
+
    /**
     * See {@link #DEFAULT_MIN_EDGE_FACTOR}.
     *
@@ -164,6 +169,21 @@ public class DecodeOptions {
     */
    public long getShrink() {
       return shrink;
+   }
+
+   @Override
+   public String toString() {
+      StringBuffer buf = new StringBuffer();
+
+      buf.append("[ minEdgeFactor: ").append(minEdgeFactor);
+      buf.append(", maxEdgeFactor: ").append(maxEdgeFactor);
+      buf.append(", scanGapFactor: ").append(scanGapFactor);
+      buf.append(", squareDev: ").append(squareDev);
+      buf.append(", edgeThresh: ").append(edgeThresh);
+      buf.append(", corrections: ").append(corrections);
+      buf.append(", shrink: ").append(shrink);
+      buf.append(" ]");
+      return buf.toString();
    }
 
    /**

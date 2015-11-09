@@ -20,6 +20,8 @@ public class PlateDecoderDefaults {
    /** The default contrast used when scanning a plate image with the flatbed scanner. */
    public static final long DEFAULT_FLATBED_CONTRAST = 0;
 
+   public static final long DEFAULT_DECODER_DEBUG_LEVEL = 0;
+
    /** The name of the file scanned images are saved to. */
    public static final String FLATBED_IMAGE_NAME = "flatbed.png";
 

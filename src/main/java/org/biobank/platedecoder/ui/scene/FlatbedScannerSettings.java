@@ -1,13 +1,11 @@
 package org.biobank.platedecoder.ui.scene;
 
-import java.util.Optional;
 
 import org.biobank.platedecoder.dmscanlib.ScanLib;
 import org.biobank.platedecoder.dmscanlib.ScanLibResult;
 import org.biobank.platedecoder.model.DriverType;
 import org.biobank.platedecoder.model.PlateDecoderDefaults;
 import org.biobank.platedecoder.model.PlateModel;
-import org.biobank.platedecoder.ui.PlateDecoder;
 import org.biobank.platedecoder.ui.ScannerDriverTypeChooser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,18 +18,13 @@ import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
-import javafx.scene.layout.TilePane;
-import javafx.scene.layout.VBox;
 
 /**
  * Displays a windows to the user where he/she can modify the parameters related to the flatbed
@@ -61,10 +54,6 @@ public class FlatbedScannerSettings extends SceneRoot {
 
    private Button scanRegionBtn;
 
-   private Button restoreDefaultsBtn;
-
-   private boolean userMadeChanges;
-
    private ObjectProperty<DriverType> driverTypeProperty;
 
    // The brightness setting for the flatbed scanner
@@ -79,10 +68,9 @@ public class FlatbedScannerSettings extends SceneRoot {
 
    @Override
    protected Region createContents() {
-      userMadeChanges = false;
       driverTypeProperty = new SimpleObjectProperty<DriverType>(model.getDriverType());
       driverTypeProperty.addListener((observable, oldValue, newValue) -> {
-            userMadeChanges = true;
+            setConfigChanged(true);
          });
       brightnessProperty = new SimpleLongProperty(model.getFlatbedBrightness());
       contrastProperty = new SimpleLongProperty(model.getFlatbedContrast());
@@ -118,8 +106,9 @@ public class FlatbedScannerSettings extends SceneRoot {
       grid.getColumnConstraints().add(col1);
       grid.getColumnConstraints().add(col2);
 
-      VBox vbox = new VBox(5);
-      vbox.getChildren().addAll(grid, createBottomButtons());
+      BorderPane borderPane = new BorderPane();
+      borderPane.setCenter(grid);
+      borderPane.setBottom(createApplyAndRestoreButtons());
 
       brightnessProperty.bindBidirectional(brightnessSlider.valueProperty());
       brightnessProperty.addListener(this::brightnessSliderListener);
@@ -127,7 +116,7 @@ public class FlatbedScannerSettings extends SceneRoot {
       contrastProperty.bindBidirectional(contrastSlider.valueProperty());
       contrastProperty.addListener(this::contrastSliderListener);
 
-      return vbox;
+      return borderPane;
    }
 
    @Override
@@ -137,16 +126,6 @@ public class FlatbedScannerSettings extends SceneRoot {
       contrastProperty.setValue(model.getFlatbedContrast());
    }
 
-   @Override
-   protected boolean allowBackButtonAction() {
-      return allowNavigationAction();
-   }
-
-   @Override
-   protected boolean allowNextButtonAction() {
-      return allowNavigationAction();
-   }
-
    /**
     * Assigns a handler to be invoked when the user presses the {@code Scan Region} button.
     *
@@ -154,6 +133,21 @@ public class FlatbedScannerSettings extends SceneRoot {
     */
    public void onDefineScanRegionAction(Runnable runnable) {
       scanRegionBtn.setOnAction(e -> runnable.run());
+   }
+
+   @Override
+   protected void applyAction() {
+      model.setDriverType(driverTypeProperty.getValue());
+      model.setFlatbedBrightness(brightnessProperty.getValue());
+      model.setFlatbedContrast(contrastProperty.getValue());
+      setConfigChanged(false);
+   }
+
+   @Override
+   protected void restoreDefaultsAction() {
+      driverTypeProperty.setValue(DriverType.valueOf(PlateDecoderDefaults.DEFAULT_DRIVER_TYPE));
+      brightnessProperty.setValue(PlateDecoderDefaults.DEFAULT_FLATBED_BRIGHTNESS);
+      contrastProperty.setValue(PlateDecoderDefaults.DEFAULT_FLATBED_CONTRAST);
    }
 
    private Slider createBrightnessSlider() {
@@ -201,27 +195,6 @@ public class FlatbedScannerSettings extends SceneRoot {
       return buf.toString();
    }
 
-   private Pane createBottomButtons() {
-      TilePane pane = new TilePane();
-      pane.setHgap(5);
-      pane.setPadding(new Insets(50, 15, 15, 15));
-      pane.setMinHeight(TilePane.USE_PREF_SIZE);
-      pane.setAlignment(Pos.BOTTOM_RIGHT);
-
-      Button applyBtn = new Button("Apply");
-      applyBtn.setOnAction(this::applyAction);
-      applyBtn.setMaxWidth(Double.MAX_VALUE);
-      applyBtn.setMinWidth(Button.USE_PREF_SIZE);
-
-      restoreDefaultsBtn = new Button("Restore defaults");
-      restoreDefaultsBtn.setOnAction(this::restoreDefaultsAction);
-      restoreDefaultsBtn.setMaxWidth(Double.MAX_VALUE);
-      restoreDefaultsBtn.setMinWidth(Button.USE_PREF_SIZE);
-
-      pane.getChildren().addAll(applyBtn, restoreDefaultsBtn);
-      return pane;
-   }
-
    @SuppressWarnings("unused")
    private void selectScannerSourceAction(ActionEvent e) {
       ScanLibResult result = ScanLib.getInstance().selectSourceAsDefault();
@@ -232,7 +205,7 @@ public class FlatbedScannerSettings extends SceneRoot {
    private void brightnessSliderListener(ObservableValue<? extends Number> observable,
                                          Number oldValue,
                                          Number newValue) {
-      userMadeChanges = true;
+      setConfigChanged(true);
       brightnessLabel.setText(getBrightnessLabel());
    }
 
@@ -240,41 +213,7 @@ public class FlatbedScannerSettings extends SceneRoot {
    private void contrastSliderListener(ObservableValue<? extends Number> observable,
                                        Number oldValue,
                                        Number newValue) {
-      userMadeChanges = true;
+      setConfigChanged(true);
       contrastLabel.setText(getContrastLabel());
-   }
-   private void applyAction() {
-      model.setDriverType(driverTypeProperty.getValue());
-      model.setFlatbedBrightness(brightnessProperty.getValue());
-      model.setFlatbedContrast(contrastProperty.getValue());
-      userMadeChanges = false;
-   }
-
-   @SuppressWarnings("unused")
-   private void applyAction(ActionEvent e) {
-      applyAction();
-   }
-
-   @SuppressWarnings("unused")
-   private void restoreDefaultsAction(ActionEvent e) {
-      driverTypeProperty.setValue(DriverType.valueOf(PlateDecoderDefaults.DEFAULT_DRIVER_TYPE));
-      brightnessProperty.setValue(PlateDecoderDefaults.DEFAULT_FLATBED_BRIGHTNESS);
-      contrastProperty.setValue(PlateDecoderDefaults.DEFAULT_FLATBED_CONTRAST);
-   }
-
-   private boolean allowNavigationAction() {
-      if (userMadeChanges) {
-         Alert alert = PlateDecoder.createDialog(
-            AlertType.CONFIRMATION,
-            "Unsaved changes",
-            "Apply your changes?",
-            "You have not applied the changes you made to these settings.");
-
-         Optional<ButtonType> result = alert.showAndWait();
-         if (result.isPresent() && result.get() == ButtonType.OK) {
-            applyAction();
-         }
-      }
-      return true;
    }
 }

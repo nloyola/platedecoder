@@ -3,19 +3,26 @@ package org.biobank.platedecoder.ui.scene;
 import java.util.Optional;
 
 import org.biobank.platedecoder.model.PlateModel;
+import org.biobank.platedecoder.ui.PlateDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
 
 /**
@@ -39,11 +46,17 @@ public abstract class SceneRoot extends BorderPane {
 
    private final String title;
 
+   private Label titleAreaMessage;
+
    private Button backBtn;
 
    private Button nextBtn;
 
    private Button finishBtn;
+
+   private Button applyBtn;
+
+   private boolean configChangesMade;
 
    private Optional<Runnable> backButtonActionRunnableMaybe = Optional.empty();
 
@@ -61,15 +74,12 @@ public abstract class SceneRoot extends BorderPane {
       this.title = title;
       setTop(createTitle());
 
+      configChangesMade = false;
+
       Region contentsRegion = createContentsArea();
       setCenter(contentsRegion);
 
       setBottom(createBottomArea());
-   }
-
-   private Region createContentsArea() {
-      final Region node = createContents();
-      return node;
    }
 
    /**
@@ -118,6 +128,20 @@ public abstract class SceneRoot extends BorderPane {
    }
 
    /**
+    * Used to enable the {@code Finish} button and bind code to execute when the user presses the
+    * button.
+    *
+    * <p>By default this button is disabled. The subclass should call this method if it wants to
+    * display the button. Usually this button will terminate the application.
+    *
+    * @param runnable  The runnable to execute when this button is pressed.
+    */
+   public void enableFinishAction(Runnable runnable) {
+      finishBtn.setVisible(true);
+      finishBtn.setOnAction(e -> runnable.run());
+   }
+
+   /**
     * Used to disable or enable the next button.
     *
     * @param disable When TRUE the button is disabled.
@@ -136,7 +160,7 @@ public abstract class SceneRoot extends BorderPane {
     * @return TRUE if the action should be allowed.
     */
    protected boolean allowBackButtonAction() {
-      return true;
+      return allowNavigationAction();
    }
 
    /**
@@ -149,6 +173,31 @@ public abstract class SceneRoot extends BorderPane {
     * @return TRUE if the action should be allowed.
     */
    protected boolean allowNextButtonAction() {
+      return allowNavigationAction();
+   }
+
+   /**
+    * Sub classes should override this method if they want to prevent the apply or next actions from
+    * taking place.
+    *
+    * <p>A good use for this is if the scene wants to remind the user to perform an Action
+    * prior to pressing the next button.
+    *
+    * @return TRUE if the action should be allowed.
+    */
+   protected boolean allowNavigationAction() {
+      if (configChangesMade) {
+         Alert alert = PlateDecoder.createDialog(
+            AlertType.CONFIRMATION,
+            "Unsaved changes",
+            "Apply your changes?",
+            "You have not applied the changes you made to these settings.");
+
+         Optional<ButtonType> result = alert.showAndWait();
+         if (result.isPresent() && result.get() == ButtonType.OK) {
+            applyAction();
+         }
+      }
       return true;
    }
 
@@ -162,27 +211,107 @@ public abstract class SceneRoot extends BorderPane {
    }
 
    /**
-    * Used to enable the {@code Finish} button and bind code to execute when the user presses the
-    * button.
+    * Used to display a text message under the title area.
     *
-    * <p>By default this button is disabled. The subclass should call this method if it wants to
-    * display the button. Usually this button will terminate the application.
-    *
-    * @param runnable  The runnable to execute when this button is pressed.
+    * @param message The message to display.
     */
-   public void enableFinishAction(Runnable runnable) {
-      finishBtn.setVisible(true);
-      finishBtn.setOnAction(e -> runnable.run());
+   protected void setTitleAreaMessage(String message) {
+      titleAreaMessage.setText(message);
+      titleAreaMessage.setStyle("-fx-font-size:12; -fx-font-weight:bold;");
+   }
+
+   /**
+    * Used to display an error message under the title area.
+    *
+    * <p>It is displayed with a red foreground color.
+    *
+    * @param message The message to display.
+    */
+   protected void setTitleAreaErrorMessage(String message) {
+      titleAreaMessage.setText(message);
+      titleAreaMessage.setStyle("-fx-text-fill: #ff1e26; -fx-font-size:12; -fx-font-weight:bold;");
+   }
+
+   /**
+    * Sub classes should call this to flag that config changes have been made.
+    *
+    * <p>When config changes are made, a dialog is shown to the user when he / she tries to navigate
+    * away from the window (by pressing the {@code Back} or {@code Next} buttons).
+    *
+    * @param changed Set to TRUE to flag that changes have been made to the configuration.
+    */
+   protected void setConfigChanged(boolean changed) {
+      configChangesMade = changed;
+   }
+
+   /**
+    * Creates an pane with Apply and Restore buttons for scenes that save data to the mode.
+    *
+    * @see #applyAction applyAction
+    * @see #restoreDefaultsAction restoreDefaultsAction
+    */
+   protected Pane createApplyAndRestoreButtons() {
+      TilePane pane = new TilePane();
+      pane.setHgap(5);
+      pane.setPadding(new Insets(5, 5, 5, 5));
+      pane.setMinHeight(TilePane.USE_PREF_SIZE);
+      pane.setAlignment(Pos.BOTTOM_RIGHT);
+
+      applyBtn = new Button("Apply");
+      applyBtn.setOnAction(e -> applyAction());
+      applyBtn.setMaxWidth(Double.MAX_VALUE);
+      applyBtn.setMinWidth(Button.USE_PREF_SIZE);
+
+      Button restoreDefaultsBtn = new Button("Restore defaults");
+      restoreDefaultsBtn.setOnAction(e -> restoreDefaultsAction());
+      restoreDefaultsBtn.setMaxWidth(Double.MAX_VALUE);
+      restoreDefaultsBtn.setMinWidth(Button.USE_PREF_SIZE);
+
+      pane.getChildren().addAll(applyBtn, restoreDefaultsBtn);
+      return pane;
+   }
+
+   /**
+    * Used to enable or disable the {@code Apply} button.
+    *
+    * @param disable When TRUE the button is disabled.
+    */
+   protected void disableApplyButton(boolean disable) {
+      applyBtn.setDisable(disable);
+   }
+
+   /**
+    * Sub classes that implement an apply action should override this method.
+    *
+    * <p>This method is usually used to save configuration information.
+    */
+   protected void applyAction() {
+   }
+
+   /**
+    * Sub classes that implement a restore action should override this method.
+    *
+    * <p>This method is usually used to restore configuration information.
+    */
+   protected void restoreDefaultsAction() {
+   }
+
+   private Region createContentsArea() {
+      final Region node = createContents();
+      return node;
    }
 
    private Node createTitle() {
-      final VBox titleBox = new VBox();
-      titleBox.setMaxHeight(Double.MAX_VALUE);
-      titleBox.setPadding(new Insets(5, 5, 20, 5));
-
       final Label titleLabel = new Label(title);
       titleLabel.setStyle("-fx-font-size:18; -fx-font-weight:bold;");
+
+      titleAreaMessage = new Label();
+
+      final VBox titleBox = new VBox(10);
+      titleBox.setMaxHeight(Double.MAX_VALUE);
+      titleBox.setPadding(new Insets(5, 5, 20, 5));
       titleBox.getChildren().add(titleLabel);
+      titleBox.getChildren().add(titleAreaMessage);
 
       final ScrollPane scrollPane = new ScrollPane(titleBox);
       scrollPane.setMaxHeight(Double.MAX_VALUE);

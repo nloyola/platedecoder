@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.biobank.platedecoder.ui.PlateDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -325,6 +326,9 @@ public class Fsm<S, C, E> {
     * @throws IllegalStateException when the validation fails.
     */
    public void validate() {
+      // only validate the state machine if running in debug mode, i.e. development
+      if (!PlateDecoder.IS_DEBUG_MODE) return;
+
       Set<State<S, E>> parentStates = states.values().stream()
          .filter(state -> state.parentStateMaybe.isPresent())
          .map(state -> state.parentStateMaybe.get())

@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.biobank.platedecoder.dmscanlib.DecodeOptions;
 import org.biobank.platedecoder.dmscanlib.DecodeResult;
 import org.biobank.platedecoder.dmscanlib.DecodedWell;
 import org.biobank.platedecoder.dmscanlib.ScanLibResult;
@@ -93,7 +94,7 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
 
    @Override
    public void onDisplay() {
-      // could be called with model.getPlate() already populated with decode information
+      // NOTE: could be called with model.getPlate() already populated with decode information
 
       Set<DecodedWell> decodedWells =
          model.getPlate().getWells().stream().filter(well -> !well.getInventoryId().isEmpty())
@@ -300,12 +301,21 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
    }
 
    private void decodeImageAction(@SuppressWarnings("unused") ActionEvent e) {
+      DecodeOptions decodeOptions = new DecodeOptions(model.getMinEdgeFactor(),
+                                                      model.getMaxEdgeFactor(),
+                                                      model.getScanGapFactor(),
+                                                      model.getEdgeThreshold(),
+                                                      model.getSquareDeviation(),
+                                                      model.getDecoderCorrections(),
+                                                      DecodeOptions.DEFAULT_SHRINK);
       DecodeImageTask worker =
          new DecodeImageTask(wellGrid,
                              model.getFlatbedDpi().getValue(),
                              model.getPlateOrientation(),
                              model.getPlateType(),
                              model.getBarcodePosition(),
+                             model.getDecoderDebugLevel(),
+                             decodeOptions,
                              getFilenameFromImageSource());
       ProgressDialog dlg = new ProgressDialog(worker);
       dlg.setTitle("Decoding image");

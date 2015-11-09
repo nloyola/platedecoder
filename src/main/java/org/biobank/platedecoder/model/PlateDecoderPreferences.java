@@ -1,6 +1,7 @@
 package org.biobank.platedecoder.model;
 
 import static org.biobank.platedecoder.model.PlateDecoderDefaults.*;
+import static org.biobank.platedecoder.dmscanlib.DecodeOptions.*;
 
 import java.util.Optional;
 import java.util.prefs.Preferences;
@@ -56,6 +57,20 @@ public class PlateDecoderPreferences {
    private static final String PREFS_FLATBED_BRIGHTNESS = "PREFS_FLATBED_BRIGHTNESS";
 
    private static final String PREFS_FLATBED_CONTRAST = "PREFS_FLATBED_CONTRAST";
+
+   private static final String PREFS_DECODER_DEBUG_LEVEL = "PREFS_DECODER_DEBUG_LEVEL";
+
+   private static final String PREFS_MIN_EDGE_FACTOR  = "PREFS_MIN_EDGE_FACTOR";
+
+   private static final String PREFS_MAX_EDGE_FACTOR  = "PREFS_MAX_EDGE_FACTOR";
+
+   private static final String PREFS_SCAN_GAP_FACTOR  = "PREFS_SCAN_GAP_FACTOR";
+
+   private static final String PREFS_SQUARE_DEVIATION = "PREFS_SQUARE_DEVIATION";
+
+   private static final String PREFS_EDGE_THRESHOLD   = "PREFS_EDGE_THRESHOLD";
+
+   private static final String PREFS_CORRECTIONS      = "PREFS_CORRECTIONS";
 
    private static final String PREFS_SPECIMEN_LINK_DIVIDER_POSITION =
       "PREFS_SPECIMEN_LINK_DIVIDER_POSITION";
@@ -295,6 +310,62 @@ public class PlateDecoderPreferences {
 
    public void setFlatbedContrast(long contrast) {
       prefs.put(PREFS_FLATBED_CONTRAST, String.valueOf(contrast));
+   }
+
+   public long getDecoderDebugLevel() {
+      return prefs.getLong(PREFS_DECODER_DEBUG_LEVEL, DEFAULT_DECODER_DEBUG_LEVEL);
+   }
+
+   public void setDecoderDebugLevel(long value) {
+      prefs.put(PREFS_DECODER_DEBUG_LEVEL, String.valueOf(value));
+   }
+
+   public double getMinEdgeFactor() {
+      return prefs.getDouble(PREFS_MIN_EDGE_FACTOR, DEFAULT_MIN_EDGE_FACTOR);
+   }
+
+   public void setMinEdgeFactor(double value) {
+      prefs.put(PREFS_MIN_EDGE_FACTOR, String.valueOf(value));
+   }
+
+   public double getMaxEdgeFactor() {
+      return prefs.getDouble(PREFS_MAX_EDGE_FACTOR, DEFAULT_MAX_EDGE_FACTOR);
+   }
+
+   public void setMaxEdgeFactor(double value) {
+      prefs.put(PREFS_MAX_EDGE_FACTOR, String.valueOf(value));
+   }
+
+   public double getScanGapFactor() {
+      return prefs.getDouble(PREFS_SCAN_GAP_FACTOR, DEFAULT_SCAN_GAP_FACTOR);
+   }
+
+   public void setScanGapFactor(double value) {
+      prefs.put(PREFS_SCAN_GAP_FACTOR, String.valueOf(value));
+   }
+
+   public long getSquareDeviation() {
+      return prefs.getLong(PREFS_SQUARE_DEVIATION, DEFAULT_SQUARE_DEV);
+   }
+
+   public void setSquareDeviation(long value) {
+      prefs.put(PREFS_SQUARE_DEVIATION, String.valueOf(value));
+   }
+
+   public long getEdgeThreshold() {
+      return prefs.getLong(PREFS_EDGE_THRESHOLD, DEFAULT_EDGE_THRESH);
+   }
+
+   public void setEdgeThreshold(long value) {
+      prefs.put(PREFS_EDGE_THRESHOLD, String.valueOf(value));
+   }
+
+   public long getDecoderCorrections() {
+      return prefs.getLong(PREFS_CORRECTIONS, DEFAULT_CORRECTIONS);
+   }
+
+   public void setDecoderCorrections(long value) {
+      prefs.put(PREFS_CORRECTIONS, String.valueOf(value));
    }
 
    //--

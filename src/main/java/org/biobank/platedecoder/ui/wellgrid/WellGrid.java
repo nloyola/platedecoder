@@ -192,8 +192,7 @@ public class WellGrid extends Rectangle implements ResizeHandler {
         for (Entry<String, WellCell> entry : wellCellMap.entrySet()) {
             String label = entry.getKey();
 
-            ImageView iv = new ImageView();
-            iv.setImage(wellDecodedImage);
+            ImageView iv = new ImageView(wellDecodedImage);
             iv.setPreserveRatio(true);
             iv.setSmooth(true);
             iv.setVisible(false);
