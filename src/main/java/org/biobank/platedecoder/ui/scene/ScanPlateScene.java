@@ -17,7 +17,7 @@ import javafx.scene.layout.Region;
 
 public class ScanPlateScene extends SceneRoot {
 
-   //@SuppressWarnings("unused")
+   // @SuppressWarnings("unused")
    private static final Logger LOG = LoggerFactory.getLogger(ScanPlateScene.class);
 
    public ScanPlateScene() {
@@ -44,17 +44,21 @@ public class ScanPlateScene extends SceneRoot {
 
    @Override
    protected boolean allowNextButtonAction() {
-      if (!checkFilePresentLinux()) {
+      if (PlateDecoder.IS_DEBUG_MODE && PlateDecoder.IS_LINUX && !checkFilePresentLinux()) {
          PlateDecoder.errorDialog(
             "Simulating the flatbed scan of a plate will not work. "
             + "To correct this, please copy an image to: "
             + PlateDecoder.flatbedPlateImageFilenameToUrl(),
-            "Unable to simulate action",
-            "File is missing.");
+            "Unable to simulate action", "File is missing.");
          return true;
       }
 
-      ScanPlateTask worker = new ScanPlateTask(model.getFlatbedDpi().getValue());
+      ScanPlateTask worker =
+         new ScanPlateTask(model.getFlatbedDpi().getValue(),
+                           model.getFlatbedBrightness(),
+                           model.getFlatbedContrast(),
+                           model.getDecoderDebugLevel(),
+                           PlateDecoderDefaults.FLATBED_PLATE_IMAGE_NAME);
       ProgressDialog dlg = new ProgressDialog(worker);
       dlg.setTitle("Scanning plate");
       dlg.setHeaderText("Scanning plate");

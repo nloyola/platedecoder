@@ -42,6 +42,8 @@ public class ValidatedTextField extends TextField {
     * Returns the image view.
     *
     * <p>This is usually called to add the image to the UI.
+    *
+    * @return The image view that contains the error icon.
     */
    public ImageView getErrorImageView() {
       return errorImageView;

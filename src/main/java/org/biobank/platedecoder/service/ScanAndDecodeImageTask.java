@@ -24,7 +24,7 @@ import javafx.scene.shape.Rectangle;
 
 public class ScanAndDecodeImageTask extends Task<ScanLibResult> {
 
-   //@SuppressWarnings("unused")
+   // @SuppressWarnings("unused")
    private static final Logger LOG = LoggerFactory.getLogger(ScanAndDecodeImageTask.class);
 
    private final Rectangle scanRect;
@@ -33,11 +33,15 @@ public class ScanAndDecodeImageTask extends Task<ScanLibResult> {
 
    private final String filename;
 
-   private PlateOrientation orientation;
+   private final PlateOrientation orientation;
 
-   private PlateType plateType;
+   private final PlateType plateType;
 
    private final BarcodePosition barcodePosition;
+
+   private final long brightness;
+
+   private final long contrast;
 
    private final long decodeDebugLevel;
 
@@ -48,6 +52,8 @@ public class ScanAndDecodeImageTask extends Task<ScanLibResult> {
                                  PlateOrientation orientation,
                                  PlateType        plateType,
                                  BarcodePosition  barcodePosition,
+                                 long             brightness,
+                                 long             contrast,
                                  long             decodeDebugLevel,
                                  DecodeOptions    decodeOptions,
                                  String           filename) {
@@ -55,6 +61,8 @@ public class ScanAndDecodeImageTask extends Task<ScanLibResult> {
       this.dpi              = dpi;
       this.orientation      = orientation;
       this.plateType        = plateType;
+      this.brightness       = brightness;
+      this.contrast         = contrast;
       this.barcodePosition  = barcodePosition;
       this.decodeDebugLevel = decodeDebugLevel;
       this.decodeOptions    = decodeOptions;
@@ -90,15 +98,21 @@ public class ScanAndDecodeImageTask extends Task<ScanLibResult> {
       }
 
       Rectangle r = rectMaybe.get();
-      return ScanLib.getInstance().scanImage(decodeDebugLevel,
-                                             dpi,
-                                             0,
-                                             0,
-                                             r.getX(),
-                                             r.getY(),
-                                             r.getWidth(),
-                                             r.getHeight(),
-                                             filename);
+      ScanLibResult result = new ScanLibResult(ScanLib.ResultCode.SC_FAIL, 0, "exception");
+      try {
+         result = ScanLib.getInstance().scanImage(decodeDebugLevel,
+                                                  dpi,
+                                                  (int) brightness,
+                                                  (int) contrast,
+                                                  r.getX(),
+                                                  r.getY(),
+                                                  r.getWidth(),
+                                                  r.getHeight(),
+                                                  filename);
+      } catch (Exception ex) {
+         LOG.error(ex.getMessage());
+      }
+      return result;
    }
 
    private ScanLibResult scanPlateLinux() throws InterruptedException {
@@ -111,17 +125,17 @@ public class ScanAndDecodeImageTask extends Task<ScanLibResult> {
    }
 
    protected DecodeResult decode() {
-      Set<CellRectangle> cells = CellRectangle.getCellsForBoundingBox(
-         scanRect,
-         orientation,
-         plateType,
-         barcodePosition);
+      Set<CellRectangle> cells =
+         CellRectangle.getCellsForBoundingBox(scanRect,
+                                              orientation,
+                                              plateType,
+                                              barcodePosition);
 
-      DecodeResult result = ScanLib.getInstance().decodeImage(
-         decodeDebugLevel,
-         filename,
-         decodeOptions,
-         cells.toArray(new CellRectangle[] {}));
+      DecodeResult result =
+         ScanLib.getInstance().decodeImage(decodeDebugLevel,
+                                           filename,
+                                           decodeOptions,
+                                           cells.toArray(new CellRectangle[] {}));
       return result;
    }
 

@@ -14,16 +14,19 @@ public class DecodeImageTask extends ScanAndDecodeImageTask {
                           PlateOrientation orientation,
                           PlateType        plateType,
                           BarcodePosition  barcodePosition,
+                          long             brightness,
+                          long             contrast,
                           long             decodeDebugLevel,
                           DecodeOptions    decodeOptions,
                           String           filename) {
-
 
       super(wellGrid,
             dpi,
             orientation,
             plateType,
             barcodePosition,
+            brightness,
+            contrast,
             decodeDebugLevel,
             decodeOptions,
             filename);

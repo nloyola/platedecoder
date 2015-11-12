@@ -12,7 +12,7 @@ import javafx.concurrent.Task;
 
 public class ScanRegionTask extends Task<ScanLibResult> {
 
-    @SuppressWarnings("unused")
+   //@SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(ScanRegionTask.class);
 
     protected PlateModel model = PlateModel.getInstance();
@@ -26,11 +26,17 @@ public class ScanRegionTask extends Task<ScanLibResult> {
     }
 
     private ScanLibResult scanFlatbedWindows() {
-        return ScanLib.getInstance().scanFlatbed(0L,
-                                                 PlateDecoderDefaults.FLATBED_IMAGE_DPI,
-                                                 0,
-                                                 0,
-                                                 PlateDecoderDefaults.FLATBED_IMAGE_NAME);
+        ScanLibResult result = new ScanLibResult(ScanLib.ResultCode.SC_FAIL, 0, "exception");
+        try {
+            result = ScanLib.getInstance().scanFlatbed(0L,
+                                                       PlateDecoderDefaults.FLATBED_IMAGE_DPI,
+                                                       0,
+                                                       0,
+                                                       PlateDecoderDefaults.FLATBED_IMAGE_NAME);
+        } catch (Exception ex) {
+            LOG.error(ex.getMessage());
+        }
+        return result;
     }
 
     private ScanLibResult scanFlatbedLinux() throws InterruptedException {

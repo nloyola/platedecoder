@@ -23,7 +23,7 @@ import javafx.scene.shape.Rectangle;
 
 public class InitialScene extends SceneRoot {
 
-   //@SuppressWarnings("unused")
+   // @SuppressWarnings("unused")
    private static final Logger LOG = LoggerFactory.getLogger(InitialScene.class);
 
    private RadioButton filesystemButton;
@@ -94,8 +94,7 @@ public class InitialScene extends SceneRoot {
    }
 
    private void withPrevParamsAction(@SuppressWarnings("unused") ActionEvent event) {
-      Rectangle scanRect =
-         PlateDecoderPreferences.getInstance().getWellRectangle(model.getPlateType());
+      Rectangle scanRect = PlateDecoderPreferences.getInstance().getWellRectangle(model.getPlateType());
 
       DecodeOptions decodeOptions = new DecodeOptions(model.getMinEdgeFactor(),
                                                       model.getMaxEdgeFactor(),
@@ -111,6 +110,8 @@ public class InitialScene extends SceneRoot {
                                     model.getPlateOrientation(),
                                     model.getPlateType(),
                                     model.getBarcodePosition(),
+                                    model.getFlatbedBrightness(),
+                                    model.getFlatbedContrast(),
                                     model.getDecoderDebugLevel(),
                                     decodeOptions,
                                     PlateDecoderDefaults.FLATBED_PLATE_IMAGE_NAME);
@@ -125,8 +126,7 @@ public class InitialScene extends SceneRoot {
             if (result.getResultCode() == ScanLibResult.Result.SUCCESS) {
                Plate plate = model.getPlate();
                result.getDecodedWells().forEach(
-                  well ->
-                  plate.setWellInventoryId(well.getLabel(), well.getMessage()));
+                  well -> plate.setWellInventoryId(well.getLabel(), well.getMessage()));
             }
             withPrevParamsRunnableMaybe.ifPresent(runnable -> runnable.run());
          });

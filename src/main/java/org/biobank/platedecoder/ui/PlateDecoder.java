@@ -34,7 +34,7 @@ import javafx.stage.WindowEvent;
  */
 public class PlateDecoder extends Application implements SceneChanger {
 
-   //@SuppressWarnings("unused")
+   // @SuppressWarnings("unused")
    private static final Logger LOG = LoggerFactory.getLogger(PlateDecoder.class);
 
    public static final boolean IS_LINUX = System.getProperty("os.name").startsWith("Linux");
@@ -59,7 +59,7 @@ public class PlateDecoder extends Application implements SceneChanger {
 
       Point2D dimensions = PlateDecoderPreferences.getInstance().getAppWindowSize();
 
-      sceneWidth  = dimensions.getX();
+      sceneWidth = dimensions.getX();
       sceneHeight = dimensions.getY();
 
       setStartScene();
@@ -167,8 +167,7 @@ public class PlateDecoder extends Application implements SceneChanger {
    private void saveWindowSize() {
       Scene scene = stage.getScene();
       if (scene != null) {
-         PlateDecoderPreferences.getInstance().setAppWindowSize(
-            scene.getWidth(), scene.getHeight());
+         PlateDecoderPreferences.getInstance().setAppWindowSize(scene.getWidth(), scene.getHeight());
       }
    }
 
@@ -180,7 +179,7 @@ public class PlateDecoder extends Application implements SceneChanger {
     * @param titleBar the string to display in the dialog box's title bar.
     *
     * @param headerMessage the string to display in the title are of the dialog box. When this value
-    * is null, the dialog will not have a title area.
+    *                      is null, the dialog will not have a title area.
     *
     * @param infoMessage the string to display in the body of the dialog box.
     *
@@ -196,7 +195,7 @@ public class PlateDecoder extends Application implements SceneChanger {
       alert.setContentText(infoMessage);
 
       if (IS_LINUX) {
-         //FIXME: Remove after release 8u40
+         // FIXME: Remove after release 8u40
          alert.setResizable(true);
          alert.getDialogPane().setPrefSize(480, 320);
       }
@@ -210,7 +209,7 @@ public class PlateDecoder extends Application implements SceneChanger {
     * @param titleBar the string to display in the dialog box's title bar.
     *
     * @param headerMessage the string to display in the title are of the dialog box. When this value
-    * is null, the dialog will not have a title area.
+    *                      is null, the dialog will not have a title area.
     *
     * @param infoMessage the string to display in the body of the dialog box.
     *
@@ -242,7 +241,7 @@ public class PlateDecoder extends Application implements SceneChanger {
     * @param titleBar the string to display in the dialog box's title bar.
     *
     * @param headerMessage the string to display in the title are of the dialog box. When this value
-    * is null, the dialog will not have a title area.
+    *                      is null, the dialog will not have a title area.
     *
     * @param infoMessage the string to display in the body of the dialog box.
     *
@@ -275,7 +274,7 @@ public class PlateDecoder extends Application implements SceneChanger {
    /**
     * Checks if a filename exists in the file system.
     *
-    * @param filename  The filename to check.
+    * @param filename The filename to check.
     *
     * @return true if filename exists and is not a directory.
     */
@@ -286,7 +285,13 @@ public class PlateDecoder extends Application implements SceneChanger {
 
    private static String userDirFilenameToUrl(String filename) {
       StringBuffer buf = new StringBuffer();
-      buf.append("file://");
+
+      if (IS_LINUX) {
+         buf.append("file://");
+      } else {
+         buf.append("file:/");
+      }
+
       buf.append(System.getProperty("user.dir"));
       buf.append(File.separator);
       buf.append(filename);

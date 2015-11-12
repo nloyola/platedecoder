@@ -249,6 +249,8 @@ public abstract class SceneRoot extends BorderPane {
     *
     * @see #applyAction applyAction
     * @see #restoreDefaultsAction restoreDefaultsAction
+    *
+    * @return The pane that holds the buttons.
     */
    protected Pane createApplyAndRestoreButtons() {
       TilePane pane = new TilePane();

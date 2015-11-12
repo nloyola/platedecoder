@@ -58,7 +58,7 @@ import javafx.scene.text.Text;
  */
 public class DecodeImageScene extends SceneRoot implements WellGridHandler {
 
-   //@SuppressWarnings("unused")
+   // @SuppressWarnings("unused")
    private static final Logger LOG = LoggerFactory.getLogger(DecodeImageScene.class);
 
    private ImageView imageView;
@@ -96,8 +96,8 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
    public void onDisplay() {
       // NOTE: could be called with model.getPlate() already populated with decode information
 
-      Set<DecodedWell> decodedWells =
-         model.getPlate().getWells().stream().filter(well -> !well.getInventoryId().isEmpty())
+      Set<DecodedWell> decodedWells = model.getPlate().getWells().stream()
+         .filter(well -> !well.getInventoryId().isEmpty())
          .map(well -> new DecodedWell(well.getLabel(), well.getInventoryId()))
          .collect(Collectors.toSet());
 
@@ -197,14 +197,11 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
       // copy data to model
       Plate plate = model.getPlate();
       decodedWellsMaybe.ifPresent(decodedWells -> {
-            decodedWells.forEach(
-               well ->
-               plate.setWellInventoryId(well.getLabel(), well.getMessage()));
+            decodedWells.forEach(well -> plate.setWellInventoryId(well.getLabel(), well.getMessage()));
          });
 
       // save current dimensions of plate to preferences so they are used next time
-      PlateDecoderPreferences.getInstance().setWellRectangle(
-         model.getPlateType(), wellGrid);
+      PlateDecoderPreferences.getInstance().setWellRectangle(model.getPlateType(), wellGrid);
       return true;
    }
 
@@ -237,9 +234,7 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
       text.setText(buf.toString());
       text.setWrappingWidth(200);
 
-      return Borders.wrap(text)
-         .etchedBorder().build()
-         .build();
+      return Borders.wrap(text).etchedBorder().build().build();
    }
 
    private Button createDecodeButton() {
@@ -266,8 +261,8 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
 
       // subtract a few pixels so that scroll bars are not displayed
       imageView.fitWidthProperty().bind(grid.widthProperty().subtract(5));
-      imageView.fitHeightProperty().bind(grid.heightProperty()
-                                         .subtract(filenameLabel.heightProperty()).subtract(5));
+      imageView.fitHeightProperty().bind(
+         grid.heightProperty().subtract(filenameLabel.heightProperty()).subtract(5));
 
       imageView.fitWidthProperty().addListener((observable, oldValue, newValue) -> {
             // the actual dimensions are in imageView.getLayoutBounds().getWidth()
@@ -308,15 +303,16 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
                                                       model.getSquareDeviation(),
                                                       model.getDecoderCorrections(),
                                                       DecodeOptions.DEFAULT_SHRINK);
-      DecodeImageTask worker =
-         new DecodeImageTask(wellGrid,
-                             model.getFlatbedDpi().getValue(),
-                             model.getPlateOrientation(),
-                             model.getPlateType(),
-                             model.getBarcodePosition(),
-                             model.getDecoderDebugLevel(),
-                             decodeOptions,
-                             getFilenameFromImageSource());
+      DecodeImageTask worker = new DecodeImageTask(wellGrid,
+                                                   model.getFlatbedDpi().getValue(),
+                                                   model.getPlateOrientation(),
+                                                   model.getPlateType(),
+                                                   model.getBarcodePosition(),
+                                                   model.getFlatbedBrightness(),
+                                                   model.getFlatbedContrast(),
+                                                   model.getDecoderDebugLevel(),
+                                                   decodeOptions,
+                                                   getFilenameFromImageSource());
       ProgressDialog dlg = new ProgressDialog(worker);
       dlg.setTitle("Decoding image");
       dlg.setHeaderText("Decoding image");
@@ -330,8 +326,7 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
                   Set<DecodedWell> currentDecodedWells = result.getDecodedWells();
 
                   // compare this new result with the previous one
-                  if (DecodeResult.compareDecodeResults(prevDecodedWells,
-                                                        currentDecodedWells)) {
+                  if (DecodeResult.compareDecodeResults(prevDecodedWells, currentDecodedWells)) {
                      // merge the two results
                      prevDecodedWells.addAll(currentDecodedWells);
                      updateDecodedWellCount(prevDecodedWells);
@@ -368,9 +363,7 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
 
    private void updateWellGrid() {
       decodedWellsMaybe.ifPresent(decodedWells -> {
-            decodedWells.forEach(
-               well ->
-               wellGrid.setWellCellInventoryId(well.getLabel(), well.getMessage()));
+            decodedWells.forEach(well -> wellGrid.setWellCellInventoryId(well.getLabel(), well.getMessage()));
             wellGrid.update();
          });
    }
@@ -438,8 +431,7 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
    }
 
    private Optional<String> getManualDecodeInventoryId(String label) {
-      Set<String> deniedInventoryIds = decodedWellsMaybe.get()
-         .stream()
+      Set<String> deniedInventoryIds = decodedWellsMaybe.get().stream()
          .map(well -> well.getMessage())
          .collect(Collectors.toSet());
       ManualDecodeDialog dlg = new ManualDecodeDialog(label, deniedInventoryIds);
