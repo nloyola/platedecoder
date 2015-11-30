@@ -15,6 +15,7 @@ import org.controlsfx.tools.Borders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.scene.Group;
@@ -166,14 +167,14 @@ public class ScanRegionScene extends SceneRoot implements ScanRegionHandler {
     }
 
     private void scanAction(@SuppressWarnings("unused") ActionEvent e) {
-        if (PlateDecoder.IS_DEBUG_MODE && PlateDecoder.IS_LINUX && !checkFilePresentLinux()) {
+        if (PlateDecoder.IS_LINUX && !checkFilePresentLinux()) {
             PlateDecoder.errorDialog(
                "Simulating a scan of the entire flatbed will not work. "
                + "To correct this, please copy an image to: "
                + PlateDecoder.flatbedImageFilenameToUrl(),
                "Unable to simulate action",
                "File is missing.");
-            return;
+            Platform.exit();
         }
 
         ScanRegionTask worker = new ScanRegionTask();
@@ -203,6 +204,7 @@ public class ScanRegionScene extends SceneRoot implements ScanRegionHandler {
 
         worker.setOnFailed(event -> {
             LOG.error("The task failed: {}", event);
+            PlateDecoder.errorDialog("Could not scan image", "Image scanning problem", null);
         });
 
         Thread th = new Thread(worker);

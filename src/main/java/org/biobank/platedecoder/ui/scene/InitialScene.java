@@ -9,10 +9,12 @@ import org.biobank.platedecoder.model.Plate;
 import org.biobank.platedecoder.model.PlateDecoderDefaults;
 import org.biobank.platedecoder.model.PlateDecoderPreferences;
 import org.biobank.platedecoder.service.ScanAndDecodeImageTask;
+import org.biobank.platedecoder.ui.PlateDecoder;
 import org.controlsfx.dialog.ProgressDialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -51,7 +53,7 @@ public class InitialScene extends SceneRoot {
    protected Region createContents() {
       filesystemButton = new RadioButton("Decode image - decode tubes in an image from the filesystem");
       flatbedScanButton = new RadioButton("Scan and decode - using the flatbed scanner");
-      withPrevParamsButton = new RadioButton("Scan and decode with my previous settings");
+      withPrevParamsButton = new RadioButton("Scan and decode using previous settings");
       modifyFlatbedConfiguration = new RadioButton("Modify flatbed scanner configuration");
       modifyDecodingConfiguration = new RadioButton("Modify 2D barcode decoding configuration");
 
@@ -94,6 +96,16 @@ public class InitialScene extends SceneRoot {
    }
 
    private void withPrevParamsAction(@SuppressWarnings("unused") ActionEvent event) {
+      if (PlateDecoder.IS_LINUX && !checkFilePresentLinux()) {
+         PlateDecoder.errorDialog(
+            "Simulating a scan of the entire flatbed will not work. "
+            + "To correct this, please copy an image to: "
+            + PlateDecoder.flatbedImageFilenameToUrl(),
+            "Unable to simulate action",
+            "File is missing.");
+         Platform.exit();
+      }
+
       Rectangle scanRect = PlateDecoderPreferences.getInstance().getWellRectangle(model.getPlateType());
 
       DecodeOptions decodeOptions = new DecodeOptions(model.getMinEdgeFactor(),
@@ -133,13 +145,20 @@ public class InitialScene extends SceneRoot {
 
       worker.setOnFailed(e -> {
             LOG.error("The task failed: {}", e);
-            withPrevParamsRunnableMaybe.ifPresent(runnable -> runnable.run());
+            PlateDecoder.errorDialog("Could not scan image", "Image scanning problem", null);
          });
 
       Thread th = new Thread(worker);
       th.setDaemon(true);
       th.start();
    }
+
+    private boolean checkFilePresentLinux() {
+        if (PlateDecoder.IS_LINUX) {
+            return PlateDecoder.fileExists(PlateDecoderDefaults.FLATBED_IMAGE_NAME);
+        }
+        throw new IllegalStateException("OS is not Linux");
+    }
 
    public void unselectAll() {
       filesystemButton.setSelected(false);

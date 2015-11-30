@@ -10,6 +10,7 @@ import org.controlsfx.dialog.ProgressDialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.layout.GridPane;
@@ -44,13 +45,13 @@ public class ScanPlateScene extends SceneRoot {
 
    @Override
    protected boolean allowNextButtonAction() {
-      if (PlateDecoder.IS_DEBUG_MODE && PlateDecoder.IS_LINUX && !checkFilePresentLinux()) {
+      if (PlateDecoder.IS_LINUX && !checkFilePresentLinux()) {
          PlateDecoder.errorDialog(
             "Simulating the flatbed scan of a plate will not work. "
             + "To correct this, please copy an image to: "
             + PlateDecoder.flatbedPlateImageFilenameToUrl(),
             "Unable to simulate action", "File is missing.");
-         return true;
+         Platform.exit();
       }
 
       ScanPlateTask worker =
@@ -71,6 +72,7 @@ public class ScanPlateScene extends SceneRoot {
 
       worker.setOnFailed(e -> {
             LOG.error("The task failed: {}", e);
+            PlateDecoder.errorDialog("Could not scan image", "Image scanning problem", null);
          });
 
       Thread th = new Thread(worker);
