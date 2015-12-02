@@ -5,6 +5,7 @@
 apply plugin: 'java'
 apply plugin: 'application'
 apply plugin: 'eclipse'
+apply plugin: 'distribution'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -12,33 +13,50 @@ targetCompatibility = 1.8
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
 version = '0.1-SNAPSHOT'
+
 mainClassName = "org.biobank.platedecoder.ui.PlateDecoder"
 
 jar {
    manifest.attributes "Main-Class": "org.biobank.platedecoder.ui.PlateDecoder"
 }
 
-javadoc {
-   source = sourceSets.main.allJava
-   classpath = configurations.compile
-}
-
 repositories {
    mavenLocal()
    mavenCentral()
+   maven { url "https://github.com/cbsrbiobank/biobank-maven-repo/raw/master/" }
+}
+
+configurations {
+   nativeBundles
+   nativeDlls
 }
 
 dependencies {
-   compile 'org.slf4j:slf4j-api:1.7.1', 'org.slf4j:slf4j-log4j12:1.7.12'
-   compile 'org.controlsfx:controlsfx:8.40.9'
-   compile 'net.sf.supercsv:super-csv:2.3.1'
-   compile 'commons-codec:commons-codec:1.10'
-   compile 'javax.json:javax.json-api:1.0'
-   compile 'com.ning:async-http-client:1.9.31'
-   compile 'com.fasterxml.jackson.jr:jackson-jr-all:2.6.2'
+   compile (
+      'org.slf4j:slf4j-api:1.7.1', 'org.slf4j:slf4j-log4j12:1.7.12',
+      'org.controlsfx:controlsfx:8.40.9',
+      'net.sf.supercsv:super-csv:2.3.1',
+      'commons-codec:commons-codec:1.10',
+      'javax.json:javax.json-api:1.0',
+      'com.ning:async-http-client:1.9.31',
+      'com.fasterxml.jackson.jr:jackson-jr-all:2.6.2')
+
    runtime 'org.glassfish:javax.json:1.0.4'
-   testCompile 'junit:junit:4.12'
-   testCompile 'de.saxsys:jfx-testrunner:1.1'
+
+   testCompile (
+      'junit:junit:4.12',
+      'de.saxsys:jfx-testrunner:1.1')
+
+   nativeBundles (
+      'scanlib:libdmscanlib64:3.0.0-ubuntu15.10',
+      'scanlib:dmscanlib:3.0.0-win32')
+
+   nativeDlls (
+      'scanlib:libglog:3.0.0-win32',
+      'scanlib:opencv_core248:3.0.0-win32',
+      'scanlib:opencv_highgui248:3.0.0-win32',
+      'scanlib:opencv_imgproc248:3.0.0-win32',
+      'scanlib:OpenThreadsWin32:3.0.0-win32')
 }
 
 test {
@@ -67,8 +85,54 @@ allprojects {
    }
 }
 
+// help from http://stackoverflow.com/questions/29437888/using-gradle-with-native-dependencies
+task copyNativeBundles(type: Sync) {
+   def location='./lib'
+   configurations.nativeBundles.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+      project.copy {
+         from artifact.file
+         into file(location)
+         rename { "${artifact.name}.${artifact.extension}" }
+      }
+   }
+}
+
+// help from
+//   https://discuss.gradle.org/t/how-to-rename-an-artifact-while-its-beeing-added-to-an-archive/7317/4
+task copyNativeDlls(type: Sync) {
+   def location='./'
+   configurations.nativeDlls.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+      project.copy {
+         from artifact.file
+         into file(location)
+         rename { "${artifact.name}.${artifact.extension}" }
+      }
+   }
+}
+
+compileJava.dependsOn copyNativeBundles, copyNativeDlls
+
 task listJars << {
    configurations.compile.each { File file -> println file.name }
+}
+
+// distributions {
+//    main {
+//       baseName = archivesBaseName
+
+//       contents {
+//          from { libsDir }
+//       }
+//    }
+// }
+
+applicationDistribution.from("lib") {
+    into "lib"
+}
+
+applicationDistribution.from("./") {
+   include "*.dll"
+   into ""
 }
 
 eclipse.classpath {

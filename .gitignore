@@ -3,6 +3,7 @@ filtered.png
 flatbed.png
 testImages
 *.class
+/*.dll
 .classpath
 .project
 /.settings/
