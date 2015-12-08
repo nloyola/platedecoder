@@ -1,13 +1,16 @@
 package org.biobank.platedecoder.service.fsm;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.biobank.platedecoder.ui.PlateDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -352,6 +355,20 @@ public class Fsm<S, C, E> {
    private void validateChoicepoints() {
       Set<Choicepoint<C>> transitionedTo = new HashSet<>();
 
+      for (Choicepoint<C> choicepoint : choicepoints.values()) {
+         List<String> errors = new ArrayList<>();
+         if (choicepoint.trueBranchTransition == null) {
+            errors.add("true branch transition missing");
+         }
+         if (choicepoint.trueBranchTransition == null) {
+            errors.add("false branch transition missing");
+         }
+
+         if (!errors.isEmpty()) {
+            throw new IllegalStateException(StringUtils.join(errors, ", "));
+         }
+      }
+
       for (State<S, E> state : states.values()) {
          for (Transition transition : state.transitions.values()) {
             if (transition.toComponent instanceof Choicepoint) {
@@ -359,6 +376,8 @@ public class Fsm<S, C, E> {
             }
          }
       }
+
+      LOG.info("transitionedTo size: {}", transitionedTo.size());
 
       for (Choicepoint<C> choicepoint : choicepoints.values()) {
          if (choicepoint.trueBranchTransition.toComponent instanceof Choicepoint) {
@@ -369,8 +388,12 @@ public class Fsm<S, C, E> {
          }
       }
 
+      LOG.info("transitionedTo size: {}", transitionedTo.size());
+
       Set<Choicepoint<C>> notTransitionedTo = new HashSet<>(choicepoints.values());
       notTransitionedTo.removeAll(transitionedTo);
+
+      LOG.info("notTransitionedTo size: {}", notTransitionedTo.size());
 
       if (!notTransitionedTo.isEmpty()) {
          throw new IllegalStateException(
