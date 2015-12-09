@@ -1,5 +1,7 @@
 package org.biobank.platedecoder.ui.scene;
 
+import static org.biobank.platedecoder.ui.JavaFxHelper.errorDialog;
+
 import org.biobank.platedecoder.model.FlatbedDpi;
 import org.biobank.platedecoder.model.PlateDecoderDefaults;
 import org.biobank.platedecoder.model.PlateDecoderPreferences;
@@ -46,7 +48,7 @@ public class ScanPlateScene extends SceneRoot {
    @Override
    protected boolean allowNextButtonAction() {
       if (PlateDecoder.IS_LINUX && !checkFilePresentLinux()) {
-         PlateDecoder.errorDialog(
+         errorDialog(
             "Simulating the flatbed scan of a plate will not work. "
             + "To correct this, please copy an image to: "
             + PlateDecoder.flatbedPlateImageFilenameToUrl(),
@@ -72,7 +74,7 @@ public class ScanPlateScene extends SceneRoot {
 
       worker.setOnFailed(e -> {
             LOG.error("The task failed: {}", e);
-            PlateDecoder.errorDialog("Could not scan image", "Image scanning problem", null);
+            errorDialog("Could not scan image", "Image scanning problem", null);
          });
 
       Thread th = new Thread(worker);

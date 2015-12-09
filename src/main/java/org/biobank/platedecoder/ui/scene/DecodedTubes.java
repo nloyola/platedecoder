@@ -1,6 +1,8 @@
 package org.biobank.platedecoder.ui.scene;
 
-import static org.biobank.platedecoder.ui.PlateDecoder.createButton;
+import static org.biobank.platedecoder.ui.JavaFxHelper.createButton;
+import static org.biobank.platedecoder.ui.JavaFxHelper.errorDialog;
+import static org.biobank.platedecoder.ui.JavaFxHelper.infoDialog;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -12,7 +14,6 @@ import java.util.stream.Collectors;
 import org.biobank.platedecoder.model.PlateWell;
 import org.biobank.platedecoder.model.PlateWellCsvWriter;
 import org.biobank.platedecoder.model.SbsPosition;
-import org.biobank.platedecoder.ui.PlateDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +49,7 @@ import javafx.stage.FileChooser;
  */
 public class DecodedTubes extends SceneRoot {
 
-   //@SuppressWarnings("unused")
+   @SuppressWarnings("unused")
    private static final Logger LOG = LoggerFactory.getLogger(DecodedTubes.class);
 
    private TableView<PlateWell> table;
@@ -169,10 +170,9 @@ public class DecodedTubes extends SceneRoot {
          try {
             PlateWellCsvWriter.write(file.toString(), sortedList);
          } catch (Exception ex) {
-            LOG.error(ex.getMessage());
-            PlateDecoder.errorDialog("Could not save file: " + ex.getMessage(),
-                                     "File save error",
-                                     null);
+            errorDialog("Could not save file: " + ex.getMessage(),
+                        "File save error",
+                        null);
          }
       }
    }
@@ -183,6 +183,6 @@ public class DecodedTubes extends SceneRoot {
 
    @SuppressWarnings("unused")
    private void specimenAssignAction(ActionEvent e) {
-      PlateDecoder.infoDialog("To be completed", "Under construction");
+      infoDialog("To be completed", "Under construction");
    }
 }

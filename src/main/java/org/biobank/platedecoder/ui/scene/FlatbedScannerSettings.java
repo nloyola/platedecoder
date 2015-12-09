@@ -1,6 +1,6 @@
 package org.biobank.platedecoder.ui.scene;
 
-import static org.biobank.platedecoder.ui.PlateDecoder.createButton;
+import static org.biobank.platedecoder.ui.JavaFxHelper.createButton;
 
 import org.biobank.platedecoder.dmscanlib.ScanLib;
 import org.biobank.platedecoder.dmscanlib.ScanLibResult;

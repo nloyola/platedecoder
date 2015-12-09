@@ -1,6 +1,7 @@
 package org.biobank.platedecoder.ui.scene;
 
-import static org.biobank.platedecoder.ui.PlateDecoder.createButton;
+import static org.biobank.platedecoder.ui.JavaFxHelper.createButton;
+import static org.biobank.platedecoder.ui.JavaFxHelper.errorDialog;
 
 import java.util.Optional;
 
@@ -169,7 +170,7 @@ public class ScanRegionScene extends SceneRoot implements ScanRegionHandler {
 
     private void scanAction(@SuppressWarnings("unused") ActionEvent e) {
         if (PlateDecoder.IS_LINUX && !checkFilePresentLinux()) {
-            PlateDecoder.errorDialog(
+            errorDialog(
                "Simulating a scan of the entire flatbed will not work. "
                + "To correct this, please copy an image to: "
                + PlateDecoder.flatbedImageFilenameToUrl(),
@@ -205,7 +206,7 @@ public class ScanRegionScene extends SceneRoot implements ScanRegionHandler {
 
         worker.setOnFailed(event -> {
             LOG.error("The task failed: {}", event);
-            PlateDecoder.errorDialog("Could not scan image", "Image scanning problem", null);
+            errorDialog("Could not scan image", "Image scanning problem", null);
         });
 
         Thread th = new Thread(worker);

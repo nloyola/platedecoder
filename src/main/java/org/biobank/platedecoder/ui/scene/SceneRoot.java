@@ -1,11 +1,11 @@
 package org.biobank.platedecoder.ui.scene;
 
-import static org.biobank.platedecoder.ui.PlateDecoder.createButton;
+import static org.biobank.platedecoder.ui.JavaFxHelper.createButton;
+import static org.biobank.platedecoder.ui.JavaFxHelper.createDialog;
 
 import java.util.Optional;
 
 import org.biobank.platedecoder.model.PlateModel;
-import org.biobank.platedecoder.ui.PlateDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -189,7 +189,7 @@ public abstract class SceneRoot extends BorderPane {
     */
    protected boolean allowNavigationAction() {
       if (configChangesMade) {
-         Alert alert = PlateDecoder.createDialog(
+         Alert alert = createDialog(
             AlertType.CONFIRMATION,
             "Unsaved changes",
             "Apply your changes?",
