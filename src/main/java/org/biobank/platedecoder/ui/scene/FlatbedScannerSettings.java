@@ -1,5 +1,6 @@
 package org.biobank.platedecoder.ui.scene;
 
+import static org.biobank.platedecoder.ui.PlateDecoder.createButton;
 
 import org.biobank.platedecoder.dmscanlib.ScanLib;
 import org.biobank.platedecoder.dmscanlib.ScanLibResult;
@@ -75,16 +76,13 @@ public class FlatbedScannerSettings extends SceneRoot {
       brightnessProperty = new SimpleLongProperty(model.getFlatbedBrightness());
       contrastProperty = new SimpleLongProperty(model.getFlatbedContrast());
 
-      Button selectDriverBtn = new Button("Select driver");
-      selectDriverBtn.setOnAction(this::selectScannerSourceAction);
-      selectDriverBtn.setMaxWidth(Double.MAX_VALUE);
+      Button selectDriverBtn = createButton("Select driver", this::selectScannerSourceAction);
 
       ScannerDriverTypeChooser driverTypeChooser = new ScannerDriverTypeChooser(driverTypeProperty);
       Slider brightnessSlider = createBrightnessSlider();
       Slider contrastSlider = createContrastSlider();
 
-      scanRegionBtn = new Button("Define scanning region");
-      scanRegionBtn.setMaxWidth(Double.MAX_VALUE);
+      scanRegionBtn = createButton("Define scanning region");
 
       GridPane grid = new GridPane();
       grid.setPadding(new Insets(20, 5, 5, 5));

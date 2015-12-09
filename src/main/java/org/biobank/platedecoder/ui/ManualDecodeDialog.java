@@ -61,8 +61,6 @@ public class ManualDecodeDialog extends Dialog<String> {
         getDialogPane().getButtonTypes().setAll(buttonTypeOk, buttonTypeCancel);
 
         inventoryId.textProperty().addListener((observable, oldValue, newValue) -> {
-                LOG.debug("manual decode dialog: new value: {}", newValue);
-
                 Optional<String> exists = deniedInventoryIds.stream()
                     .filter(id -> id.equals(newValue))
                     .findFirst();

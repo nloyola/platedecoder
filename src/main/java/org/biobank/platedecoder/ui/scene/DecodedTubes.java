@@ -1,5 +1,7 @@
 package org.biobank.platedecoder.ui.scene;
 
+import static org.biobank.platedecoder.ui.PlateDecoder.createButton;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -120,20 +122,12 @@ public class DecodedTubes extends SceneRoot {
    }
 
    private Button [] createButtons() {
-      Button copyToClipboardBtn = new Button("Copy to clipboard");
-      copyToClipboardBtn.setOnAction(this::copyToClipboardAction);
-
-      Button copyToClipboardNoLabelsBtn = new Button("Copy to clipboard (no labels)");
-      copyToClipboardNoLabelsBtn.setOnAction(this::copyToClipboardNoLabelsAction);
-
-      Button exportToCsvBtn = new Button("Export to CSV");
-      exportToCsvBtn.setOnAction(this::exportToCsvAction);
-
-      Button specimenLinkBtn = new Button("Specimen link");
-      specimenLinkBtn.setOnAction(this::specimenLinkAction);
-
-      Button specimenAssignBtn = new Button("Specimen assign");
-      specimenAssignBtn.setOnAction(this::specimenAssignAction);
+      Button copyToClipboardBtn = createButton("Copy to clipboard", this::copyToClipboardAction);
+      Button copyToClipboardNoLabelsBtn = createButton("Copy to clipboard (no labels)",
+                                                       this::copyToClipboardNoLabelsAction);
+      Button exportToCsvBtn = createButton("Export to CSV", this::exportToCsvAction);
+      Button specimenLinkBtn = createButton("Specimen link", this::specimenLinkAction);
+      Button specimenAssignBtn = createButton("Specimen assign", this::specimenAssignAction);
 
       return new Button [] {
          copyToClipboardBtn,

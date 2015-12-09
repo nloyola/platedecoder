@@ -1,5 +1,7 @@
 package org.biobank.platedecoder.ui.scene;
 
+import static org.biobank.platedecoder.ui.PlateDecoder.createButton;
+
 import java.util.Optional;
 
 import org.biobank.platedecoder.model.PlateModel;
@@ -217,7 +219,8 @@ public abstract class SceneRoot extends BorderPane {
     */
    protected void setTitleAreaMessage(String message) {
       titleAreaMessage.setText(message);
-      titleAreaMessage.setStyle("-fx-font-size:12; -fx-font-weight:bold;");
+      titleAreaMessage.setWrapText(true);
+      titleAreaMessage.setStyle("-fx-font-size:12; -fx-font-weight:normal;");
    }
 
    /**
@@ -259,15 +262,9 @@ public abstract class SceneRoot extends BorderPane {
       pane.setMinHeight(TilePane.USE_PREF_SIZE);
       pane.setAlignment(Pos.BOTTOM_RIGHT);
 
-      applyBtn = new Button("Apply");
-      applyBtn.setOnAction(e -> applyAction());
-      applyBtn.setMaxWidth(Double.MAX_VALUE);
-      applyBtn.setMinWidth(Button.USE_PREF_SIZE);
+      applyBtn = createButton("Apply", e -> applyAction());
 
-      Button restoreDefaultsBtn = new Button("Restore defaults");
-      restoreDefaultsBtn.setOnAction(e -> restoreDefaultsAction());
-      restoreDefaultsBtn.setMaxWidth(Double.MAX_VALUE);
-      restoreDefaultsBtn.setMinWidth(Button.USE_PREF_SIZE);
+      Button restoreDefaultsBtn = createButton("Restore defaults", e -> restoreDefaultsAction());
 
       pane.getChildren().addAll(applyBtn, restoreDefaultsBtn);
       return pane;
@@ -296,6 +293,10 @@ public abstract class SceneRoot extends BorderPane {
     * <p>This method is usually used to restore configuration information.
     */
    protected void restoreDefaultsAction() {
+   }
+
+   protected void nextButtonRequestFocus() {
+      nextBtn.requestFocus();
    }
 
    private Region createContentsArea() {
@@ -327,17 +328,15 @@ public abstract class SceneRoot extends BorderPane {
       final AnchorPane pane = new AnchorPane();
       pane.setPadding(new Insets(5, 5, 5, 5));
 
-      backBtn = new Button("Back");
+      backBtn = createButton("Back", this::backButtonAction);
       backBtn.managedProperty().bind(backBtn.visibleProperty());
-      backBtn.setOnAction(this::backButtonAction);
       backBtn.setVisible(false);
 
-      nextBtn = new Button("Next");
+      nextBtn = createButton("Next", this::nextButtonAction);
       nextBtn.managedProperty().bind(nextBtn.visibleProperty());
-      nextBtn.setOnAction(this::nextButtonAction);
       nextBtn.setVisible(false);
 
-      finishBtn = new Button("Finish");
+      finishBtn = createButton("Finish");
       finishBtn.managedProperty().bind(finishBtn.visibleProperty());
       finishBtn.setVisible(false);
 

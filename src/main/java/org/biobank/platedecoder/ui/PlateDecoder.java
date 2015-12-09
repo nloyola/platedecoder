@@ -18,6 +18,9 @@ import org.biobank.platedecoder.ui.scene.SpecimenLink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javafx.scene.control.Button;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.application.Application;
 import javafx.geometry.Point2D;
 import javafx.scene.Scene;
@@ -297,5 +300,21 @@ public class PlateDecoder extends Application implements SceneChanger {
       buf.append(filename);
       return buf.toString();
    }
+
+   public static Button createButton(String label, EventHandler<ActionEvent> handler) {
+      Button button = new Button(label);
+      if (handler != null) {
+         button.setOnAction(handler);
+      }
+      button.setMaxWidth(Double.MAX_VALUE);
+      button.setMinWidth(Button.USE_PREF_SIZE);
+      button.defaultButtonProperty().bind(button.focusedProperty());
+      return button;
+   }
+
+   public static Button createButton(String label) {
+      return createButton(label, null);
+   }
+
 
 }

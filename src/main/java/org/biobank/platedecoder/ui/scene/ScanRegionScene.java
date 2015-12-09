@@ -1,5 +1,7 @@
 package org.biobank.platedecoder.ui.scene;
 
+import static org.biobank.platedecoder.ui.PlateDecoder.createButton;
+
 import java.util.Optional;
 
 import org.biobank.platedecoder.dmscanlib.ScanLibResult;
@@ -67,8 +69,7 @@ public class ScanRegionScene extends SceneRoot implements ScanRegionHandler {
     }
 
     private Node createControlsPane() {
-        Button scanButton = new Button("Scan");
-        scanButton.setOnAction(this::scanAction);
+       Button scanButton = createButton("Scan", this::scanAction);
         scanButton.setMaxWidth(Double.MAX_VALUE);
 
         HBox hbox = new HBox(5);

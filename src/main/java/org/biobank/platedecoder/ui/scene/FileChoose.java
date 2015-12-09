@@ -1,8 +1,11 @@
 package org.biobank.platedecoder.ui.scene;
 
+import static org.biobank.platedecoder.ui.PlateDecoder.createButton;
+
 import java.io.File;
 import java.util.Optional;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
@@ -26,6 +29,7 @@ public class FileChoose extends SceneRoot {
    private TextField filenameField;
    private Optional<File> selectedFile = Optional.empty();
    private Button decodeBtn;
+   private Button browseFileBtn;
 
    public FileChoose() {
       super("Select an image file");
@@ -47,14 +51,10 @@ public class FileChoose extends SceneRoot {
       GridPane.setHgrow(filenameField, Priority.ALWAYS);
       grid.add(filenameField, 1, 0);
 
-      final Button browseFileBtn = new Button("Browse");
-      browseFileBtn.setOnAction(this::browseFileBtnAction);
-      browseFileBtn.setMaxWidth(Double.MAX_VALUE);
-      browseFileBtn.requestFocus();
+      browseFileBtn = createButton("Browse", this::browseFileBtnAction);
 
-      decodeBtn = new Button("Decode this image");
+      decodeBtn = createButton("Decode this image");
       decodeBtn.setDisable(true);
-      decodeBtn.setMaxWidth(Double.MAX_VALUE);
       grid.add(decodeBtn, 1, 2);
 
       final HBox box = new HBox(8);
@@ -82,6 +82,7 @@ public class FileChoose extends SceneRoot {
    @Override
    public void onDisplay() {
       unselectAll();
+      Platform.runLater(() -> browseFileBtn.requestFocus());
    }
 
    public void unselectAll() {

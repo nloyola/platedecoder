@@ -27,7 +27,7 @@ public class ScanPlateScene extends SceneRoot {
 
    @Override
    public void onDisplay() {
-      // do nothing
+      Platform.runLater(() -> nextButtonRequestFocus());
    }
 
    @Override

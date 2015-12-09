@@ -30,9 +30,9 @@ with the required libraries.
 
 ### MS Windows
 
-To use the app in MS Windows you will first have to install the
+To use the app in MS Windows, you will first have to install the
 [Microsoft Visual C++ 2010 SP1 Redistributable Package (x86)](http://www.microsoft.com/en-us/download/details.aspx?id=8328).
-This only needs to be done once.
+This only needs to be done once per computer.
 
 ## Development
 
