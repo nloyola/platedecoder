@@ -26,7 +26,6 @@ public final class DecodedWell implements Comparable<DecodedWell> {
     * @param label  The SBS label this object belongs to.
     *
     * @param message The decoded string extracted from the 2D barcode.
-    *
     */
    public DecodedWell(String label, String message) {
       this.label = label;
@@ -47,8 +46,7 @@ public final class DecodedWell implements Comparable<DecodedWell> {
     *
     */
    public DecodedWell(int row, int col, String message) {
-      this.label = SbsLabeling.fromRowCol(row, col);
-      this.message = message;
+      this(SbsLabeling.fromRowCol(row, col), message);
    }
 
    /**
@@ -70,6 +68,20 @@ public final class DecodedWell implements Comparable<DecodedWell> {
          return "";
       }
       return message;
+   }
+
+   @Override
+   public boolean equals(Object obj) {
+      if (obj instanceof DecodedWell) {
+         DecodedWell that = (DecodedWell) obj;
+         return this.label.equals(that.label);
+      }
+      return false;
+   }
+
+   @Override
+   public int hashCode() {
+      return 17 + label.hashCode();
    }
 
    /**

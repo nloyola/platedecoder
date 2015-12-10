@@ -11,7 +11,7 @@ import org.biobank.platedecoder.service.fsm.TransitionRunnable;
 import org.biobank.platedecoder.ui.SceneChanger;
 import org.biobank.platedecoder.ui.scene.DecodeImageScene;
 import org.biobank.platedecoder.ui.scene.DecodedTubes;
-import org.biobank.platedecoder.ui.scene.DecoderSettings;
+import org.biobank.platedecoder.ui.scene.decodersettings.DecoderSettings;
 import org.biobank.platedecoder.ui.scene.FileChoose;
 import org.biobank.platedecoder.ui.scene.FlatbedScannerSettings;
 import org.biobank.platedecoder.ui.scene.InitialScene;

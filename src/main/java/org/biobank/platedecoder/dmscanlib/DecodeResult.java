@@ -1,5 +1,6 @@
 package org.biobank.platedecoder.dmscanlib;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -54,7 +55,7 @@ public class DecodeResult extends ScanLibResult {
       return wells;
    }
 
-   private static Map<String, String> labelToInventoryIdMap(Set<DecodedWell> set) {
+   private static Map<String, String> labelToInventoryIdMap(Collection<DecodedWell> set) {
       Map<String, String> result = new HashMap<>();
       set.forEach(well -> {
             if (!well.getMessage().isEmpty()) {
@@ -64,7 +65,7 @@ public class DecodeResult extends ScanLibResult {
       return result;
    }
 
-   private static Map<String, String> inventoryIdToLabelMap(Set<DecodedWell> set) {
+   private static Map<String, String> inventoryIdToLabelMap(Collection<DecodedWell> set) {
       Map<String, String> result = new HashMap<>();
       set.forEach(well -> {
             if (!well.getMessage().isEmpty()) {
@@ -87,7 +88,8 @@ public class DecodeResult extends ScanLibResult {
     *
     * @return {@code true} if the results can be merged.
     */
-   public static boolean compareDecodeResults(Set<DecodedWell> former, Set<DecodedWell> latter) {
+   public static boolean compareDecodeResults(Collection<DecodedWell> former,
+                                              Collection<DecodedWell> latter) {
       // ensure each label contains the same inventory id
       Map<String, String> formerLabelToInventoryId = labelToInventoryIdMap(former);
       Map<String, String> latterLabelToInventoryId = labelToInventoryIdMap(latter);

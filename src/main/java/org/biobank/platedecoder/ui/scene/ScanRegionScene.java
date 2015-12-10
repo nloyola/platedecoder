@@ -14,7 +14,6 @@ import org.biobank.platedecoder.ui.ZoomingPane;
 import org.biobank.platedecoder.ui.scanregion.ScanRegion;
 import org.biobank.platedecoder.ui.scanregion.ScanRegionHandler;
 import org.controlsfx.dialog.ProgressDialog;
-import org.controlsfx.tools.Borders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,214 +30,205 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.text.Text;
 
 public class ScanRegionScene extends SceneRoot implements ScanRegionHandler {
 
-    // @SuppressWarnings("unused")
-    private static final Logger LOG = LoggerFactory.getLogger(ScanRegionScene.class);
+   // @SuppressWarnings("unused")
+   private static final Logger LOG = LoggerFactory.getLogger(ScanRegionScene.class);
 
-    private ImageView imageView;
+   private static final String TITLE_AREA_MESSAGE =
+      "Place a plate on your flatbed scanner and then press the scan button. "
+      + "Align the rectangle so that it contains all the tubes on the plate. "
+      + "Use the scroll wheel on the mouse to zoom into / out of the image. "
+      + "Once aligned press the continue button.";
 
-    private Group imageGroup;
+   private ImageView imageView;
 
-    private ScanRegion scanRegion;
+   private Group imageGroup;
 
-    public ScanRegionScene() {
-        super("Define scanning region");
-    }
+   private ScanRegion scanRegion;
 
-    @Override
-    public void onDisplay() {
-        createScanRegion();
-        disableNextButton(true);
-    }
+   public ScanRegionScene() {
+      super("Define scanning region");
+      setTitleAreaMessage(TITLE_AREA_MESSAGE);
+   }
 
-    @Override
-    protected Region createContents() {
-        Node controls = createControlsPane();
-        Node imagePane = createImagePane();
+   @Override
+   public void onDisplay() {
+      createScanRegion();
+      disableNextButton(true);
+   }
 
-        BorderPane borderPane = new BorderPane();
-        borderPane.setPadding(new Insets(5, 5, 5, 5));
-        borderPane.setLeft(controls);
-        borderPane.setCenter(imagePane);
+   @Override
+   protected Region createContents() {
+      Node controls = createControlsPane();
+      Node imagePane = createImagePane();
 
-        BorderPane.setMargin(controls, new Insets(5));
+      BorderPane borderPane = new BorderPane();
+      borderPane.setPadding(new Insets(5, 5, 5, 5));
+      borderPane.setLeft(controls);
+      borderPane.setCenter(imagePane);
 
-        return borderPane;
-    }
+      BorderPane.setMargin(controls, new Insets(5));
 
-    private Node createControlsPane() {
-       Button scanButton = createButton("Scan", this::scanAction);
-        scanButton.setMaxWidth(Double.MAX_VALUE);
+      return borderPane;
+   }
 
-        HBox hbox = new HBox(5);
-        hbox.setPadding(new Insets(0, 20, 10, 20));
-        hbox.getChildren().addAll(scanButton);
+   private Node createControlsPane() {
+      Button scanButton = createButton("Scan", this::scanAction);
+      scanButton.setMaxWidth(Double.MAX_VALUE);
 
-        GridPane grid = new GridPane();
-        grid.setVgap(2);
-        grid.setHgap(2);
-        grid.add(createInstructionsArea(), 0, 0);
-        grid.add(hbox, 0, 1);
+      HBox hbox = new HBox(5);
+      hbox.setPadding(new Insets(0, 20, 10, 20));
+      hbox.getChildren().addAll(scanButton);
 
-        return grid;
-    }
+      GridPane grid = new GridPane();
+      grid.setVgap(2);
+      grid.setHgap(2);
+      grid.add(hbox, 0, 0);
 
-    private Node createInstructionsArea() {
-        StringBuffer buf = new StringBuffer();
-        buf.append("Place a plate on your flatbed scanner and then press the scan button.\n\n");
-        buf.append("Align the rectangle so that it contains all the tubes on the plate.\n\n");
-        buf.append("Use the scroll wheel on the mouse to zoom into / out of the image.\n\n");
-        buf.append("Once aligned press the continue button.");
+      return grid;
+   }
 
-        Text text = new Text();
-        text.setText(buf.toString());
-        text.setWrappingWidth(200);
+   private Node createImagePane() {
+      imageView = new ImageView();
+      imageView.setPreserveRatio(true);
+      imageView.setSmooth(true);
 
-        return Borders.wrap(text).etchedBorder().build().build();
-    }
+      imageGroup = new Group();
+      imageGroup.getChildren().add(imageView);
+      ZoomingPane imagePane = new ZoomingPane(imageGroup);
 
-    private Node createImagePane() {
-        imageView = new ImageView();
-        imageView.setPreserveRatio(true);
-        imageView.setSmooth(true);
+      imageView.fitWidthProperty().bind(imagePane.widthProperty());
+      imageView.fitHeightProperty().bind(imagePane.heightProperty());
 
-        imageGroup = new Group();
-        imageGroup.getChildren().add(imageView);
-        ZoomingPane imagePane = new ZoomingPane(imageGroup);
-
-        imageView.fitWidthProperty().bind(imagePane.widthProperty());
-        imageView.fitHeightProperty().bind(imagePane.heightProperty());
-
-        imageView.fitWidthProperty().addListener((observable, oldValue, newValue) -> {
+      imageView.fitWidthProperty().addListener((observable, oldValue, newValue) -> {
             // the actual dimensions are in imageView.getLayoutBounds().getWidth()
             Image image = imageView.getImage();
             if (image != null) {
-                double newScale = imageView.getLayoutBounds().getWidth() / image.getWidth();
-                scanRegion.setDisplayScale(newScale);
+               double newScale = imageView.getLayoutBounds().getWidth() / image.getWidth();
+               scanRegion.setDisplayScale(newScale);
             }
-        });
+         });
 
-        imageView.fitHeightProperty().addListener((observable, oldValue, newValue) -> {
+      imageView.fitHeightProperty().addListener((observable, oldValue, newValue) -> {
             // the actual dimensions are in imageView.getLayoutBounds().getHeight()
             Image image = imageView.getImage();
             if (image != null) {
-                double newScale = imageView.getLayoutBounds().getHeight() / image.getHeight();
-                scanRegion.setDisplayScale(newScale);
+               double newScale = imageView.getLayoutBounds().getHeight() / image.getHeight();
+               scanRegion.setDisplayScale(newScale);
             }
-        });
+         });
 
-        imagePane.getZoomScaleProperty().addListener((observable, oldValue, newValue) -> {
+      imagePane.getZoomScaleProperty().addListener((observable, oldValue, newValue) -> {
             if (scanRegion != null) {
-                scanRegion.setImageZoomScale(newValue.doubleValue());
+               scanRegion.setImageZoomScale(newValue.doubleValue());
             }
-        });
+         });
 
-        return imagePane;
-    }
+      return imagePane;
+   }
 
-    private void createScanRegion() {
-        Image image = imageView.getImage();
+   private void createScanRegion() {
+      Image image = imageView.getImage();
 
-        if (image == null) return;
+      if (image == null) return;
 
-        Rectangle r;
+      Rectangle r;
 
-        if (scanRegion == null) {
-            Optional<Rectangle> rectMaybe = PlateDecoderPreferences.getInstance().getScanRegion();
-            if (rectMaybe.isPresent()) {
-                r = inchesToPixels(rectMaybe.get(), PlateDecoderDefaults.FLATBED_IMAGE_DPI);
-            } else {
-                r = inchesToPixels(PlateDecoderDefaults.getDefaultScanRegion(),
-                                   PlateDecoderDefaults.FLATBED_IMAGE_DPI);
-            }
-        } else {
-            r = scanRegion;
-        }
+      if (scanRegion == null) {
+         Optional<Rectangle> rectMaybe = PlateDecoderPreferences.getInstance().getScanRegion();
+         if (rectMaybe.isPresent()) {
+            r = inchesToPixels(rectMaybe.get(), PlateDecoderDefaults.FLATBED_IMAGE_DPI);
+         } else {
+            r = inchesToPixels(PlateDecoderDefaults.getDefaultScanRegion(),
+                               PlateDecoderDefaults.FLATBED_IMAGE_DPI);
+         }
+      } else {
+         r = scanRegion;
+      }
 
-        double scale = imageView.getLayoutBounds().getWidth() / image.getWidth();
-        scanRegion = new ScanRegion(this,
-                                    imageView,
-                                    r.getX(),
-                                    r.getY(),
-                                    r.getWidth(),
-                                    r.getHeight(),
-                                    scale);
-    }
+      double scale = imageView.getLayoutBounds().getWidth() / image.getWidth();
+      scanRegion = new ScanRegion(this,
+                                  imageView,
+                                  r.getX(),
+                                  r.getY(),
+                                  r.getWidth(),
+                                  r.getHeight(),
+                                  scale);
+   }
 
-    private void scanAction(@SuppressWarnings("unused") ActionEvent e) {
-        if (PlateDecoder.IS_LINUX && !checkFilePresentLinux()) {
-            errorDialog(
-               "Simulating a scan of the entire flatbed will not work. "
-               + "To correct this, please copy an image to: "
-               + PlateDecoder.flatbedImageFilenameToUrl(),
-               "Unable to simulate action",
-               "File is missing.");
-            Platform.exit();
-        }
+   private void scanAction(@SuppressWarnings("unused") ActionEvent e) {
+      if (PlateDecoder.IS_LINUX && !checkFilePresentLinux()) {
+         errorDialog(
+            "Simulating a scan of the entire flatbed will not work. "
+            + "To correct this, please copy an image to: "
+            + PlateDecoder.flatbedImageFilenameToUrl(),
+            "Unable to simulate action",
+            "File is missing.");
+         Platform.exit();
+      }
 
-        ScanRegionTask worker = new ScanRegionTask();
+      ScanRegionTask worker = new ScanRegionTask();
 
-        ProgressDialog dlg = new ProgressDialog(worker);
-        dlg.setTitle("Scanning flatbed");
-        dlg.setHeaderText("Scanning flatbed");
+      ProgressDialog dlg = new ProgressDialog(worker);
+      dlg.setTitle("Scanning flatbed");
+      dlg.setHeaderText("Scanning flatbed");
 
-        worker.setOnSucceeded(event -> {
+      worker.setOnSucceeded(event -> {
             ScanLibResult result = worker.getValue();
 
             if (result.getResultCode() == ScanLibResult.Result.SUCCESS) {
-                Image image = new Image(PlateDecoder.flatbedImageFilenameToUrl());
-                imageView.setImage(image);
-                imageView.setCache(true);
+               Image image = new Image(PlateDecoder.flatbedImageFilenameToUrl());
+               imageView.setImage(image);
+               imageView.setCache(true);
 
-                createScanRegion();
+               createScanRegion();
 
-                imageGroup.getChildren().clear();
-                imageGroup.getChildren().add(imageView);
-                imageGroup.getChildren().add(scanRegion.getDisplayRegion());
-                imageGroup.getChildren().addAll(scanRegion.getResizeHandles());
+               imageGroup.getChildren().clear();
+               imageGroup.getChildren().add(imageView);
+               imageGroup.getChildren().add(scanRegion.getDisplayRegion());
+               imageGroup.getChildren().addAll(scanRegion.getResizeHandles());
 
-                disableNextButton(false);
+               disableNextButton(false);
             }
-        });
+         });
 
-        worker.setOnFailed(event -> {
+      worker.setOnFailed(event -> {
             LOG.error("The task failed: {}", event);
             errorDialog("Could not scan image", "Image scanning problem", null);
-        });
+         });
 
-        Thread th = new Thread(worker);
-        th.setDaemon(true);
-        th.start();
-    }
+      Thread th = new Thread(worker);
+      th.setDaemon(true);
+      th.start();
+   }
 
-    private boolean checkFilePresentLinux() {
-        if (PlateDecoder.IS_LINUX) {
-            return PlateDecoder.fileExists(PlateDecoderDefaults.FLATBED_IMAGE_NAME);
-        }
-        throw new IllegalStateException("OS is not Linux");
-    }
+   private boolean checkFilePresentLinux() {
+      if (PlateDecoder.IS_LINUX) {
+         return PlateDecoder.fileExists(PlateDecoderDefaults.FLATBED_IMAGE_NAME);
+      }
+      throw new IllegalStateException("OS is not Linux");
+   }
 
-    @Override
-    protected boolean allowNextButtonAction() {
-        Rectangle r = pixelsToInches(scanRegion, PlateDecoderDefaults.FLATBED_IMAGE_DPI);
-        PlateDecoderPreferences.getInstance().setScanRegion(r);
-        return true;
-    }
+   @Override
+   protected void nextButtonAction() {
+      Rectangle r = pixelsToInches(scanRegion, PlateDecoderDefaults.FLATBED_IMAGE_DPI);
+      PlateDecoderPreferences.getInstance().setScanRegion(r);
+      super.nextButtonAction();
+   }
 
-    private Rectangle pixelsToInches(Rectangle r, long dotsPerInch) {
-        return new Rectangle(r.getX() / dotsPerInch,
-                             r.getY() / dotsPerInch,
-                             r.getWidth() / dotsPerInch,
-                             r.getHeight() / dotsPerInch);
-    }
+   private Rectangle pixelsToInches(Rectangle r, long dotsPerInch) {
+      return new Rectangle(r.getX() / dotsPerInch,
+                           r.getY() / dotsPerInch,
+                           r.getWidth() / dotsPerInch,
+                           r.getHeight() / dotsPerInch);
+   }
 
-    private Rectangle inchesToPixels(Rectangle r, long dotsPerInch) {
-        return new Rectangle(r.getX() * dotsPerInch,
-                             r.getY() * dotsPerInch,
-                             r.getWidth() * dotsPerInch,
-                             r.getHeight() * dotsPerInch);
-    }
+   private Rectangle inchesToPixels(Rectangle r, long dotsPerInch) {
+      return new Rectangle(r.getX() * dotsPerInch,
+                           r.getY() * dotsPerInch,
+                           r.getWidth() * dotsPerInch,
+                           r.getHeight() * dotsPerInch);
+   }
 }

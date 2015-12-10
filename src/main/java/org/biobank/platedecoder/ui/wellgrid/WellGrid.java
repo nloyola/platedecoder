@@ -3,17 +3,18 @@ package org.biobank.platedecoder.ui.wellgrid;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.scene.Cursor;
-import javafx.scene.control.Tooltip;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.paint.Color;
+import javafx.scene.Node;
 import javafx.scene.shape.Rectangle;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.biobank.platedecoder.dmscanlib.CellRectangle.*;
+
 import org.biobank.platedecoder.model.PlateModel;
 import org.biobank.platedecoder.model.PlateOrientation;
 import org.biobank.platedecoder.model.PlateType;
@@ -37,357 +38,354 @@ public class WellGrid extends Rectangle implements ResizeHandler {
     *   http://stackoverflow.com/questions/26298873/resizable-and-movable-rectangle
     */
 
-    @SuppressWarnings("unused")
-    private static final Logger LOG = LoggerFactory.getLogger(WellGrid.class);
+   @SuppressWarnings("unused")
+   private static final Logger LOG = LoggerFactory.getLogger(WellGrid.class);
 
-    private static final Color A1_CELL_FILL_COLOR = Color.rgb(189, 237, 255, 0.35);
+   private final PlateModel model = PlateModel.getInstance();
 
-    private static final Color DECODED_CELL_FILL_COLOR = Color.rgb(153, 198, 142, .25);
+   private final WellGridHandler wellGridHandler;
 
-    private final PlateModel model = PlateModel.getInstance();
+   private Map<String, WellCell> wellCellMap = new HashMap<>();
 
-    private final WellGridHandler wellGridHandler;
+   private DoubleProperty displayScaleProperty;
 
-    private final ImageView imageView;
+   private ResizeHandleNW resizeRectNW;
 
-    private PlateType plateType;
+   private ResizeHandleSE resizeRectSE;
 
-    private Map<String, WellCell> wellCellMap = new HashMap<>();
+   /**
+    * The well grid is superimposed on the image containinig the 2D barcodes. The image is scaled
+    * to fit into the window displayed to the user. The {@code scale} is the scaling factor used to
+    * display the image.
+    *
+    * @param wellGridHandler The object to inform of changes to the grid.
+    *
+    * @param x  The X coordinate of the top left corner of the grid.
+    *
+    * @param y  The Y coordinate of the top left corner of the grid.
+    *
+    * @param width  The width of the grid.
+    *
+    * @param height  The height of the grid.
+    *
+    * @param scale  The scale used to display the grid.
+    */
+   public WellGrid(final WellGridHandler wellGridHandler,
+                   double    x,
+                   double    y,
+                   double    width,
+                   double    height,
+                   double    scale) {
+      super(x, y, width, height);
 
-    private Map<String, ImageView> wellDecodedIconMap = new HashMap<>();
+      this.wellGridHandler = wellGridHandler;
+      this.displayScaleProperty = new SimpleDoubleProperty(scale);
 
-    private DoubleProperty displayScaleProperty;
+      createResizeHandles();
+      createWellCells();
+   }
 
-    private final Image wellDecodedImage;
+   /**
+    * Called when a user moves one of the cells that makes up the grid.
+    *
+    * @param cell The cell the user is moving.
+    *
+    * @param deltaX The distance the user has moved the cell in the X direction.
+    *
+    * @param deltaY The distance the user has moved the cell in the Y direction.
+    */
+   public void cellMoved(WellCell cell, double deltaX, double deltaY) {
+      double dScale = displayScaleProperty.getValue();
+      double adjustedDeltaX = deltaX / dScale;
+      double adjustedDeltaY = deltaY / dScale;
 
-    private ResizeHandleNW resizeRectNW;
+      double newX = Math.min(Math.max(0.0, getX() + adjustedDeltaX),
+                             wellGridHandler.getImageWidth() - getWidth());
+      double newY = Math.min(Math.max(0.0, getY() + adjustedDeltaY),
+                             wellGridHandler.getImageHeight() - getHeight());
 
-    private ResizeHandleSE resizeRectSE;
+      setX(newX);
+      setY(newY);
+      update();
+   }
 
-    /**
-     * The well grid is superimposed on the image containinig the 2D barcodes. The image is scaled
-     * to fit into the window displayed to the user. The {@code scale} is the scaling factor used to
-     * display the image.
-     *
-     * @param wellGridHandler The object to inform of changes to the grid.
-     *
-     * @param imageView  The object that contains a view of the image.
-     *
-     * @param plateType How many wells the plate contains. See {@link PlateType}.
-     *
-     * @param x  The X coordinate of the top left corner of the grid.
-     *
-     * @param y  The Y coordinate of the top left corner of the grid.
-     *
-     * @param width  The width of the grid.
-     *
-     * @param height  The height of the grid.
-     *
-     * @param scale  The scale used to display the grid.
-     */
-    public WellGrid(final WellGridHandler wellGridHandler,
-                    ImageView  imageView,
-                    PlateType plateType,
-                    double     x,
-                    double     y,
-                    double     width,
-                    double     height,
-                    double     scale) {
-        super(x, y, width, height);
+   /**
+    * Used to update the grid after a user interface change.
+    *
+    * <p>A user interface change can be one of: user resized the window the grid is being displayed
+    * in, the user changed the dimensions, orientation, or the position of the barcodes on the grid.
+    */
+   public void update() {
+      double displayScale = displayScaleProperty.getValue();
+      int rows, cols;
 
-        this.wellGridHandler = wellGridHandler;
-        this.imageView = imageView;
-        this.plateType = plateType;
-        this.displayScaleProperty = new SimpleDoubleProperty(scale);
+      PlateType plateType = model.getPlateType();
+      if (model.getPlateOrientation() == PlateOrientation.LANDSCAPE) {
+         rows = plateType.getRows();
+         cols = plateType.getCols();
+      } else {
+         rows = plateType.getCols();
+         cols = plateType.getRows();
+      }
 
-        wellDecodedImage = new Image(WellGrid.class.getResourceAsStream("accept.png"));
+      double wellWidth = displayScale * getWidth() / cols;
+      double wellHeight = displayScale * getHeight() / rows;
 
-        createResizeHandles();
-        createWellCells();
-        createWellDecodedIcons();
-    }
+      double xPosition = displayScale * getX();
+      double offsetX = xPosition;
+      double offsetY = displayScale * getY();
 
-    private void createResizeHandles() {
-        resizeRectNW = new ResizeHandleNW(this, xProperty(), yProperty(), displayScaleProperty);
-
-        resizeRectSE = new ResizeHandleSE(this,
-                                          xProperty(),
-                                          yProperty(),
-                                          widthProperty(),
-                                          heightProperty(),
-                                          displayScaleProperty);
-    }
-
-    private void createWellCells() {
-        double displayScale = displayScaleProperty.getValue();
-        int rows, cols;
-
-        if (model.getPlateOrientation() == PlateOrientation.LANDSCAPE) {
-            rows = plateType.getRows();
-            cols = plateType.getCols();
-        } else {
-            rows = plateType.getCols();
-            cols = plateType.getRows();
-        }
-
-        double wellWidth = displayScale * getWidth() / cols;
-        double wellHeight = displayScale * getHeight() / rows;
-
-        double wellGridX = displayScale * getX();
-        double offsetX = wellGridX;
-        double offsetY = displayScale * getY();
-        double wellDisplayWidth = wellWidth - 2;
-        double wellDisplayHeight = wellHeight - 2;
-        WellCell cell;
-
-        for (int row = 0; row < rows; ++row) {
-            for (int col = 0; col < cols; ++col) {
-                String label = getLabelForGridPosition(row, col);
-
-                // make the well slightly smaller so that user can see gaps between wells
-                cell = new WellCell(wellGridHandler,
-                                    label,
-                                    1,
-                                    1,
-                                    wellDisplayWidth,
-                                    wellDisplayHeight);
-
-                cell.setTranslateX(offsetX);
-                cell.setTranslateY(offsetY);
-
-                if (label.equals("A1")) {
-                    cell.setFill(A1_CELL_FILL_COLOR);
-                }
-
-                Tooltip.install(cell, new Tooltip(label));
-
-                wellCellMap.put(label, cell);
-                offsetX += wellWidth;
+      for (int row = 0; row < rows; ++row) {
+         for (int col = 0; col < cols; ++col) {
+            String label = getLabelForGridPosition(row, col);
+            WellCell cell = wellCellMap.get(label);
+            if (cell != null) {
+               cell.setPositionAndSize(offsetX, offsetY, wellWidth, wellHeight);
+            } else {
+               throw new IllegalStateException(
+                  "updateCells: rectangle for label not found: " + label);
             }
 
-            offsetX = wellGridX;
-            offsetY += wellHeight;
-        }
-    }
+            offsetX += wellWidth;
+         }
 
-    public void cellMoved(@SuppressWarnings("unused") WellCell cell,
-                          double deltaX,
-                          double deltaY) {
-        double dScale = displayScaleProperty.getValue();
-        double adjustedDeltaX = deltaX / dScale;
-        double adjustedDeltaY = deltaY / dScale;
-        Image image = imageView.getImage();
+         offsetX = xPosition;
+         offsetY += wellHeight;
+      }
+   }
 
-        double newX = Math.min(Math.max(0.0, getX() + adjustedDeltaX),
-                               image.getWidth() - getWidth());
-        double newY = Math.min(Math.max(0.0, getY() + adjustedDeltaY),
-                               image.getHeight() - getHeight());
+   /**
+    * @return the count of the cells where the image has been successfully decoded or manually
+    * decoded.
+    */
+   public int getDecodedCellCount() {
+      int count = 0;
+      for (WellCell cell : wellCellMap.values()) {
+         if (!cell.getInventoryId().isEmpty()) {
+            ++count;
+         }
+      }
+      return count;
+   }
 
-        setX(newX);
-        setY(newY);
-        update();
-    }
+   /**
+    * @return the cells where the image has been successfully decoded or manually decoded.
+    */
+   public Set<WellCell> getDecodedCells() {
+      return wellCellMap.values().stream()
+         .filter(c -> !c.getInventoryId().isEmpty())
+         .collect(Collectors.toSet());
+   }
 
-    public void createWellDecodedIcons() {
-        for (Entry<String, WellCell> entry : wellCellMap.entrySet()) {
-            String label = entry.getKey();
+   /**
+    * @return A list of JavaFX widgets do be displayed by this well grid.
+    */
+   public Node [] getWidgets() {
+      List<Node> widgets = new ArrayList<>();
+      wellCellMap.values().forEach(cell -> {
+            widgets.addAll(cell.getWidgets());
+         });
+      widgets.add(resizeRectNW);
+      widgets.add(resizeRectSE);
+      return widgets.toArray(new Node [] {});
+   }
 
-            ImageView iv = new ImageView(wellDecodedImage);
-            iv.setPreserveRatio(true);
-            iv.setSmooth(true);
-            iv.setVisible(false);
-            wellDecodedIconMap.put(label, iv);
-        }
-    }
+   /**
+    * Clears the inventory ID from all the cells in the grid.
+    */
+   public void clearWellCellInventoryId() {
+      for (WellCell cell : wellCellMap.values()) {
+         cell.setInventoryId("");
+      }
+   }
 
-    public void update() {
-        updateCells();
-        updateWellDecodedIcons();
-    }
+   /**
+    * Assigns an inventory ID to a cell in the grid.
+    *
+    * @param label The label for the cell.
+    *
+    * @param inventoryId The inventory ID for the cell.
+    *
+    * @param manuallyDecoded True when the cell was decoded with a handheld scanner instead of the
+    * decoding library.
+    */
+   public void setWellCellInventoryId(String  label,
+                                      String  inventoryId,
+                                      boolean manuallyDecoded) {
+      WellCell cell = wellCellMap.get(label);
+      if (cell == null) {
+         throw new IllegalArgumentException("label is invalid for grid: " + label);
+      }
+      cell.setInventoryId(inventoryId);
+      cell.setManuallyDecoded(manuallyDecoded);
+   }
 
-    private void updateCells() {
-        double displayScale = displayScaleProperty.getValue();
-        int rows, cols;
+   /**
+    * Assigns an inventory ID to a cell in the grid.
+    *
+    * <p>Used when the decoding library was used to decode the 2D barcode.
+    *
+    * @param label The label for the cell.
+    *
+    * @param inventoryId The inventory ID for the cell.
+    *
+    */
+   public void setWellCellInventoryId(String label, String inventoryId) {
+      setWellCellInventoryId(label, inventoryId, false);
+   }
 
-        if (model.getPlateOrientation() == PlateOrientation.LANDSCAPE) {
-            rows = plateType.getRows();
-            cols = plateType.getCols();
-        } else {
-            rows = plateType.getCols();
-            cols = plateType.getRows();
-        }
+   /**
+    * Returns the label for a cell in the grid.
+    *
+    * @param row The row the cell is in.
+    *
+    * @param col The column the cell is in.
+    */
+   private String getLabelForGridPosition(int row, int col) {
+      return getLabelForPosition(row,
+                                 col,
+                                 model.getPlateOrientation(),
+                                 model.getPlateType(),
+                                 model.getBarcodePosition());
+   }
 
-        double wellWidth = displayScale * getWidth() / cols;
-        double wellHeight = displayScale * getHeight() / rows;
+   /**
+    * @return The scale used to display the grid.
+    */
+   public double getScale() {
+      return displayScaleProperty.getValue();
+   }
 
-        double xPosition = displayScale * getX();
-        double offsetX = xPosition;
-        double offsetY = displayScale * getY();
+   /**
+    * The scale used when displaying the grid.
+    *
+    * <p>The scale is usually the same as the scale used on the background image.
+    *
+    * @param scale the scale used to display the grid.
+    */
+   public void setScale(double scale) {
+      displayScaleProperty.setValue(scale);
+      update();
+   }
 
-        for (int row = 0; row < rows; ++row) {
-            for (int col = 0; col < cols; ++col) {
-                String label = getLabelForGridPosition(row, col);
-                WellCell cell = wellCellMap.get(label);
-                if (cell != null) {
-                    cell.setTranslateX(offsetX);
-                    cell.setTranslateY(offsetY);
-                    cell.setWidth(wellWidth);
-                    cell.setHeight(wellHeight);
+   @Override
+   public void setResizeCursor(Cursor value) {
+      wellGridHandler.setCursor(value);
+   }
 
-                    String inventoryId = cell.getInventoryId();
+   @Override
+   public void mouseDragged(ResizeHandle resizeHandle, double deltaX, double deltaY) {
+      double displayScale = displayScaleProperty.getValue();
+      double x = getX();
+      double y = getY();
+      double width = getWidth();
+      double height = getHeight();
+      double newWidth;
+      double newHeight;
 
-                    StringBuffer labelBuf = new StringBuffer();
-                    labelBuf.append(label);
+      if (resizeHandle == resizeRectNW) {
+         double adjustedDeltaX = deltaX / displayScale;
+         double adjustedDeltaY = deltaY / displayScale;
 
-                    if (!inventoryId.isEmpty()) {
-                        labelBuf.append(": ").append(inventoryId);
-                    }
+         // NOTE: x and y are re-assigned
+         x = Math.min(Math.max(0.0, x + adjustedDeltaX), x + width - ResizeHandle.RESIZE_RECT_SIZE);
+         y = Math.min(Math.max(0.0, y + adjustedDeltaY), y + height - ResizeHandle.RESIZE_RECT_SIZE);
 
-                    if (!label.equals("A1")) {
-                        Color fillColor = inventoryId.isEmpty()
-                            ? Color.TRANSPARENT : DECODED_CELL_FILL_COLOR;
-                        cell.setFill(fillColor);
-                    }
+         newWidth = Math.min(
+            Math.max(ResizeHandle.RESIZE_RECT_SIZE, width - adjustedDeltaX), x + width);
+         newHeight = Math.min(
+            Math.max(ResizeHandle.RESIZE_RECT_SIZE, height - adjustedDeltaY), y + height);
 
-                    Tooltip.install(cell, new Tooltip(labelBuf.toString()));
-                } else {
-                    throw new IllegalStateException(
-                        "updateCells: rectangle for label not found: " + label);
-                }
+      } else if (resizeHandle == resizeRectSE) {
+         newWidth = Math.min(
+            Math.max(ResizeHandle.RESIZE_RECT_SIZE, width + deltaX / displayScale),
+            wellGridHandler.getImageWidth() - x);
+         newHeight = Math.min(
+            Math.max(ResizeHandle.RESIZE_RECT_SIZE, height + deltaY / displayScale),
+            wellGridHandler.getImageHeight() - y);
+      } else {
+         throw new IllegalStateException(
+            "invalid callback for resize: " + resizeHandle);
+      }
 
-                offsetX += wellWidth;
-            }
+      resized(x, y, newWidth, newHeight);
+   }
 
-            offsetX = xPosition;
-            offsetY += wellHeight;
-        }
-    }
+   private void createResizeHandles() {
+      resizeRectNW = new ResizeHandleNW(this, xProperty(), yProperty(), displayScaleProperty);
 
-    private void updateWellDecodedIcons() {
-        double imageWidth = wellDecodedImage.getWidth();
-        double imageHeight = wellDecodedImage.getWidth();
+      resizeRectSE = new ResizeHandleSE(this,
+                                        xProperty(),
+                                        yProperty(),
+                                        widthProperty(),
+                                        heightProperty(),
+                                        displayScaleProperty);
+   }
 
-        for (Entry<String, WellCell> entry : wellCellMap.entrySet()) {
-            String label = entry.getKey();
-            WellCell cell = entry.getValue();
+   private void createWellCells() {
+      double displayScale = displayScaleProperty.getValue();
+      int rows, cols;
 
-            ImageView iv = wellDecodedIconMap.get(label);
+      PlateType plateType = model.getPlateType();
+      if (model.getPlateOrientation() == PlateOrientation.LANDSCAPE) {
+         rows = plateType.getRows();
+         cols = plateType.getCols();
+      } else {
+         rows = plateType.getCols();
+         cols = plateType.getRows();
+      }
 
-            double halfWidth = cell.getWidth() / 2;
-            double halfHeight = cell.getHeight() / 2;
+      double wellWidth = displayScale * getWidth() / cols;
+      double wellHeight = displayScale * getHeight() / rows;
 
-            double fitWidth = halfWidth < imageWidth ? halfWidth : imageWidth;
-            double fitHeight = halfHeight < imageHeight ? halfWidth : imageHeight;
+      double wellGridX = displayScale * getX();
+      double offsetX = wellGridX;
+      double offsetY = displayScale * getY();
+      double wellDisplayWidth = wellWidth - 2;
+      double wellDisplayHeight = wellHeight - 2;
+      WellCell cell;
 
-            iv.setX(cell.getX() + cell.getTranslateX());
-            iv.setY(cell.getY() + cell.getTranslateY() + cell.getHeight() - fitHeight);
-            iv.setFitWidth(fitWidth);
-            iv.setVisible(!cell.getInventoryId().isEmpty());
-        }
-    }
+      for (int row = 0; row < rows; ++row) {
+         for (int col = 0; col < cols; ++col) {
+            String label = getLabelForGridPosition(row, col);
 
-    public void plateTypeSelectionChanged(PlateType plateType) {
-        this.plateType = plateType;
-    }
+            // make the well slightly smaller so that user can see gaps between wells
+            cell = new WellCell(wellGridHandler,
+                                label,
+                                1,
+                                1,
+                                wellDisplayWidth,
+                                wellDisplayHeight);
 
-    public Rectangle [] getWellCells() {
-        return wellCellMap.values().toArray(new WellCell [] {});
-    }
+            cell.setPosition(offsetX, offsetY);
 
-    public ImageView [] getWellDecodedIcons() {
-        return wellDecodedIconMap.values().toArray(new ImageView [] {});
-    }
+            wellCellMap.put(label, cell);
+            offsetX += wellWidth;
+         }
 
-    public void clearWellCellInventoryId() {
-        for (WellCell cell : wellCellMap.values()) {
-            cell.setInventoryId("");
-        }
-    }
+         offsetX = wellGridX;
+         offsetY += wellHeight;
+      }
+   }
 
-    public void setWellCellInventoryId(String label, String inventoryId) {
-        WellCell cell = wellCellMap.get(label);
-        if (cell == null) {
-            throw new IllegalArgumentException("label is invalid for grid: " + label);
-        }
-        cell.setInventoryId(inventoryId);
-    }
+   private void resized(double x, double y, double width, double height) {
+      if ((x < 0.0) || (y < 0.0) || (width < 0.0) || (height < 0.0)) {
+         throw new IllegalArgumentException("invalid dimensions");
+      }
 
-    private String getLabelForGridPosition(int row, int col) {
-        return getLabelForPosition(row,
-                                   col,
-                                   model.getPlateOrientation(),
-                                   plateType,
-                                   model.getBarcodePosition());
-    }
+      setX(x);
+      setY(y);
+      setWidth(width);
+      setHeight(height);
+      update();
+   }
 
-    public Rectangle [] getResizeHandles() {
-        return new Rectangle [] { resizeRectNW, resizeRectSE };
-    }
-
-    public void setScale(double scale) {
-        displayScaleProperty.setValue(scale);
-        update();
-    }
-
-    public double getScale() {
-        return displayScaleProperty.getValue();
-    }
-
-    @Override
-    public void setResizeCursor(Cursor value) {
-        wellGridHandler.setCursor(value);
-    }
-
-    @Override
-    public void mouseDragged(ResizeHandle resizeRect, double deltaX, double deltaY) {
-        double displayScale = displayScaleProperty.getValue();
-        double x = getX();
-        double y = getY();
-        double width = getWidth();
-        double height = getHeight();
-        double newWidth;
-        double newHeight;
-
-        if (resizeRect == resizeRectNW) {
-            double adjustedDeltaX = deltaX / displayScale;
-            double adjustedDeltaY = deltaY / displayScale;
-
-            // NOTE: x and y are re-assigned
-            x = Math.min(Math.max(0.0, x + adjustedDeltaX), x + width - ResizeHandle.RESIZE_RECT_SIZE);
-            y = Math.min(Math.max(0.0, y + adjustedDeltaY), y + height - ResizeHandle.RESIZE_RECT_SIZE);
-
-            newWidth = Math.min(
-                Math.max(ResizeHandle.RESIZE_RECT_SIZE, width - adjustedDeltaX), x + width);
-            newHeight = Math.min(
-                Math.max(ResizeHandle.RESIZE_RECT_SIZE, height - adjustedDeltaY), y + height);
-
-        } else if (resizeRect == resizeRectSE) {
-            Image image = imageView.getImage();
-
-            newWidth = Math.min(
-                Math.max(ResizeHandle.RESIZE_RECT_SIZE, width + deltaX / displayScale),
-                image.getWidth() - x);
-            newHeight = Math.min(
-                Math.max(ResizeHandle.RESIZE_RECT_SIZE, height + deltaY / displayScale),
-                image.getHeight() - y);
-        } else {
-            throw new IllegalStateException(
-                "invalid callback for resize: " + resizeRect);
-        }
-
-        resized(x, y, newWidth, newHeight);
-    }
-
-    private void resized(double x, double y, double width, double height) {
-        if ((x < 0.0) || (y < 0.0) || (width < 0.0) || (height < 0.0)) {
-            throw new IllegalArgumentException("invalid dimensions");
-        }
-
-        setX(x);
-        setY(y);
-        setWidth(width);
-        setHeight(height);
-        update();
-    }
+   public boolean containsDecodedLabel(String label) {
+      WellCell cell = wellCellMap.get(label);
+      if (cell == null) {
+         throw new IllegalArgumentException("label does not exist: " + label);
+      }
+      return !cell.getInventoryId().isEmpty() && !cell.isManuallyDecoded();
+   }
 
 }

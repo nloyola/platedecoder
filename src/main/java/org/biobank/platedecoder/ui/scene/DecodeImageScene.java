@@ -6,8 +6,6 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -21,6 +19,7 @@ import org.biobank.platedecoder.model.Plate;
 import org.biobank.platedecoder.model.PlateDecoderPreferences;
 import org.biobank.platedecoder.service.DecodeImageTask;
 import org.biobank.platedecoder.ui.BarcodePositionChooser;
+import org.biobank.platedecoder.ui.JavaFxHelper;
 import org.biobank.platedecoder.ui.ManualDecodeDialog;
 import org.biobank.platedecoder.ui.PlateOrientationChooser;
 import org.biobank.platedecoder.ui.PlateTypeChooser;
@@ -44,15 +43,11 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.shape.Rectangle;
-
-// TODO: add a clear button, so manually entered cells can be cleared
-
-// TODO: when the image is from a flatbed scan, the file name should say so. Maybe rename file name
-// to "image source".
 
 /**
  * Used for decoding the tubes present in an image.
@@ -61,6 +56,11 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
 
    // @SuppressWarnings("unused")
    private static final Logger LOG = LoggerFactory.getLogger(DecodeImageScene.class);
+
+   private static final String TITLE_AREA_MESSAGE =
+      "Align grid so that each cell contains a 2D barcode, and then press the Decode button. "
+      + "If there are missed cells, double click one to decode it with a hand held scanner. "
+      + "Press the Next button once all cells are decoded.";
 
    private ImageView imageView;
 
@@ -74,15 +74,12 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
 
    private Label filenameLabel;
 
-   private Optional<Set<DecodedWell>> decodedWellsMaybe = Optional.empty();
-
-   private Set<DecodedWell> manuallyDecodedWells = new HashSet<>();
-
    public DecodeImageScene() {
       super("Align grid with barcodes");
+      setTitleAreaMessage(TITLE_AREA_MESSAGE);
+      createWellGrid();
 
       model.getPlateTypeProperty().addListener((observable, oldValue, newValue) -> {
-            LOG.debug("plate type changed: {}", newValue);
             createWellGrid();
          });
 
@@ -98,27 +95,12 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
    @Override
    public void onDisplay() {
       // NOTE: could be called with model.getPlate() already populated with decode information
+      model.getPlate().getWells().forEach(w -> {
+            wellGrid.setWellCellInventoryId(w.getLabel(), w.getInventoryId());
+         });
 
-      Set<DecodedWell> decodedWells = model.getPlate().getWells().stream()
-         .filter(well -> !well.getInventoryId().isEmpty())
-         .map(well -> new DecodedWell(well.getLabel(), well.getInventoryId()))
-         .collect(Collectors.toSet());
-
-      if (decodedWells.isEmpty()) {
-         decodedWellsMaybe = Optional.empty();
-      } else {
-         decodedWellsMaybe = Optional.of(decodedWells);
-      }
-
-      createWellGrid();
-      if (wellGrid != null) {
-         updateWellGrid();
-         wellGrid.update();
-      }
-      manuallyDecodedWells = new HashSet<>();
-      disableNextButton(decodedWells.isEmpty());
-
-      LOG.info("onDisplay: manuallyDecodedWells size: {}", manuallyDecodedWells.size());
+      updateWellGrid();
+      disableNextButton(wellGrid.getDecodedCellCount() <= 0);
    }
 
    /**
@@ -133,51 +115,46 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
       Image image = new Image(imageSource.getImageFileUrl());
       imageView.setImage(image);
       imageView.setCache(true);
-      createWellGrid();
-      setTitleAreaMessage(titleAreaMessage());
+   }
+
+   @Override
+   public double getImageWidth() {
+      Image image = imageView.getImage();
+      if (image == null) {
+         throw new IllegalArgumentException("image is null");
+      }
+      return image.getWidth();
+   }
+
+   @Override
+   public double getImageHeight() {
+      Image image = imageView.getImage();
+      if (image == null) {
+         throw new IllegalArgumentException("image is null");
+      }
+      return image.getHeight();
    }
 
    /**
     * Creates a new well grid with the dimensions of the previous one.
     */
    private void createWellGrid() {
-      Image image = imageView.getImage();
-
-      if (image == null) return;
-
       Rectangle r;
 
-      if (wellGrid == null) {
-         r = PlateDecoderPreferences.getInstance().getWellRectangle(model.getPlateType());
-      } else {
-         r = wellGrid;
-      }
+      r = PlateDecoderPreferences.getInstance().getWellRectangle(model.getPlateType());
+      Image image = imageView.getImage();
+      double scale = (image == null) ? 1.0
+         : imageView.getLayoutBounds().getWidth() / image.getWidth();
 
-      wellGrid = new WellGrid(this,
-                              imageView,
-                              model.getPlateType(),
-                              r.getX(),
-                              r.getY(),
-                              r.getWidth(),
-                              r.getHeight(),
-                              imageView.getLayoutBounds().getWidth() / image.getWidth());
-
-      wellGrid.setScale(imageView.getLayoutBounds().getWidth() / image.getWidth());
+      wellGrid = new WellGrid(this, r.getX(), r.getY(), r.getWidth(), r.getHeight(), scale);
+      wellGrid.setScale(scale);
 
       imageGroup.getChildren().clear();
       imageGroup.getChildren().add(imageView);
-      imageGroup.getChildren().addAll(wellGrid.getWellCells());
-      imageGroup.getChildren().addAll(wellGrid.getWellDecodedIcons());
-      imageGroup.getChildren().addAll(wellGrid.getResizeHandles());
+      imageGroup.getChildren().addAll(wellGrid.getWidgets());
 
-      Set<DecodedWell> wells = decodedWellsMaybe.isPresent()
-         ? decodedWellsMaybe.get() : Collections.emptySet();
-
-      updateDecodedWellCount(wells);
-
+      updateDecodedWellCount(wellGrid.getDecodedCellCount());
       wellGrid.update();
-
-      LOG.debug("decodedWells: {}", wells.size());
    }
 
    @Override
@@ -196,31 +173,19 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
    }
 
    @Override
-   protected boolean allowNextButtonAction() {
-      if (!decodedWellsMaybe.isPresent()) {
+   protected void nextButtonAction() {
+      if (wellGrid.getDecodedCellCount() <= 0) {
          throw new IllegalStateException("missing decoded wells");
       }
 
       // copy data to model
       Plate plate = model.getPlate();
-      decodedWellsMaybe.ifPresent(decodedWells -> {
-            decodedWells.forEach(well -> plate.setWellInventoryId(well.getLabel(), well.getMessage()));
-         });
+      wellGrid.getDecodedCells().forEach(
+         w -> plate.setWellInventoryId(w.getLabel(), w.getInventoryId()));
 
       // save current dimensions of plate to preferences so they are used next time
       PlateDecoderPreferences.getInstance().setWellRectangle(model.getPlateType(), wellGrid);
-      return true;
-   }
-
-   private String titleAreaMessage() {
-      StringBuffer buf = new StringBuffer();
-      buf.append(
-         "Align grid so that each cell contains a 2D barcode, and then press the Decode button. ");
-      buf.append(
-         "If there are missed cells, double click one to decode it with a hand held scanner. ");
-      buf.append("Press the Next button once all cells are decoded.");
-
-      return buf.toString();
+      super.nextButtonAction();
    }
 
    private Node createControlsPane() {
@@ -230,13 +195,20 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
       Button clearDecodeButton = createButton("Clear", this::clearDecodeAction);
 
       GridPane grid = new GridPane();
-      grid.setVgap(2);
-      grid.setHgap(2);
+      grid.setVgap(5);
+      grid.setHgap(5);
       grid.add(plateTypeChooser, 0, 0, 2, 1);
       grid.add(new PlateOrientationChooser(model.getPlateOrientationProperty()), 0, 1, 2, 1);
       grid.add(new BarcodePositionChooser(model.getBarcodePositionProperty()), 0, 2, 2, 1);
       grid.add(clearDecodeButton, 0, 3);
       grid.add(decodeButton, 1, 3);
+
+      ColumnConstraints col1 = new ColumnConstraints();
+      col1.setPercentWidth(50);
+      ColumnConstraints col2 = new ColumnConstraints();
+      col2.setPercentWidth(50);
+      grid.getColumnConstraints().add(col1);
+      grid.getColumnConstraints().add(col2);
 
       return grid;
    }
@@ -293,7 +265,10 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
    }
 
    private void clearDecodeAction(@SuppressWarnings("unused") ActionEvent e) {
-      decodedWellsMaybe = Optional.empty();
+      wellGrid.clearWellCellInventoryId();
+      updateWellGrid();
+      updateDecodedWellCount(0);
+      disableNextButton(true);
    }
 
    private void decodeImageAction(@SuppressWarnings("unused") ActionEvent e) {
@@ -322,30 +297,27 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
             DecodeResult result = (DecodeResult) worker.getValue();
 
             if (result.getResultCode() == ScanLibResult.Result.SUCCESS) {
-               if (decodedWellsMaybe.isPresent()) {
-                  Set<DecodedWell> prevDecodedWells = decodedWellsMaybe.get();
-                  Set<DecodedWell> currentDecodedWells = result.getDecodedWells();
+               Set<DecodedWell> decodedWells = result.getDecodedWells();
+
+               if (wellGrid.getDecodedCellCount() > 0) {
+                  Set<DecodedWell> prevDecodedWells = wellGrid.getDecodedCells().stream()
+                     .map(c -> new DecodedWell(c.getLabel(), c.getInventoryId()))
+                     .collect(Collectors.toSet());
+                  Set<DecodedWell> currentDecodedWells = decodedWells;
 
                   // compare this new result with the previous one
                   if (DecodeResult.compareDecodeResults(prevDecodedWells, currentDecodedWells)) {
-                     // merge the two results
-                     prevDecodedWells.addAll(currentDecodedWells);
-                     updateDecodedWellCount(prevDecodedWells);
-                     decodedWellsMaybe = Optional.of(prevDecodedWells);
-
-                  } else {
-                     if (decodeMismatchErrorDialog()) {
-                        decodedWellsMaybe = Optional.of(currentDecodedWells);
-                        updateDecodedWellCount(currentDecodedWells);
-                        wellGrid.clearWellCellInventoryId();
-                     }
+                     // aggregate this new result
+                     setDecodedCells(currentDecodedWells);
+                  } else if (decodeMismatchErrorDialog()) {
+                     wellGrid.clearWellCellInventoryId();
+                     setDecodedCells(currentDecodedWells);
                   }
                } else {
-                  Set<DecodedWell> decodedWells = result.getDecodedWells();
-                  decodedWellsMaybe = Optional.of(decodedWells);
-                  updateDecodedWellCount(decodedWells);
+                  setDecodedCells(decodedWells);
                }
 
+               updateDecodedWellCount(wellGrid.getDecodedCellCount());
                updateWellGrid();
                disableNextButton(false);
             } else {
@@ -362,19 +334,23 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
       th.start();
    }
 
-   private void updateWellGrid() {
-      decodedWellsMaybe.ifPresent(decodedWells -> {
-            decodedWells.forEach(well -> wellGrid.setWellCellInventoryId(well.getLabel(), well.getMessage()));
-            wellGrid.update();
-         });
+   private void setDecodedCells(Set<DecodedWell> decodedWells) {
+      for (DecodedWell well : decodedWells) {
+         wellGrid.setWellCellInventoryId(well.getLabel(), well.getMessage());
+      }
    }
 
-   private void updateDecodedWellCount(Set<DecodedWell> decodedWells) {
+   private void updateWellGrid() {
+      wellGrid.update();
+      updateDecodedWellCount(wellGrid.getDecodedCellCount());
+   }
+
+   private void updateDecodedWellCount(int count) {
       StringBuffer buf = new StringBuffer();
       buf.append(imageSource);
-      if (!decodedWells.isEmpty()) {
+      if (count > 0) {
          buf.append(", tubes decoded: ");
-         buf.append(decodedWells.size());
+         buf.append(count);
       }
       filenameLabel.setText(buf.toString());
    }
@@ -386,18 +362,19 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
     * @return TRUE if these results should be used instead. FALSE if they should be discarded.
     */
    private boolean decodeMismatchErrorDialog() {
+      // display error message to user
       ButtonType buttonTypeUseResult = new ButtonType("Use this result instead");
       ButtonType buttonTypeDiscardResult = new ButtonType("Discard this result");
 
-      // display error message to user
-      Alert dlg = new Alert(AlertType.CONFIRMATION);
-      dlg.setTitle("Decode Mismatch");
-      dlg.getDialogPane().setHeaderText("The results from this decode do not match the previous results.");
-      dlg.getDialogPane().setContentText("What would you like to do?");
+      Alert dlg = JavaFxHelper.createDialog(
+         AlertType.CONFIRMATION,
+         "Decode Mismatch",
+         "The results from this decode do not match the previous results.",
+         "What would you like to do?");
+
       dlg.getButtonTypes().setAll(buttonTypeUseResult, buttonTypeDiscardResult);
 
       Optional<ButtonType> result = dlg.showAndWait();
-
       return (result.get() == buttonTypeUseResult);
    }
 
@@ -409,35 +386,32 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
       wellGrid.cellMoved(cell, deltaX, deltaY);
    }
 
+   /**
+    * Called when the user double clicks on a cell in the grid.
+    *
+    * @param cell The cell in the grid that was double clicked.
+    */
    @Override
    public void manualDecode(WellCell cell) {
-      LOG.info("manualDecode: cell: {}", cell);
-      if (!cell.getInventoryId().isEmpty()) {
-         // exit if this cell already has an invetory ID
+      if ((wellGrid.getDecodedCellCount() <= 0)
+          || wellGrid.containsDecodedLabel(cell.getLabel())) {
+         // exit if this cell already has an inventory ID, or if it was never manually entered
          return;
       }
 
-      decodedWellsMaybe.ifPresent(wells -> {
-            String label = cell.getLabel();
-            Optional<String> inventoryIdMaybe = getManualDecodeInventoryId(label);
-
-            inventoryIdMaybe.ifPresent(inventoryId -> {
-                  DecodedWell newWell = new DecodedWell(label, inventoryId);
-                  wells.add(newWell);
-                  manuallyDecodedWells.add(newWell);
-
-                  wellGrid.setWellCellInventoryId(cell.getLabel(), inventoryId);
-                  wellGrid.update();
-                  updateDecodedWellCount(wells);
-               });
+      String label = cell.getLabel();
+      getManualDecodeInventoryId(label, cell.getInventoryId()).ifPresent(inventoryId -> {
+            wellGrid.setWellCellInventoryId(cell.getLabel(), inventoryId, true);
+            wellGrid.update();
+            updateDecodedWellCount(wellGrid.getDecodedCellCount());
          });
    }
 
-   private Optional<String> getManualDecodeInventoryId(String label) {
-      Set<String> deniedInventoryIds = decodedWellsMaybe.get().stream()
-         .map(well -> well.getMessage())
-         .collect(Collectors.toSet());
-      ManualDecodeDialog dlg = new ManualDecodeDialog(label, deniedInventoryIds);
+   private Optional<String> getManualDecodeInventoryId(String label, String inventoryId) {
+      Set<String> deniedInventoryIds = wellGrid.getDecodedCells().stream()
+         .filter(well -> !well.getInventoryId().equals(inventoryId))
+         .map(well -> well.getInventoryId()).collect(Collectors.toSet());
+      ManualDecodeDialog dlg = new ManualDecodeDialog(label, inventoryId, deniedInventoryIds);
       return dlg.showAndWait();
    }
 }

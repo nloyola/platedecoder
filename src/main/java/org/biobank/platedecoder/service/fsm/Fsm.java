@@ -377,7 +377,7 @@ public class Fsm<S, C, E> {
          }
       }
 
-      LOG.info("transitionedTo size: {}", transitionedTo.size());
+      LOG.debug("transitionedTo size: {}", transitionedTo.size());
 
       for (Choicepoint<C> choicepoint : choicepoints.values()) {
          if (choicepoint.trueBranchTransition.toComponent instanceof Choicepoint) {
@@ -388,12 +388,12 @@ public class Fsm<S, C, E> {
          }
       }
 
-      LOG.info("transitionedTo size: {}", transitionedTo.size());
+      LOG.debug("transitionedTo size: {}", transitionedTo.size());
 
       Set<Choicepoint<C>> notTransitionedTo = new HashSet<>(choicepoints.values());
       notTransitionedTo.removeAll(transitionedTo);
 
-      LOG.info("notTransitionedTo size: {}", notTransitionedTo.size());
+      LOG.debug("notTransitionedTo size: {}", notTransitionedTo.size());
 
       if (!notTransitionedTo.isEmpty()) {
          throw new IllegalStateException(

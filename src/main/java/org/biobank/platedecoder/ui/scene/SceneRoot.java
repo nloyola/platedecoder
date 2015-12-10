@@ -1,7 +1,6 @@
 package org.biobank.platedecoder.ui.scene;
 
 import static org.biobank.platedecoder.ui.JavaFxHelper.createButton;
-import static org.biobank.platedecoder.ui.JavaFxHelper.createDialog;
 
 import java.util.Optional;
 
@@ -9,22 +8,15 @@ import org.biobank.platedecoder.model.PlateModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
-import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
 
 /**
@@ -56,13 +48,9 @@ public abstract class SceneRoot extends BorderPane {
 
    private Button finishBtn;
 
-   private Button applyBtn;
+   protected Optional<Runnable> backButtonActionRunnableMaybe = Optional.empty();
 
-   private boolean configChangesMade;
-
-   private Optional<Runnable> backButtonActionRunnableMaybe = Optional.empty();
-
-   private Optional<Runnable> nextButtonActionRunnableMaybe = Optional.empty();
+   protected Optional<Runnable> nextButtonActionRunnableMaybe = Optional.empty();
 
    /**
     * Creates a scene.
@@ -75,8 +63,6 @@ public abstract class SceneRoot extends BorderPane {
    public SceneRoot(String title) {
       this.title = title;
       setTop(createTitle());
-
-      configChangesMade = false;
 
       Region contentsRegion = createContentsArea();
       setCenter(contentsRegion);
@@ -153,57 +139,6 @@ public abstract class SceneRoot extends BorderPane {
    }
 
    /**
-    * Sub classes should override this method if they want to prevent the back action from taking
-    * place.
-    *
-    * <p>A good use for this is if the scene wants to remind the user to perform an Action
-    * prior to pressing the back button.
-    *
-    * @return TRUE if the action should be allowed.
-    */
-   protected boolean allowBackButtonAction() {
-      return allowNavigationAction();
-   }
-
-   /**
-    * Sub classes should override this method if they want to prevent the next action from taking
-    * place.
-    *
-    * <p>A good use for this is if the scene wants to remind the user to perform an Action
-    * prior to pressing the next button.
-    *
-    * @return TRUE if the action should be allowed.
-    */
-   protected boolean allowNextButtonAction() {
-      return allowNavigationAction();
-   }
-
-   /**
-    * Sub classes should override this method if they want to prevent the apply or next actions from
-    * taking place.
-    *
-    * <p>A good use for this is if the scene wants to remind the user to perform an Action
-    * prior to pressing the next button.
-    *
-    * @return TRUE if the action should be allowed.
-    */
-   protected boolean allowNavigationAction() {
-      if (configChangesMade) {
-         Alert alert = createDialog(
-            AlertType.CONFIRMATION,
-            "Unsaved changes",
-            "Apply your changes?",
-            "You have not applied the changes you made to these settings.");
-
-         Optional<ButtonType> result = alert.showAndWait();
-         if (result.isPresent() && result.get() == ButtonType.OK) {
-            applyAction();
-         }
-      }
-      return true;
-   }
-
-   /**
     * The sub class may want finer control when the {@code Next} button is pressed.
     *
     * <p>This button allows for the action to be taken.
@@ -233,66 +168,6 @@ public abstract class SceneRoot extends BorderPane {
    protected void setTitleAreaErrorMessage(String message) {
       titleAreaMessage.setText(message);
       titleAreaMessage.setStyle("-fx-text-fill: #ff1e26; -fx-font-size:12; -fx-font-weight:bold;");
-   }
-
-   /**
-    * Sub classes should call this to flag that config changes have been made.
-    *
-    * <p>When config changes are made, a dialog is shown to the user when he / she tries to navigate
-    * away from the window (by pressing the {@code Back} or {@code Next} buttons).
-    *
-    * @param changed Set to TRUE to flag that changes have been made to the configuration.
-    */
-   protected void setConfigChanged(boolean changed) {
-      configChangesMade = changed;
-   }
-
-   /**
-    * Creates an pane with Apply and Restore buttons for scenes that save data to the mode.
-    *
-    * @see #applyAction applyAction
-    * @see #restoreDefaultsAction restoreDefaultsAction
-    *
-    * @return The pane that holds the buttons.
-    */
-   protected Pane createApplyAndRestoreButtons() {
-      TilePane pane = new TilePane();
-      pane.setHgap(5);
-      pane.setPadding(new Insets(5, 5, 5, 5));
-      pane.setMinHeight(TilePane.USE_PREF_SIZE);
-      pane.setAlignment(Pos.BOTTOM_RIGHT);
-
-      applyBtn = createButton("Apply", e -> applyAction());
-
-      Button restoreDefaultsBtn = createButton("Restore defaults", e -> restoreDefaultsAction());
-
-      pane.getChildren().addAll(applyBtn, restoreDefaultsBtn);
-      return pane;
-   }
-
-   /**
-    * Used to enable or disable the {@code Apply} button.
-    *
-    * @param disable When TRUE the button is disabled.
-    */
-   protected void disableApplyButton(boolean disable) {
-      applyBtn.setDisable(disable);
-   }
-
-   /**
-    * Sub classes that implement an apply action should override this method.
-    *
-    * <p>This method is usually used to save configuration information.
-    */
-   protected void applyAction() {
-   }
-
-   /**
-    * Sub classes that implement a restore action should override this method.
-    *
-    * <p>This method is usually used to restore configuration information.
-    */
-   protected void restoreDefaultsAction() {
    }
 
    protected void nextButtonRequestFocus() {
@@ -328,11 +203,11 @@ public abstract class SceneRoot extends BorderPane {
       final AnchorPane pane = new AnchorPane();
       pane.setPadding(new Insets(5, 5, 5, 5));
 
-      backBtn = createButton("Back", this::backButtonAction);
+      backBtn = createButton("Back", e -> backButtonAction());
       backBtn.managedProperty().bind(backBtn.visibleProperty());
       backBtn.setVisible(false);
 
-      nextBtn = createButton("Next", this::nextButtonAction);
+      nextBtn = createButton("Next", e -> nextButtonAction());
       nextBtn.managedProperty().bind(nextBtn.visibleProperty());
       nextBtn.setVisible(false);
 
@@ -355,7 +230,37 @@ public abstract class SceneRoot extends BorderPane {
       return scrollPane;
    }
 
-   private void backButtonAction(@SuppressWarnings("unused") ActionEvent event) {
+   /**
+    * Sub classes should override this method if they want to prevent the back action from taking
+    * place.
+    *
+    * <p>A good use for this is if the scene wants to remind the user to perform an Action
+    * prior to pressing the back button.
+    *
+    * @return TRUE if the action should be allowed.
+    */
+   protected boolean allowBackButtonAction() {
+      return true;
+   }
+
+   /**
+    * Sub classes should override this method if they want to prevent the next action from taking
+    * place.
+    *
+    * <p>A good use for this is if the scene wants to remind the user to perform an Action
+    * prior to pressing the next button.
+    *
+    * @return TRUE if the action should be allowed.
+    */
+   protected boolean allowNextButtonAction() {
+      return true;
+   }
+
+   /**
+    * Sub classes should override this method if they want to perform additional functionality when
+    * the back button is pressed.
+    */
+   protected void backButtonAction() {
       backButtonActionRunnableMaybe.ifPresent(runnable -> {
             if (allowBackButtonAction()) {
                runnable.run();
@@ -363,7 +268,11 @@ public abstract class SceneRoot extends BorderPane {
          });
    }
 
-   private void nextButtonAction(@SuppressWarnings("unused") ActionEvent event) {
+   /**
+    * Sub classes should override this method if they want to perform additional functionality when
+    * the next button is pressed.
+    */
+   protected void nextButtonAction() {
       nextButtonActionRunnableMaybe.ifPresent(runnable -> {
             if (allowNextButtonAction()) {
                runnable.run();

@@ -30,6 +30,7 @@ public class ManualDecodeDialog extends Dialog<String> {
     private static final Logger LOG = LoggerFactory.getLogger(ManualDecodeDialog.class);
 
     public ManualDecodeDialog(final String label,
+                              final String inventoryId,
                               final Set<String> deniedInventoryIds) {
         StringBuffer buf = new StringBuffer();
         buf.append("Manual decode for well ");
@@ -38,7 +39,9 @@ public class ManualDecodeDialog extends Dialog<String> {
         setTitle("Manual Decode");
         setHeaderText(buf.toString());
 
-        TextField inventoryId = new TextField();
+        TextField textField = new TextField();
+        textField.setText(inventoryId);
+
         Text errorMessage = new Text();
         errorMessage.setFill(Color.RED);
 
@@ -46,7 +49,7 @@ public class ManualDecodeDialog extends Dialog<String> {
         grid.setVgap(10);
         grid.setHgap(5);
         grid.add(new Label("Enter the inventory ID:"), 0, 0);
-        grid.add(inventoryId, 1, 0);
+        grid.add(textField, 1, 0);
         grid.add(errorMessage, 0, 1, 2, 1);
         grid.setPadding(new Insets(5));
         grid.setMaxWidth(Double.MAX_VALUE);
@@ -60,7 +63,7 @@ public class ManualDecodeDialog extends Dialog<String> {
         ButtonType buttonTypeCancel = new ButtonType("Cancel", ButtonData.CANCEL_CLOSE);
         getDialogPane().getButtonTypes().setAll(buttonTypeOk, buttonTypeCancel);
 
-        inventoryId.textProperty().addListener((observable, oldValue, newValue) -> {
+        textField.textProperty().addListener((observable, oldValue, newValue) -> {
                 Optional<String> exists = deniedInventoryIds.stream()
                     .filter(id -> id.equals(newValue))
                     .findFirst();
@@ -88,7 +91,7 @@ public class ManualDecodeDialog extends Dialog<String> {
             });
 
         // handle "enter key" event
-        inventoryId.setOnAction((event) -> {
+        textField.setOnAction((event) -> {
                 LOG.debug("TextField Action");
                 Button okButton = (Button) getDialogPane().lookupButton(buttonTypeOk);
                 okButton.fire();
@@ -96,11 +99,12 @@ public class ManualDecodeDialog extends Dialog<String> {
 
         setResultConverter(button -> {
                 if (button == buttonTypeOk) {
-                    return inventoryId.getText();
+                    return textField.getText();
                 }
                 return null;
             });
 
+        Platform.runLater(() -> textField.requestFocus());
     }
 
 }

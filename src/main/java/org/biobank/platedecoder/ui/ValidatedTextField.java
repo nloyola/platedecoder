@@ -57,4 +57,13 @@ public class ValidatedTextField extends TextField {
    public void addListener(ChangeListener<String> listener) {
       textProperty().addListener(listener);
    }
+
+   /**
+    * Removes the listener that is called when the value in the text field changes.
+    *
+    * @param listener The listener to be removedy.
+    */
+   public void removeListener(ChangeListener<String> listener) {
+      textProperty().removeListener(listener);
+   }
 }

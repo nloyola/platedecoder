@@ -40,7 +40,7 @@ import javafx.scene.layout.Region;
  * </ul>
  *
  */
-public class FlatbedScannerSettings extends SceneRoot {
+public class FlatbedScannerSettings extends ConfigScene {
 
    //@SuppressWarnings("unused")
    private static final Logger LOG = LoggerFactory.getLogger(FlatbedScannerSettings.class);
