@@ -1,6 +1,20 @@
-package org.biobank.platedecoder.dmscanlib;
+package org.biobank.dmscanlib;
 
 public class ScanLib {
+
+   public static final int MAX_BRIGHTNESS = 1000;
+
+   public static final int MIN_BRIGHTNESS = -1000;
+
+   public static final int MAX_CONTRAST = 1000;
+
+   public static final int MIN_CONTRAST = -1000;
+
+   private static final boolean IS_MS_WINDOWS = System.getProperty("os.name").startsWith("Windows");
+
+   private static final boolean IS_LINUX = System.getProperty("os.name").startsWith("Linux");
+
+   private static final boolean IS_ARCH_64_BIT = System.getProperty("os.arch").equals("amd64");
 
    public static class ResultCode {
       /** The call to ScanLib was successful. */
@@ -27,23 +41,39 @@ public class ScanLib {
       /** Incorrect DPI on scanned image. */
       public static final int SC_INCORRECT_DPI_SCANNED = -7;
 
+      /** An invalid device was specified. */
+      public static final int SC_INVALID_DEVICE            = -8;
+
+      /** An invalid brightness value was requested. */
+      public static final int SC_INVALID_BRIGHTNESS        = -9;
+
+      /** An invalid contrast value was requested. */
+      public static final int SC_INVALID_CONTRAST          = -10;
    }
 
    public static class Capability {
       /** The TWAIN driver supports WIA. */
       public static final int CAP_IS_WIA = 0x01;
 
-      /** The TWAIN driver supports a DPI of 300. */
-      public static final int CAP_DPI_300 = 0x02;
-
-      /** The TWAIN driver supports a DPI of 400. */
-      public static final int CAP_DPI_400 = 0x04;
-
-      /** The TWAIN driver supports a DPI of 600. */
-      public static final int CAP_DPI_600 = 0x08;
-
       /** The scanner source has been selected. */
-      public static final int CAP_IS_SCANNER = 0x10;
+      public static final int CAP_IS_SCANNER = 0x02;
+   }
+
+   static {
+      if (IS_MS_WINDOWS) {
+         System.loadLibrary("dmscanlib");
+      } else if (IS_LINUX && IS_ARCH_64_BIT) {
+         System.loadLibrary("dmscanlib64");
+      }
+   }
+
+   /**
+    * Returns true if running on MS Windows.
+    *
+    * @return {@code true} if the operating system is running MS Windows.
+    */
+   public static boolean runningMsWindows() {
+      return IS_MS_WINDOWS;
    }
 
    public static ScanLib getInstance() {
@@ -63,26 +93,37 @@ public class ScanLib {
    public native ScanLibResult selectSourceAsDefault();
 
    /**
-    * Queries the selected scanner for the driver type and supported dpi.
+    * Returns the names of all the flatbed scanners available on this computer.
     *
-    * <p>If the driver supports a DPI of 300, then use the value {@code 300} in this API to use it.
-    * Similarly for DPI values of {@code 400} and {@code 600}.
+    * <p>This method returns valid results under Linux only.
     *
-    * @return The bits in ScanLibResult.getValue() correspond to:
+    * @return The list of device names.
+    */
+   public native DeviceNamesResult getDeviceNames();
+
+   /**
+    * Returns the set of DPIs that can be used with this scanning device.
+    *
+    * <p>Should be called after a scanning device has been selected.
+    *
+    * @param deviceName the device the user wishes to retrieve the DPIs for.
+    *
+    * @return A list of valid DPIs.
+    */
+   public native ValidDpisResult getValidDpis(String deviceName);
+
+   /**
+    * Queries the selected scanner for the driver type and if the source has been selected.
+    *
+    * @return The bits in ValueResult.getValue() correspond to:
     *         <dl>
     *           <dt>Bit 1 (LSB)</dt>
     *           <dd>If set, driver type is WIA.</dd>
     *           <dt>Bit 2</dt>
-    *           <dd>If set, driver supports 300 dpi.</dd>
-    *           <dt>Bit 3</dt>
-    *           <dd>If set, driver supports 400 dpi.</dd>
-    *           <dt>Bit 4</dt>
-    *           <dd>If set, driver supports 600 dpi.</dd>
-    *           <dt>Bit 5</dt>
     *           <dd>if set, scanner source has been selected.</dd>
     *         </dl>
     */
-   public native ScanLibResult getScannerCapability();
+   public native ValueResult getScannerCapability();
 
    /**
     * Uses the flatbed scanner to scan an image of the specified dimensions and save it to the specified
@@ -97,20 +138,23 @@ public class ScanLib {
     * @param verbose  The amount of debug logging information to generate. 1 is minimal and 9 is very
     *                 detailed. Using a value of 0 does not generate any logging information.
     *
+    * @parma deviceName The device name associated with the flatbed scanner. This value can be an
+    *                   empty string when running on MS Windows.
+    *
     * @param dpi  The dots per inch for the image. Function {@link #getScannerCapability
     *             getScannerCapability} returns the valid values.
     *
-    * @param brightness a value between -1000 and 1000. Only used when using the TWAIN driver.
+    * @param brightness a value between -1000 and 1000.
     *
-    * @param contrast a value between -1000 and 1000. Only used when using the TWAIN driver.
+    * @param contrast a value between -1000 and 1000.
     *
-    * @param x The left margin in inches.
+    * @param left The left coordinate in inches.
     *
-    * @param y The top margin in inches.
+    * @param top The top coordinate in inches.
     *
-    * @param width The width in inches.
+    * @param right The right coordinate in inches.
     *
-    * @param height The height in inches.
+    * @param bottom The bottom coordinate in inches.
     *
     * @param filename The file name to save the image to. The filename extension specifies the
     *                 format of the image. If no path is specified then the image is saved to the
@@ -121,13 +165,14 @@ public class ScanLib {
     * should be checked for a reason.
     */
    public native ScanLibResult scanImage(long   verbose,
+                                         String deviceName,
                                          long   dpi,
                                          int    brightness,
                                          int    contrast,
-                                         double x,
-                                         double y,
-                                         double width,
-                                         double height,
+                                         double left,
+                                         double top,
+                                         double right,
+                                         double bottom,
                                          String filename);
 
    /**
@@ -140,12 +185,15 @@ public class ScanLib {
     * @param verbose  The amount of debug logging information to generate. 1 is minimal and 9 is very
     *                 detailed. Using a value of 0 does not generate any logging information.
     *
+    * @parma deviceName The device name associated with the flatbed scanner. This value can be an
+    *                   empty string when running on MS Windows.
+    *
     * @param dpi  The dots per inch for the image. Function {@link #getScannerCapability
     *             getScannerCapability} returns the valid values.
     *
-    * @param brightness a value between -1000 and 1000. Only used when using the TWAIN driver.
+    * @param brightness a value between -1000 and 1000.
     *
-    * @param contrast a value between -1000 and 1000. Only used when using the TWAIN driver.
+    * @param contrast a value between -1000 and 1000.
     *
     * @param filename The file name to save the image to. The filename extension specifies the
     *                 format of the image. If no path is specified then the image is saved to the
@@ -156,6 +204,7 @@ public class ScanLib {
     * should be checked for a reason.
     */
    public native ScanLibResult scanFlatbed(long   verbose,
+                                           String deviceName,
                                            long   dpi,
                                            int    brightness,
                                            int    contrast,
@@ -171,20 +220,23 @@ public class ScanLib {
     * @param verbose  The amount of debug logging information to generate. 1 is minimal and 9 is very
     *                 detailed. Using a value of 0 does not generate any logging information.
     *
+    * @parma deviceName The device name associated with the flatbed scanner. This value can be an
+    *                   empty string when running on MS Windows.
+    *
     * @param dpi  The dots per inch for the image. Function {@link #getScannerCapability
     *             getScannerCapability} returns the valid values.
     *
-    * @param brightness a value between -1000 and 1000. Only used when using the TWAIN driver.
+    * @param brightness a value between -1000 and 1000.
     *
-    * @param contrast a value between -1000 and 1000. Only used when using the TWAIN driver.
+    * @param contrast a value between -1000 and 1000.
     *
-    * @param x The left margin in inches.
+    * @param left The left coordinate in inches.
     *
-    * @param y The top margin in inches.
+    * @param top The top coordinate in inches.
     *
-    * @param width The width in inches.
+    * @param right The right coordinate in inches.
     *
-    * @param height The height in inches.
+    * @param bottom The bottom coordinate in inches.
     *
     * @param decodeOptions See the constructor for {@link DecodeOptions} for a description of these
     *                      settings.
@@ -195,13 +247,14 @@ public class ScanLib {
     * @return The results of the decode in a {@link DecodeResult} object.
     */
    public native DecodeResult scanAndDecode(long            verbose,
+                                            String          deviceName,
                                             long            dpi,
                                             int             brightness,
                                             int             contrast,
-                                            double          x,
-                                            double          y,
-                                            double          width,
-                                            double          height,
+                                            double          left,
+                                            double          top,
+                                            double          right,
+                                            double          bottom,
                                             DecodeOptions   decodeOptions,
                                             CellRectangle[] wells);
 

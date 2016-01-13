@@ -9,10 +9,10 @@ import javafx.scene.shape.Rectangle;
 public class PlateDecoderDefaults {
 
    /** The DPI used for scanning the entire flatbed. */
-   public static final String DEFAULT_FLATBED_DPI = FlatbedDpi.DPI_300.name();
+   public static final String DEFAULT_FLATBED_DPI = FlatbedDpi.DPI_75.name();
 
    /** The default DPI used when scanning a plate image with the flatbed scanner. */
-   public static final long FLATBED_IMAGE_DPI = 300;
+   public static final String DEFAULT_FLATBED_IMAGE_DPI = FlatbedDpi.DPI_300.name();
 
    /** The default brightness used when scanning a plate image with the flatbed scanner. */
    public static final long DEFAULT_FLATBED_BRIGHTNESS = 0;

@@ -1,4 +1,4 @@
-package org.biobank.platedecoder.dmscanlib;
+package org.biobank.dmscanlib;
 
 /**
  * Used to configure the DataMatrix 2D barcode decoder.

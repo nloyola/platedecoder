@@ -5,8 +5,11 @@ import static org.biobank.platedecoder.model.PlateDecoderDefaults.FLATBED_PLATE_
 
 import java.io.File;
 import java.util.Map;
+import java.util.Set;
 
-import org.biobank.platedecoder.dmscanlib.LibraryLoader;
+import org.biobank.dmscanlib.DeviceNamesResult;
+import org.biobank.dmscanlib.ScanLib;
+import org.biobank.dmscanlib.ScanLibResult;
 import org.biobank.platedecoder.model.ImageSourceFileSystem;
 import org.biobank.platedecoder.model.PlateDecoderPreferences;
 import org.biobank.platedecoder.ui.fsm.SceneFsmFactory;
@@ -39,14 +42,33 @@ public class PlateDecoder extends Application implements SceneChanger {
 
    public static final boolean IS_DEBUG_MODE = (System.getProperty("debug") != null);
 
+   private static final String DEVICE_NAME;
+
    private Stage stage;
 
    private double sceneWidth;
 
    private double sceneHeight;
 
+   static {
+      ScanLib scanLib = ScanLib.getInstance();
+
+      if (!ScanLib.runningMsWindows()) {
+         DeviceNamesResult result = scanLib.getDeviceNames();
+         if (result.getResultCode() != ScanLibResult.Result.SUCCESS) {
+            throw new IllegalStateException("could not get scanning library device names");
+         }
+         Set<String> deviceNames = result.getDeviceNames();
+         if (deviceNames.isEmpty()) {
+            throw new IllegalStateException("scanning library reports ZERO devices");
+         }
+         DEVICE_NAME = deviceNames.iterator().next();
+      } else {
+         DEVICE_NAME = "";
+      }
+   }
+
    public static void main(String[] args) {
-      LibraryLoader.load();
       launch(args);
    }
 
@@ -212,7 +234,13 @@ public class PlateDecoder extends Application implements SceneChanger {
       buf.append(File.separator);
       buf.append(filename);
       return buf.toString();
-   }
+    }
 
+    /**
+     * @return the deviceName
+     */
+    public static String getDeviceName() {
+        return DEVICE_NAME;
+    }
 
 }

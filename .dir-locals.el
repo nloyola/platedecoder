@@ -6,7 +6,7 @@
                         "..")))
          (eval . (global-set-key [f5]
                                  '(lambda () (interactive)
-                                    (nl/eclim-run-configuartion "Run PlateDecoder"))))
+                                    (eclim-run-configuartion "Run PlateDecoder"))))
          (eval . (global-set-key [(control f5)]
                                  '(lambda () (interactive)
                                     (nl/gradle-javadoc))))

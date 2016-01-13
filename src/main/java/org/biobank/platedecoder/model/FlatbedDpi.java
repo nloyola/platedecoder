@@ -6,6 +6,7 @@ package org.biobank.platedecoder.model;
  */
 public enum FlatbedDpi {
 
+    DPI_75(75),
     DPI_300(300),
     DPI_400(400),
     DPI_600(600);

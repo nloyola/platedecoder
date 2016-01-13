@@ -1,10 +1,6 @@
 package org.biobank.platedecoder.ui.wellgrid;
 
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.scene.Cursor;
-import javafx.scene.Node;
-import javafx.scene.shape.Rectangle;
+import static org.biobank.dmscanlib.CellRectangle.getLabelForPosition;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,17 +9,21 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static org.biobank.platedecoder.dmscanlib.CellRectangle.*;
-
 import org.biobank.platedecoder.model.PlateModel;
 import org.biobank.platedecoder.model.PlateOrientation;
 import org.biobank.platedecoder.model.PlateType;
-import org.biobank.platedecoder.ui.resize.ResizeHandler;
 import org.biobank.platedecoder.ui.resize.ResizeHandle;
 import org.biobank.platedecoder.ui.resize.ResizeHandleNW;
 import org.biobank.platedecoder.ui.resize.ResizeHandleSE;
+import org.biobank.platedecoder.ui.resize.ResizeHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.scene.Cursor;
+import javafx.scene.Node;
+import javafx.scene.shape.Rectangle;
 
 /**
  * This class maintains the size of the grid and manages the rectangles that could contain an image

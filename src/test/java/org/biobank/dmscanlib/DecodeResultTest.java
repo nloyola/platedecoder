@@ -1,10 +1,12 @@
-package org.biobank.platedecoder.dmscanlib;
+package org.biobank.dmscanlib;
 
 import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.List;
 
+import org.biobank.dmscanlib.DecodeResult;
+import org.biobank.dmscanlib.DecodedWell;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +23,7 @@ public class DecodeResultTest {
         );
 
     private DecodeResult createDecodeResult(List<DecodedWell> wells) {
-        DecodeResult dr = new DecodeResult(0, 0, "OK");
+        DecodeResult dr = new DecodeResult(0, "OK");
         for (DecodedWell well : wells) {
             dr.addWell(well.getLabel(), well.getMessage());
         }

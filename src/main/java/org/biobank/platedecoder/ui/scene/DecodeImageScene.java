@@ -10,10 +10,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.biobank.platedecoder.dmscanlib.DecodeOptions;
-import org.biobank.platedecoder.dmscanlib.DecodeResult;
-import org.biobank.platedecoder.dmscanlib.DecodedWell;
-import org.biobank.platedecoder.dmscanlib.ScanLibResult;
+import org.biobank.dmscanlib.DecodeOptions;
+import org.biobank.dmscanlib.DecodeResult;
+import org.biobank.dmscanlib.DecodedWell;
+import org.biobank.dmscanlib.ScanLibResult;
 import org.biobank.platedecoder.model.ImageSource;
 import org.biobank.platedecoder.model.Plate;
 import org.biobank.platedecoder.model.PlateDecoderPreferences;

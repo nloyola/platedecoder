@@ -2,12 +2,11 @@ package org.biobank.platedecoder.ui.scene;
 
 import static org.biobank.platedecoder.ui.JavaFxHelper.createButton;
 
-import org.biobank.platedecoder.dmscanlib.ScanLib;
-import org.biobank.platedecoder.dmscanlib.ScanLibResult;
+import org.biobank.dmscanlib.ScanLib;
+import org.biobank.dmscanlib.ScanLibResult;
 import org.biobank.platedecoder.model.DriverType;
 import org.biobank.platedecoder.model.PlateDecoderDefaults;
 import org.biobank.platedecoder.model.PlateModel;
-import org.biobank.platedecoder.ui.ScannerDriverTypeChooser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,9 +75,8 @@ public class FlatbedScannerSettings extends ConfigScene {
       brightnessProperty = new SimpleLongProperty(model.getFlatbedBrightness());
       contrastProperty = new SimpleLongProperty(model.getFlatbedContrast());
 
-      Button selectDriverBtn = createButton("Select driver", this::selectScannerSourceAction);
+      Button selectDriverBtn = createButton("Select scanner", this::selectFlatbedScannerAction);
 
-      ScannerDriverTypeChooser driverTypeChooser = new ScannerDriverTypeChooser(driverTypeProperty);
       Slider brightnessSlider = createBrightnessSlider();
       Slider contrastSlider = createContrastSlider();
 
@@ -89,7 +87,6 @@ public class FlatbedScannerSettings extends ConfigScene {
       grid.setVgap(10);
       grid.setHgap(10);
       grid.add(selectDriverBtn, 0, 0);
-      grid.add(driverTypeChooser, 0, 1);
       grid.add(brightnessLabel, 0, 2);
       grid.add(brightnessSlider, 1, 2);
       grid.add(contrastLabel, 0, 3);
@@ -194,7 +191,7 @@ public class FlatbedScannerSettings extends ConfigScene {
    }
 
    @SuppressWarnings("unused")
-   private void selectScannerSourceAction(ActionEvent e) {
+   private void selectFlatbedScannerAction(ActionEvent e) {
       ScanLibResult result = ScanLib.getInstance().selectSourceAsDefault();
       LOG.debug("selectScannerSource: {}", result);
    }

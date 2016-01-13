@@ -1,6 +1,6 @@
 package org.biobank.platedecoder.service;
 
-import org.biobank.platedecoder.dmscanlib.ScanLibResult;
+import org.biobank.dmscanlib.ScanLibResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

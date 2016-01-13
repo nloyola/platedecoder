@@ -1,4 +1,4 @@
-package org.biobank.platedecoder.dmscanlib;
+package org.biobank.dmscanlib;
 
 import org.biobank.platedecoder.model.SbsLabeling;
 

@@ -1,4 +1,4 @@
-package org.biobank.platedecoder.dmscanlib;
+package org.biobank.dmscanlib;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,18 +29,16 @@ public class DecodeResult extends ScanLibResult {
    /**
     * Stores the results when an image of a plate is decoded.
     *
-    * <p>Meant for the scanning library JNI. Object of this type are created by the scanning library
-    * when it decodes an image.
+    * <p>Meant for the scanning library JNI. Objects of this type are created by the scanning
+    * library when it decodes an image.
     *
-    * @param resultCode  See {@link org.biobank.platedecoder.dmscanlib.ScanLib.ResultCode ResultCode}
-    *
-    * @param value  Same as resultCode. This value is deprecated.
+    * @param resultCode  See {@link org.biobank.dmscanlib.ScanLib.ResultCode ResultCode}
     *
     * @param message  The string representation of the resultCode.
     *
     */
-   public DecodeResult(int resultCode, int value, String message) {
-      super(resultCode, value, message);
+   public DecodeResult(int resultCode, String message) {
+      super(resultCode, message);
    }
 
    public void addWell(String label, String message) {

@@ -1,7 +1,8 @@
 package org.biobank.platedecoder.service;
 
-import org.biobank.platedecoder.dmscanlib.ScanLib;
-import org.biobank.platedecoder.dmscanlib.ScanLibResult;
+import org.biobank.dmscanlib.ScanLib;
+import org.biobank.dmscanlib.ScanLibResult;
+import org.biobank.platedecoder.model.FlatbedDpi;
 import org.biobank.platedecoder.model.PlateDecoderDefaults;
 import org.biobank.platedecoder.model.PlateModel;
 import org.biobank.platedecoder.ui.PlateDecoder;
@@ -19,33 +20,20 @@ public class ScanRegionTask extends Task<ScanLibResult> {
 
     @Override
     protected ScanLibResult call() throws Exception {
-        if (PlateDecoder.IS_LINUX) {
-            return scanFlatbedLinux();
-        }
-        return scanFlatbedWindows();
-    }
-
-    private ScanLibResult scanFlatbedWindows() {
-        ScanLibResult result = new ScanLibResult(ScanLib.ResultCode.SC_FAIL, 0, "exception");
+        ScanLibResult result = new ScanLibResult(ScanLib.ResultCode.SC_FAIL, "exception");
+        long dpi = FlatbedDpi.valueOf(PlateDecoderDefaults.DEFAULT_FLATBED_DPI).getValue();
         try {
-            result = ScanLib.getInstance().scanFlatbed(0L,
-                                                       PlateDecoderDefaults.FLATBED_IMAGE_DPI,
-                                                       0,
-                                                       0,
-                                                       PlateDecoderDefaults.FLATBED_IMAGE_NAME);
+            result = ScanLib.getInstance().scanFlatbed(
+               1L,
+               PlateDecoder.getDeviceName(),
+               dpi,
+               0,
+               0,
+               PlateDecoderDefaults.FLATBED_IMAGE_NAME);
         } catch (Exception ex) {
             LOG.error(ex.getMessage());
         }
         return result;
-    }
-
-    private ScanLibResult scanFlatbedLinux() throws InterruptedException {
-        Thread.sleep(500);
-        if (!PlateDecoder.fileExists(PlateDecoderDefaults.FLATBED_IMAGE_NAME)) {
-            throw new IllegalStateException(
-               "file not present: " + PlateDecoderDefaults.FLATBED_IMAGE_NAME);
-        }
-        return new ScanLibResult(ScanLib.ResultCode.SC_SUCCESS, 0, "");
     }
 
 }

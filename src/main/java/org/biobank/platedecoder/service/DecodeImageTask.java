@@ -1,7 +1,7 @@
 package org.biobank.platedecoder.service;
 
-import org.biobank.platedecoder.dmscanlib.DecodeOptions;
-import org.biobank.platedecoder.dmscanlib.DecodeResult;
+import org.biobank.dmscanlib.DecodeOptions;
+import org.biobank.dmscanlib.DecodeResult;
 import org.biobank.platedecoder.model.BarcodePosition;
 import org.biobank.platedecoder.model.PlateOrientation;
 import org.biobank.platedecoder.model.PlateType;

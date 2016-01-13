@@ -63,6 +63,22 @@ dependencies {
 test {
    systemProperty "java.library.path", "lib"
    systemProperty "debug", "true"
+
+   include 'org/biobank/**'
+
+   // by default do not run tests that require a flatbed scanner
+   exclude '**/ScanLibSuite.class'
+   exclude '**/DmScanLibTest.class'
+
+   // listen to events in the test execution lifecycle
+   beforeTest { descriptor ->
+      logger.lifecycle("Running test: " + descriptor)
+   }
+
+   // listen to standard out and standard error of the test JVM(s)
+   onOutput { descriptor, event ->
+      logger.lifecycle("Test: " + descriptor + " produced standard out/err: " + event.message )
+   }
 }
 
 run {

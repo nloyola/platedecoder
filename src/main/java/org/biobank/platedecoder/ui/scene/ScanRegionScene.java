@@ -5,7 +5,8 @@ import static org.biobank.platedecoder.ui.JavaFxHelper.errorDialog;
 
 import java.util.Optional;
 
-import org.biobank.platedecoder.dmscanlib.ScanLibResult;
+import org.biobank.dmscanlib.ScanLibResult;
+import org.biobank.platedecoder.model.FlatbedDpi;
 import org.biobank.platedecoder.model.PlateDecoderDefaults;
 import org.biobank.platedecoder.model.PlateDecoderPreferences;
 import org.biobank.platedecoder.service.ScanRegionTask;
@@ -17,7 +18,6 @@ import org.controlsfx.dialog.ProgressDialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.scene.Group;
@@ -137,12 +137,12 @@ public class ScanRegionScene extends SceneRoot implements ScanRegionHandler {
       Rectangle r;
 
       if (scanRegion == null) {
+         long dpi = FlatbedDpi.valueOf(PlateDecoderDefaults.DEFAULT_FLATBED_DPI).getValue();
          Optional<Rectangle> rectMaybe = PlateDecoderPreferences.getInstance().getScanRegion();
          if (rectMaybe.isPresent()) {
-            r = inchesToPixels(rectMaybe.get(), PlateDecoderDefaults.FLATBED_IMAGE_DPI);
+            r = inchesToPixels(rectMaybe.get(), dpi);
          } else {
-            r = inchesToPixels(PlateDecoderDefaults.getDefaultScanRegion(),
-                               PlateDecoderDefaults.FLATBED_IMAGE_DPI);
+            r = inchesToPixels(PlateDecoderDefaults.getDefaultScanRegion(), dpi);
          }
       } else {
          r = scanRegion;
@@ -159,16 +159,6 @@ public class ScanRegionScene extends SceneRoot implements ScanRegionHandler {
    }
 
    private void scanAction(@SuppressWarnings("unused") ActionEvent e) {
-      if (PlateDecoder.IS_LINUX && !checkFilePresentLinux()) {
-         errorDialog(
-            "Simulating a scan of the entire flatbed will not work. "
-            + "To correct this, please copy an image to: "
-            + PlateDecoder.flatbedImageFilenameToUrl(),
-            "Unable to simulate action",
-            "File is missing.");
-         Platform.exit();
-      }
-
       ScanRegionTask worker = new ScanRegionTask();
 
       ProgressDialog dlg = new ProgressDialog(worker);
@@ -204,16 +194,10 @@ public class ScanRegionScene extends SceneRoot implements ScanRegionHandler {
       th.start();
    }
 
-   private boolean checkFilePresentLinux() {
-      if (PlateDecoder.IS_LINUX) {
-         return PlateDecoder.fileExists(PlateDecoderDefaults.FLATBED_IMAGE_NAME);
-      }
-      throw new IllegalStateException("OS is not Linux");
-   }
-
    @Override
    protected void nextButtonAction() {
-      Rectangle r = pixelsToInches(scanRegion, PlateDecoderDefaults.FLATBED_IMAGE_DPI);
+      long dpi = FlatbedDpi.valueOf(PlateDecoderDefaults.DEFAULT_FLATBED_DPI).getValue();
+      Rectangle r = pixelsToInches(scanRegion, dpi);
       PlateDecoderPreferences.getInstance().setScanRegion(r);
       super.nextButtonAction();
    }

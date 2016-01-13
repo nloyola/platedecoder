@@ -1,12 +1,10 @@
-package org.biobank.platedecoder.dmscanlib;
+package org.biobank.dmscanlib;
+
+import static org.biobank.dmscanlib.ScanLib.ResultCode.*;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.biobank.platedecoder.dmscanlib.ScanLib.ResultCode;
-
-import static org.biobank.platedecoder.dmscanlib.ScanLib.ResultCode.*;
 
 /**
  * A wrapper class for result values returned by the Scanning Library JNI API.
@@ -41,7 +39,16 @@ public class ScanLibResult {
       INVALID_NOTHING_TO_DECODE(SC_INVALID_NOTHING_TO_DECODE),
 
       /** See {@link ResultCode#SC_INCORRECT_DPI_SCANNED}. */
-      INCORRECT_DPI_SCANNED(SC_INCORRECT_DPI_SCANNED);
+      INCORRECT_DPI_SCANNED(SC_INCORRECT_DPI_SCANNED),
+
+      /** See {@link ResultCode#SC_INVALID_DEVICE}. */
+      INVALID_DEVICE(SC_INVALID_DEVICE),
+
+      /** See {@link ResultCode#SC_INVALID_BRIGHTNESS}. */
+      INVALID_BRIGHTNESS(SC_INVALID_BRIGHTNESS),
+
+      /** See {@link ResultCode#SC_INVALID_CONTRAST}. */
+      INVALID_CONTRAST(SC_INVALID_CONTRAST);
 
       private final int value;
 
@@ -53,8 +60,8 @@ public class ScanLibResult {
          for (Result resultEnum : values()) {
             Result check = map.get(resultEnum.getValue());
             if (check != null) {
-               throw new IllegalStateException("permission enum value "
-                                               + resultEnum.getValue() + " used multiple times");
+               throw new IllegalStateException(
+                  "enum value " + resultEnum.getValue() + " used multiple times");
             }
 
             map.put(resultEnum.getValue(), resultEnum);
@@ -93,8 +100,6 @@ public class ScanLibResult {
 
    private int resultCode;
 
-   private int value; // used by API call to return its value (if any)
-
    private String message;
 
    /**
@@ -105,13 +110,10 @@ public class ScanLibResult {
     *
     * @param resultCode A value from {@link ResultCode ResultCode}.
     *
-    * @param value This value is now deprecated.
-    *
     * @param message A string representation of the error message.
     */
-   public ScanLibResult(int resultCode, int value, String message) {
+   public ScanLibResult(int resultCode, String message) {
       this.resultCode = resultCode;
-      this.setValue(value);
       this.message = message;
    }
 
@@ -131,7 +133,7 @@ public class ScanLibResult {
     * <p>Meant for the scanning library JNI. Object of this type are created by the scanning library
     * when it is decoding an image.
     *
-    * @param resultCode a value from {@link ResultCode ResultCode}.
+    * @param resultCode a value from {@link #org.biobank.dmscanlib.ScanLib.ResultCode ResultCode}.
     */
    public void setResultCode(int resultCode) {
       this.resultCode = resultCode;
@@ -159,33 +161,10 @@ public class ScanLibResult {
       this.message = message;
    }
 
-   /**
-    * The associated value for the result code from a call to the Scanning Library JNI API.
-    *
-    * @return The associated value for the result code.
-    */
-   public int getValue() {
-      return value;
-   }
-
-   /**
-    * Used to assign an associated value for the result code from a call to the Scanning Library JNI API.
-    *
-    * <p>Meant for the scanning library JNI. Object of this type are created by the scanning library
-    * when it is decoding an image.
-    *
-    * @param value  The associated value for the result code.
-    */
-   @Deprecated
-   public void setValue(int value) {
-      this.value = value;
-   }
-
    @Override
    public String toString() {
       StringBuffer buf = new StringBuffer();
       buf.append("[ resultCode: ").append(getResultCode());
-      buf.append(", value: ").append(value);
       buf.append(", message: ").append(message);
       buf.append(" ]");
       return buf.toString();

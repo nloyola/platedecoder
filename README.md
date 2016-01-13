@@ -99,7 +99,7 @@ For tests to run, the native library folder has to be added to the JVM
 parameters as follows:
 
 ```
-<path_to_eclim>/eclim -command project_setting -p platedecoder -s org.eclim.java.junit.jvmargs -v \[\"-Djava.library.path=./lib\"\]
+<path_to_eclim>/eclim -command project_setting -p platedecoder -s org.eclim.java.junit.jvmargs -v \[\"-Ddebug=true\",\"-Djava.library.path=./lib\"\]
 ```
 
 The path to Eclim for me is:

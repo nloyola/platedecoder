@@ -1,7 +1,7 @@
 package org.biobank.platedecoder.model;
 
+import static org.biobank.dmscanlib.DecodeOptions.*;
 import static org.biobank.platedecoder.model.PlateDecoderDefaults.*;
-import static org.biobank.platedecoder.dmscanlib.DecodeOptions.*;
 
 import java.util.Optional;
 import java.util.prefs.Preferences;
@@ -279,7 +279,7 @@ public class PlateDecoderPreferences {
     * @return The DPI value stored in the preferences.
     */
    public FlatbedDpi getFlatbedDpi() {
-      return FlatbedDpi.valueOf(prefs.get(PREFS_FLATBED_LAST_USED_DPI, DEFAULT_FLATBED_DPI));
+      return FlatbedDpi.valueOf(prefs.get(PREFS_FLATBED_LAST_USED_DPI, DEFAULT_FLATBED_IMAGE_DPI));
    }
 
    public void setFlatbedDpi(FlatbedDpi dpi) {

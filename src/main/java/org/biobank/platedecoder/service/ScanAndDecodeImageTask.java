@@ -1,15 +1,15 @@
 package org.biobank.platedecoder.service;
 
-import static org.biobank.platedecoder.dmscanlib.ScanLib.ResultCode.SC_SUCCESS;
+import static org.biobank.dmscanlib.ScanLib.ResultCode.SC_SUCCESS;
 
 import java.util.Optional;
 import java.util.Set;
 
-import org.biobank.platedecoder.dmscanlib.CellRectangle;
-import org.biobank.platedecoder.dmscanlib.DecodeOptions;
-import org.biobank.platedecoder.dmscanlib.DecodeResult;
-import org.biobank.platedecoder.dmscanlib.ScanLib;
-import org.biobank.platedecoder.dmscanlib.ScanLibResult;
+import org.biobank.dmscanlib.CellRectangle;
+import org.biobank.dmscanlib.DecodeOptions;
+import org.biobank.dmscanlib.DecodeResult;
+import org.biobank.dmscanlib.ScanLib;
+import org.biobank.dmscanlib.ScanLibResult;
 import org.biobank.platedecoder.model.BarcodePosition;
 import org.biobank.platedecoder.model.PlateDecoderDefaults;
 import org.biobank.platedecoder.model.PlateDecoderPreferences;
@@ -77,7 +77,6 @@ public class ScanAndDecodeImageTask extends Task<ScanLibResult> {
       ScanLibResult result = scanPlate();
       if (result.getResultCode() != ScanLibResult.Result.SUCCESS) {
          return new DecodeResult(result.getResultCode().getValue(),
-                                 result.getValue(),
                                  result.getMessage());
       }
       return decode();
@@ -98,9 +97,10 @@ public class ScanAndDecodeImageTask extends Task<ScanLibResult> {
       }
 
       Rectangle r = rectMaybe.get();
-      ScanLibResult result = new ScanLibResult(ScanLib.ResultCode.SC_FAIL, 0, "exception");
+      ScanLibResult result = new ScanLibResult(ScanLib.ResultCode.SC_FAIL, "exception");
       try {
          result = ScanLib.getInstance().scanImage(decodeDebugLevel,
+                                                  "",
                                                   dpi,
                                                   (int) brightness,
                                                   (int) contrast,
@@ -121,7 +121,7 @@ public class ScanAndDecodeImageTask extends Task<ScanLibResult> {
          throw new IllegalStateException(
             "file not present: " + PlateDecoderDefaults.FLATBED_PLATE_IMAGE_NAME);
       }
-      return new ScanLibResult(SC_SUCCESS, 0, "");
+      return new ScanLibResult(SC_SUCCESS, "");
    }
 
    protected DecodeResult decode() {

@@ -7,7 +7,6 @@ import org.biobank.platedecoder.model.PlateDecoderDefaults;
 import org.biobank.platedecoder.model.PlateDecoderPreferences;
 import org.biobank.platedecoder.service.ScanPlateTask;
 import org.biobank.platedecoder.ui.FlatbedDpiChooser;
-import org.biobank.platedecoder.ui.PlateDecoder;
 import org.controlsfx.dialog.ProgressDialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,15 +46,6 @@ public class ScanPlateScene extends SceneRoot {
 
    @Override
    protected boolean allowNextButtonAction() {
-      if (PlateDecoder.IS_LINUX && !checkFilePresentLinux()) {
-         errorDialog(
-            "Simulating the flatbed scan of a plate will not work. "
-            + "To correct this, please copy an image to: "
-            + PlateDecoder.flatbedPlateImageFilenameToUrl(),
-            "Unable to simulate action", "File is missing.");
-         Platform.exit();
-      }
-
       ScanPlateTask worker =
          new ScanPlateTask(model.getFlatbedDpi().getValue(),
                            model.getFlatbedBrightness(),
@@ -83,13 +73,6 @@ public class ScanPlateScene extends SceneRoot {
 
       // return false here so that the action is not take, it is taken if the worker succeeds
       return false;
-   }
-
-   private boolean checkFilePresentLinux() {
-      if (PlateDecoder.IS_LINUX) {
-         return PlateDecoder.fileExists(PlateDecoderDefaults.FLATBED_PLATE_IMAGE_NAME);
-      }
-      throw new IllegalStateException("OS is not Linux");
    }
 
 }

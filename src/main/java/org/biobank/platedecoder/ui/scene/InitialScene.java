@@ -4,19 +4,17 @@ import static org.biobank.platedecoder.ui.JavaFxHelper.errorDialog;
 
 import java.util.Optional;
 
-import org.biobank.platedecoder.dmscanlib.DecodeOptions;
-import org.biobank.platedecoder.dmscanlib.DecodeResult;
-import org.biobank.platedecoder.dmscanlib.ScanLibResult;
+import org.biobank.dmscanlib.DecodeOptions;
+import org.biobank.dmscanlib.DecodeResult;
+import org.biobank.dmscanlib.ScanLibResult;
 import org.biobank.platedecoder.model.Plate;
 import org.biobank.platedecoder.model.PlateDecoderDefaults;
 import org.biobank.platedecoder.model.PlateDecoderPreferences;
 import org.biobank.platedecoder.service.ScanAndDecodeImageTask;
-import org.biobank.platedecoder.ui.PlateDecoder;
 import org.controlsfx.dialog.ProgressDialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -98,16 +96,6 @@ public class InitialScene extends SceneRoot {
    }
 
    private void withPrevParamsAction(@SuppressWarnings("unused") ActionEvent event) {
-      if (PlateDecoder.IS_LINUX && !checkFilePresentLinux()) {
-         errorDialog(
-            "Simulating a scan of the entire flatbed will not work. "
-            + "To correct this, please copy an image to: "
-            + PlateDecoder.flatbedImageFilenameToUrl(),
-            "Unable to simulate action",
-            "File is missing.");
-         Platform.exit();
-      }
-
       Rectangle scanRect = PlateDecoderPreferences.getInstance().getWellRectangle(model.getPlateType());
 
       DecodeOptions decodeOptions = new DecodeOptions(model.getMinEdgeFactor(),
@@ -154,13 +142,6 @@ public class InitialScene extends SceneRoot {
       th.setDaemon(true);
       th.start();
    }
-
-    private boolean checkFilePresentLinux() {
-        if (PlateDecoder.IS_LINUX) {
-            return PlateDecoder.fileExists(PlateDecoderDefaults.FLATBED_IMAGE_NAME);
-        }
-        throw new IllegalStateException("OS is not Linux");
-    }
 
    public void unselectAll() {
       filesystemButton.setSelected(false);

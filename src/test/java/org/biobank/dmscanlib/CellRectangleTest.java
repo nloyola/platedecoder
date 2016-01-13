@@ -1,4 +1,4 @@
-package org.biobank.platedecoder.dmscanlib;
+package org.biobank.dmscanlib;
 
 import static org.junit.Assert.*;
 
@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import org.biobank.dmscanlib.CellRectangle;
 import org.biobank.platedecoder.model.BarcodePosition;
 import org.biobank.platedecoder.model.PlateOrientation;
 import org.biobank.platedecoder.model.PlateType;
