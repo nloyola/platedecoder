@@ -28,8 +28,6 @@ public class PlateDecoderPreferences {
 
    private static final String PREFS_APP_WINDOW_HEIGHT = "PREFS_APP_WINDOW_HEIGHT";
 
-   private static final String PREFS_DRIVER_TYPE = "PREFS_DRIVER_TYPE";
-
    private static final String PREFS_SCAN_REGION_X = "PREFS_SCAN_REGION_X";
 
    private static final String PREFS_SCAN_REGION_Y = "PREFS_SCAN_REGION_Y_";
@@ -109,24 +107,6 @@ public class PlateDecoderPreferences {
    public void setAppWindowSize(double width, double height) {
       prefs.putDouble(PREFS_APP_WINDOW_WIDTH,  width);
       prefs.putDouble(PREFS_APP_WINDOW_HEIGHT, height);
-   }
-
-   /**
-    * The type of driver (used with the scanning library) stored in the preferences.
-    *
-    * @return Either TWAIN or WIA. Defaults to {@link PlateDecoderDefaults#DEFAULT_DRIVER_TYPE}.
-    */
-   public DriverType getDriverType() {
-      return DriverType.valueOf(prefs.get(PREFS_DRIVER_TYPE, DEFAULT_DRIVER_TYPE));
-   }
-
-   /**
-    * Sets the driver type in the preferences.
-    *
-    * @param driverType The driver type to save in the preferences.
-    */
-   public void setFlatbedDriverType(DriverType driverType) {
-      prefs.put(PREFS_DRIVER_TYPE, driverType.name());
    }
 
    /**

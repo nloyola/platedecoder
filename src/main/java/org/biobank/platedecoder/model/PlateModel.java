@@ -69,9 +69,6 @@ public class PlateModel {
    // If the barcodes are present on the tube tops or bottoms.
    private ObjectProperty<BarcodePosition> barcodePositionProperty;
 
-   // The TWAIN driver type
-   private ObjectProperty<DriverType> driverTypeProperty;
-
    // The DPI used when the flatbed scanner was used to take an image of the plate.
    private ObjectProperty<FlatbedDpi> flatbedDpiProperty;
 
@@ -108,12 +105,6 @@ public class PlateModel {
       plateOrientationProperty.addListener((observable, oldValue, newValue) -> {
             preferences.setPlateOrientation(newValue);
             createNewPlate();
-         });
-
-      driverTypeProperty =
-         new SimpleObjectProperty<DriverType>(preferences.getDriverType());
-      driverTypeProperty.addListener((observable, oldValue, newValue) -> {
-            preferences.setFlatbedDriverType(newValue);
          });
 
       flatbedDpiProperty =
@@ -301,24 +292,6 @@ public class PlateModel {
     */
    public Plate getPlate() {
       return plate;
-   }
-
-   /**
-    * The TWAIN driver type used to access the flatbed scanner.
-    *
-    * @return The TWAIN driver type.
-    */
-   public DriverType getDriverType() {
-      return driverTypeProperty.getValue();
-   }
-
-   /**
-    * The TWAIN driver type used to access the flatbed scanner.
-    *
-    * @param driverType The TWAIN driver type.
-    */
-   public void setDriverType(DriverType driverType) {
-      driverTypeProperty.setValue(driverType);
    }
 
    /**

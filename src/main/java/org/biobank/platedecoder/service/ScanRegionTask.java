@@ -37,16 +37,13 @@ public class ScanRegionTask extends Task<ScanLibResult> {
       ScanLibResult result = new ScanLibResult(ScanLib.ResultCode.SC_FAIL, "exception");
       long dpi = FlatbedDpi.valueOf(PlateDecoderDefaults.DEFAULT_FLATBED_DPI).getValue();
 
-      LOG.info("debug level: {}", decodeDebugLevel);
-
       try {
-         result = ScanLib.getInstance().scanFlatbed(
-            decodeDebugLevel,
-            PlateDecoder.getDeviceName(),
-            dpi,
-            (int) brightness,
-            (int) contrast,
-            PlateDecoderDefaults.FLATBED_IMAGE_NAME);
+         result = ScanLib.getInstance().scanFlatbed(decodeDebugLevel,
+                                                    PlateDecoder.getDeviceName(),
+                                                    dpi,
+                                                    (int) brightness,
+                                                    (int) contrast,
+                                                    PlateDecoderDefaults.FLATBED_IMAGE_NAME);
       } catch (Exception ex) {
          LOG.error(ex.getMessage());
       }

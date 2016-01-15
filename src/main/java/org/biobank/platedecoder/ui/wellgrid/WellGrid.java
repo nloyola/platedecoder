@@ -49,9 +49,9 @@ public class WellGrid extends Rectangle implements ResizeHandler {
 
    private DoubleProperty displayScaleProperty;
 
-   private ResizeHandleNW resizeRectNW;
+   private ResizeHandleNW resizeHandleNW;
 
-   private ResizeHandleSE resizeRectSE;
+   private ResizeHandleSE resizeHandleSE;
 
    /**
     * The well grid is superimposed on the image containinig the 2D barcodes. The image is scaled
@@ -185,8 +185,8 @@ public class WellGrid extends Rectangle implements ResizeHandler {
       wellCellMap.values().forEach(cell -> {
             widgets.addAll(cell.getWidgets());
          });
-      widgets.add(resizeRectNW);
-      widgets.add(resizeRectSE);
+      widgets.add(resizeHandleNW);
+      widgets.add(resizeHandleSE);
       return widgets.toArray(new Node [] {});
    }
 
@@ -283,25 +283,25 @@ public class WellGrid extends Rectangle implements ResizeHandler {
       double newWidth;
       double newHeight;
 
-      if (resizeHandle == resizeRectNW) {
+      if (resizeHandle == resizeHandleNW) {
          double adjustedDeltaX = deltaX / displayScale;
          double adjustedDeltaY = deltaY / displayScale;
 
          // NOTE: x and y are re-assigned
-         x = Math.min(Math.max(0.0, x + adjustedDeltaX), x + width - ResizeHandle.RESIZE_RECT_SIZE);
-         y = Math.min(Math.max(0.0, y + adjustedDeltaY), y + height - ResizeHandle.RESIZE_RECT_SIZE);
+         x = Math.min(Math.max(0.0, x + adjustedDeltaX), x + width - resizeHandle.getSize());
+         y = Math.min(Math.max(0.0, y + adjustedDeltaY), y + height - resizeHandle.getSize());
 
          newWidth = Math.min(
-            Math.max(ResizeHandle.RESIZE_RECT_SIZE, width - adjustedDeltaX), x + width);
+            Math.max(resizeHandle.getSize(), width - adjustedDeltaX), x + width);
          newHeight = Math.min(
-            Math.max(ResizeHandle.RESIZE_RECT_SIZE, height - adjustedDeltaY), y + height);
+            Math.max(resizeHandle.getSize(), height - adjustedDeltaY), y + height);
 
-      } else if (resizeHandle == resizeRectSE) {
+      } else if (resizeHandle == resizeHandleSE) {
          newWidth = Math.min(
-            Math.max(ResizeHandle.RESIZE_RECT_SIZE, width + deltaX / displayScale),
+            Math.max(resizeHandle.getSize(), width + deltaX / displayScale),
             wellGridHandler.getImageWidth() - x);
          newHeight = Math.min(
-            Math.max(ResizeHandle.RESIZE_RECT_SIZE, height + deltaY / displayScale),
+            Math.max(resizeHandle.getSize(), height + deltaY / displayScale),
             wellGridHandler.getImageHeight() - y);
       } else {
          throw new IllegalStateException(
@@ -312,14 +312,8 @@ public class WellGrid extends Rectangle implements ResizeHandler {
    }
 
    private void createResizeHandles() {
-      resizeRectNW = new ResizeHandleNW(this, xProperty(), yProperty(), displayScaleProperty);
-
-      resizeRectSE = new ResizeHandleSE(this,
-                                        xProperty(),
-                                        yProperty(),
-                                        widthProperty(),
-                                        heightProperty(),
-                                        displayScaleProperty);
+      resizeHandleNW = new ResizeHandleNW(this);
+      resizeHandleSE = new ResizeHandleSE(this);
    }
 
    private void createWellCells() {
@@ -386,6 +380,22 @@ public class WellGrid extends Rectangle implements ResizeHandler {
          throw new IllegalArgumentException("label does not exist: " + label);
       }
       return !cell.getInventoryId().isEmpty() && !cell.isManuallyDecoded();
+   }
+
+
+   @Override
+   public DoubleProperty xPositionProperty() {
+      return xProperty();
+   }
+
+   @Override
+   public DoubleProperty yPositionProperty() {
+      return yProperty();
+   }
+
+   @Override
+   public DoubleProperty scaleProperty() {
+      return displayScaleProperty;
    }
 
 }

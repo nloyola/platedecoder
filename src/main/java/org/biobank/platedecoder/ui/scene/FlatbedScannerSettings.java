@@ -4,16 +4,13 @@ import static org.biobank.platedecoder.ui.JavaFxHelper.createButton;
 
 import org.biobank.dmscanlib.ScanLib;
 import org.biobank.dmscanlib.ScanLibResult;
-import org.biobank.platedecoder.model.DriverType;
 import org.biobank.platedecoder.model.PlateDecoderDefaults;
 import org.biobank.platedecoder.model.PlateModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javafx.beans.property.LongProperty;
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleLongProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
@@ -54,8 +51,6 @@ public class FlatbedScannerSettings extends ConfigScene {
 
    private Button scanRegionBtn;
 
-   private ObjectProperty<DriverType> driverTypeProperty;
-
    // The brightness setting for the flatbed scanner
    private LongProperty brightnessProperty;
 
@@ -68,10 +63,6 @@ public class FlatbedScannerSettings extends ConfigScene {
 
    @Override
    protected Region createContents() {
-      driverTypeProperty = new SimpleObjectProperty<DriverType>(model.getDriverType());
-      driverTypeProperty.addListener((observable, oldValue, newValue) -> {
-            setConfigChanged(true);
-         });
       brightnessProperty = new SimpleLongProperty(model.getFlatbedBrightness());
       contrastProperty = new SimpleLongProperty(model.getFlatbedContrast());
 
@@ -116,7 +107,6 @@ public class FlatbedScannerSettings extends ConfigScene {
 
    @Override
    public void onDisplay() {
-      driverTypeProperty.setValue(model.getDriverType());
       brightnessProperty.setValue(model.getFlatbedBrightness());
       contrastProperty.setValue(model.getFlatbedContrast());
    }
@@ -132,7 +122,6 @@ public class FlatbedScannerSettings extends ConfigScene {
 
    @Override
    protected void applyAction() {
-      model.setDriverType(driverTypeProperty.getValue());
       model.setFlatbedBrightness(brightnessProperty.getValue());
       model.setFlatbedContrast(contrastProperty.getValue());
       setConfigChanged(false);
@@ -140,7 +129,6 @@ public class FlatbedScannerSettings extends ConfigScene {
 
    @Override
    protected void restoreDefaultsAction() {
-      driverTypeProperty.setValue(DriverType.valueOf(PlateDecoderDefaults.DEFAULT_DRIVER_TYPE));
       brightnessProperty.setValue(PlateDecoderDefaults.DEFAULT_FLATBED_BRIGHTNESS);
       contrastProperty.setValue(PlateDecoderDefaults.DEFAULT_FLATBED_CONTRAST);
    }

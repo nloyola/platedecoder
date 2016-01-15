@@ -28,9 +28,6 @@ public class PlateDecoderDefaults {
    /** The name of the file the flatbed region images are saved to. */
    public static final String FLATBED_PLATE_IMAGE_NAME = "plate.png";
 
-   /** The type of TWAIN driver being used to communicate with the flatbed scanner. */
-   public static final String DEFAULT_DRIVER_TYPE = DriverType.NONE.name();
-
    /** The default dimensions of the plate scanning region. */
    public static final double [] DEFAULT_SCAN_REGION_INCHES = new double [] {
       0.25, 0.25, 3.0, 2.0

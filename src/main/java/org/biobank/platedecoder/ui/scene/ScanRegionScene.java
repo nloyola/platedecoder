@@ -55,7 +55,6 @@ public class ScanRegionScene extends SceneRoot implements ScanRegionHandler {
 
    @Override
    public void onDisplay() {
-      createScanRegion();
       disableNextButton(true);
    }
 

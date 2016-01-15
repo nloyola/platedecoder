@@ -2,6 +2,7 @@ package org.biobank.platedecoder.ui.resize;
 
 import java.util.Optional;
 
+import javafx.beans.property.DoubleProperty;
 import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
 import javafx.scene.paint.Color;
@@ -12,57 +13,78 @@ import javafx.scene.shape.Rectangle;
  */
 public abstract class ResizeHandle extends Rectangle {
 
-    public static final double RESIZE_RECT_SIZE = 30;
+   public static final double RESIZE_RECT_RATIO = 0.03;
 
-    protected final ResizeHandler resizeHandler;
+   protected final ResizeHandler resizeHandler;
 
-    protected Optional<Point2D> mouseLocationMaybe;
+   protected Optional<Point2D> mouseLocationMaybe;
 
-    protected double size;
+   protected double size;
 
-    public ResizeHandle(final ResizeHandler resizeHandler,
-                        double              size,
-                        Cursor              mouseEnteredCursor) {
-        super(0, 0, size, size);
+   /**
+    * Manages a rectangle that can be used to resize a parent rectangle.
+    *
+    * The resize control is placed in the north west corner of the parent rectangle.
+    *
+    * @param resizeHandler the handler that will be informed when the user interacts with the
+    * resize handle.
+    *
+    * @param mouseEnteredCursor The cursor to display when the user hovers the mouse of the resize
+    * handle.
+    */
+   public ResizeHandle(final ResizeHandler resizeHandler, Cursor mouseEnteredCursor) {
+      super(0, 0, 1, 1);
 
-        this.resizeHandler      = resizeHandler;
-        this.mouseLocationMaybe = Optional.empty();
+      this.resizeHandler      = resizeHandler;
+      this.mouseLocationMaybe = Optional.empty();
 
-        setFill(Color.LIGHTGREEN);
+      DoubleProperty parentWidthProperty = resizeHandler.widthProperty();
+      DoubleProperty scaleProperty = resizeHandler.scaleProperty();
 
-        setOnMouseEntered(event -> {
-                this.resizeHandler.setResizeCursor(mouseEnteredCursor);
-            });
+      this.widthProperty().bind(
+         parentWidthProperty.multiply(scaleProperty.multiply(RESIZE_RECT_RATIO)));
+      this.heightProperty().bind(
+         parentWidthProperty.multiply(scaleProperty.multiply(RESIZE_RECT_RATIO)));
 
-        setOnMouseExited(event -> {
-                this.resizeHandler.setResizeCursor(Cursor.DEFAULT);
-            });
+      setFill(Color.LIGHTGREEN);
 
-        setOnMousePressed(event -> {
-                this.resizeHandler.setResizeCursor(Cursor.CLOSED_HAND);
-                mouseLocationMaybe = Optional.of(
-                    new Point2D(event.getSceneX(), event.getSceneY()));
-            });
+      setOnMouseEntered(event -> {
+            this.resizeHandler.setResizeCursor(mouseEnteredCursor);
+         });
 
-        setOnMouseReleased(event -> {
-                this.resizeHandler.setResizeCursor(Cursor.DEFAULT);
-                mouseLocationMaybe = Optional.empty();
-            });
+      setOnMouseExited(event -> {
+            this.resizeHandler.setResizeCursor(Cursor.DEFAULT);
+         });
 
-        setOnMouseDragged(event -> {
-                mouseLocationMaybe.ifPresent(mouseLocation -> {
-                        resizeHandler.setResizeCursor(Cursor.CLOSED_HAND);
+      setOnMousePressed(event -> {
+            this.resizeHandler.setResizeCursor(Cursor.CLOSED_HAND);
+            mouseLocationMaybe = Optional.of(
+               new Point2D(event.getSceneX(), event.getSceneY()));
+         });
 
-                        double deltaX = event.getSceneX() - mouseLocation.getX();
-                        double deltaY = event.getSceneY() - mouseLocation.getY();
+      setOnMouseReleased(event -> {
+            this.resizeHandler.setResizeCursor(Cursor.DEFAULT);
+            mouseLocationMaybe = Optional.empty();
+         });
 
-                        resizeHandler.mouseDragged(this, deltaX, deltaY);
+      setOnMouseDragged(event -> {
+            mouseLocationMaybe.ifPresent(mouseLocation -> {
+                  resizeHandler.setResizeCursor(Cursor.CLOSED_HAND);
 
-                        mouseLocationMaybe = Optional.of(
-                            new Point2D(event.getSceneX(), event.getSceneY()));
-                        event.consume();
-                    });
-            });
-    }
+                  double deltaX = event.getSceneX() - mouseLocation.getX();
+                  double deltaY = event.getSceneY() - mouseLocation.getY();
+
+                  resizeHandler.mouseDragged(this, deltaX, deltaY);
+
+                  mouseLocationMaybe = Optional.of(
+                     new Point2D(event.getSceneX(), event.getSceneY()));
+                  event.consume();
+               });
+         });
+   }
+
+   public double getSize() {
+      return getWidth();
+   }
 
 }

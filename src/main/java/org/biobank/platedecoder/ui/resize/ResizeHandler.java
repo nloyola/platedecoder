@@ -1,5 +1,6 @@
 package org.biobank.platedecoder.ui.resize;
 
+import javafx.beans.property.DoubleProperty;
 import javafx.scene.Cursor;
 
 /**
@@ -27,5 +28,33 @@ public interface ResizeHandler {
     * @param deltaY The amount it was dragged in the Y direction.
     */
    public void mouseDragged(ResizeHandle handle, double deltaX, double deltaY);
+
+   /**
+    * The property that holds the X coordinate of the upper-left corner of the
+    * parent rectangle.
+    */
+   public DoubleProperty xPositionProperty();
+
+   /**
+    * The property that holds the Y coordinate of the upper-left corner of the
+    * parent rectangle.
+    */
+   public DoubleProperty yPositionProperty();
+
+   /**
+    * The property that holds the width value of the parent rectangle.
+    */
+   public DoubleProperty widthProperty();
+
+   /**
+    * The property that holds the height value of the parent rectangle.
+    */
+   public DoubleProperty heightProperty();
+
+   /**
+    * The property that holds the scale value to display the parent rectangle.
+    *
+    */
+   public DoubleProperty scaleProperty();
 
 }

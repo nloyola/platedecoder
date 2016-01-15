@@ -99,6 +99,17 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
             wellGrid.setWellCellInventoryId(w.getLabel(), w.getInventoryId());
          });
 
+      Image image = imageView.getImage();
+      double scale = (image == null) ? 1.0
+         : imageView.getLayoutBounds().getWidth() / image.getWidth();
+      wellGrid.setScale(scale);
+
+      if ((wellGrid.getWidth() > image.getWidth())
+          || (wellGrid.getHeight() > image.getHeight())) {
+         wellGrid.setWidth(image.getWidth());
+         wellGrid.setHeight(image.getHeight());
+      }
+
       updateWellGrid();
       disableNextButton(wellGrid.getDecodedCellCount() <= 0);
    }
