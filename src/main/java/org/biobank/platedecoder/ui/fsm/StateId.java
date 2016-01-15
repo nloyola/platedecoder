@@ -14,6 +14,7 @@ enum StateId {
 
    // settings
    SETTINGS_FLATBED_SCANNER,
+   SETTINGS_SCAN_REGION,
    SETTINGS_DECODER;
 
 }

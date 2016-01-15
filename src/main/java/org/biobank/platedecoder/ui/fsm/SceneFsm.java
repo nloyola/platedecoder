@@ -63,6 +63,7 @@ class SceneFsm extends Fsm<StateId, ChoicepointId, Event> {
       addState(StateId.DECODE_IMAGE);
       addState(StateId.DECODED_IMAGE_TUBES);
       addState(StateId.SETTINGS_FLATBED_SCANNER);
+      addState(StateId.SETTINGS_SCAN_REGION);
       addState(StateId.SETTINGS_DECODER);
 
       addChoicepoint(
@@ -78,6 +79,7 @@ class SceneFsm extends Fsm<StateId, ChoicepointId, Event> {
       createDecodeImageSceneTransitions();
       createDecodedTubesSceneTransitions();
       createFlatbedScannerSettingsTransitions();
+      createSettingsScanRegionDefineTransitions();
       createDecoderSettingsTransitions();
 
       validate();
@@ -276,12 +278,24 @@ class SceneFsm extends Fsm<StateId, ChoicepointId, Event> {
                     );
       addTransition(Event.SCAN_REGION_DEFINE,
                     StateId.SETTINGS_FLATBED_SCANNER,
-                    StateId.SETTINGS_DECODER,
+                    StateId.SETTINGS_SCAN_REGION,
                     () -> sceneChanger.changeScene(scanRegion));
 
       scannerSettings.enableBackAction(() -> feedEvent(Event.BACK_SELECTED));
       scannerSettings.enableNextAction(() -> feedEvent(Event.FINISH_SELECTED));
       scannerSettings.onDefineScanRegionAction(() -> feedEvent(Event.SCAN_REGION_DEFINE));
+   }
+
+   private void createSettingsScanRegionDefineTransitions() {
+      addTransition(Event.NEXT_SELECTED,
+                    StateId.SETTINGS_SCAN_REGION,
+                    StateId.SETTINGS_FLATBED_SCANNER,
+                    () -> sceneChanger.changeScene(scannerSettings));
+
+      addTransition(Event.BACK_SELECTED,
+                    StateId.SETTINGS_SCAN_REGION,
+                    StateId.SETTINGS_FLATBED_SCANNER,
+                    () -> sceneChanger.changeScene(scannerSettings));
    }
 
    private void createDecoderSettingsTransitions() {

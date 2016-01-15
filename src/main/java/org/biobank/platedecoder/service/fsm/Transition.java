@@ -21,8 +21,9 @@ abstract class Transition {
    @Override
    public String toString() {
       StringBuffer buf = new StringBuffer();
+      buf.append("from: ");
       buf.append(fromComponent);
-      buf.append(", ");
+      buf.append(", to: ");
       buf.append(toComponent);
       return buf.toString();
    }
