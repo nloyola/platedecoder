@@ -27,11 +27,6 @@ public class ScanPlateScene extends SceneRoot {
    }
 
    @Override
-   public void onDisplay() {
-      Platform.runLater(() -> nextButtonRequestFocus());
-   }
-
-   @Override
    protected Region createContents() {
       FlatbedDpiChooser dpiChooser = new FlatbedDpiChooser(model.getFlatbedDpiProperty());
 
@@ -41,6 +36,8 @@ public class ScanPlateScene extends SceneRoot {
       grid.setHgap(10);
       grid.add(dpiChooser, 0, 0);
       grid.setAlignment(Pos.TOP_CENTER);
+
+      Platform.runLater(() -> nextButtonRequestFocus());
       return grid;
    }
 

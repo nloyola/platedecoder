@@ -62,6 +62,8 @@ public class FileChoose extends SceneRoot {
       box.getChildren().addAll(browseFileBtn, decodeBtn);
 
       grid.add(box, 1, 1);
+
+      Platform.runLater(() -> browseFileBtn.requestFocus());
       return grid;
    }
 
@@ -77,12 +79,6 @@ public class FileChoose extends SceneRoot {
          filenameField.setText(file.getName());
          decodeBtn.setDisable(false);
       }
-   }
-
-   @Override
-   public void onDisplay() {
-      unselectAll();
-      Platform.runLater(() -> browseFileBtn.requestFocus());
    }
 
    public void unselectAll() {

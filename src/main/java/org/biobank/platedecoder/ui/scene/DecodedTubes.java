@@ -70,15 +70,6 @@ public class DecodedTubes extends SceneRoot {
    }
 
    @Override
-   public void onDisplay() {
-      sortedList = new ArrayList<>(model.getPlate().getWells());
-      Collections.sort(sortedList);
-      ObservableList<PlateWell> plateWells = FXCollections.observableArrayList(sortedList);
-      table.setItems(plateWells);
-      table.getSortOrder().add(labelColumn);
-   }
-
-   @Override
    protected Region createContents() {
       table = new TableView<>();
 
@@ -108,7 +99,11 @@ public class DecodedTubes extends SceneRoot {
       vbox.setPadding(new Insets(5, 5, 5, 5));
       vbox.getChildren().addAll(table, hbox);
 
-      onDisplay();
+      sortedList = new ArrayList<>(model.getPlate().getWells());
+      Collections.sort(sortedList);
+      ObservableList<PlateWell> plateWells = FXCollections.observableArrayList(sortedList);
+      table.setItems(plateWells);
+      table.getSortOrder().add(labelColumn);
 
       return vbox;
    }

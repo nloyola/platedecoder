@@ -45,11 +45,6 @@ public class InitialScene extends SceneRoot {
    }
 
    @Override
-   public void onDisplay() {
-      unselectAll();
-   }
-
-   @Override
    protected Region createContents() {
       filesystemButton = new RadioButton("Decode image - decode tubes in an image from the filesystem");
       flatbedScanButton = new RadioButton("Scan and decode - using the flatbed scanner");

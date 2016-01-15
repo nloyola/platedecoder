@@ -92,27 +92,27 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
          });
    }
 
-   @Override
-   public void onDisplay() {
-      // NOTE: could be called with model.getPlate() already populated with decode information
-      model.getPlate().getWells().forEach(w -> {
-            wellGrid.setWellCellInventoryId(w.getLabel(), w.getInventoryId());
-         });
+   // @Override
+   // public void onDisplay() {
+   //    // NOTE: could be called with model.getPlate() already populated with decode information
+   //    model.getPlate().getWells().forEach(w -> {
+   //          wellGrid.setWellCellInventoryId(w.getLabel(), w.getInventoryId());
+   //       });
 
-      Image image = imageView.getImage();
-      double scale = (image == null) ? 1.0
-         : imageView.getLayoutBounds().getWidth() / image.getWidth();
-      wellGrid.setScale(scale);
+   //    Image image = imageView.getImage();
+   //    double scale = (image == null) ? 1.0
+   //       : imageView.getLayoutBounds().getWidth() / image.getWidth();
+   //    wellGrid.setScale(scale);
 
-      if ((wellGrid.getWidth() > image.getWidth())
-          || (wellGrid.getHeight() > image.getHeight())) {
-         wellGrid.setWidth(image.getWidth());
-         wellGrid.setHeight(image.getHeight());
-      }
+   //    if ((wellGrid.getWidth() > image.getWidth())
+   //        || (wellGrid.getHeight() > image.getHeight())) {
+   //       wellGrid.setWidth(image.getWidth());
+   //       wellGrid.setHeight(image.getHeight());
+   //    }
 
-      updateWellGrid();
-      disableNextButton(wellGrid.getDecodedCellCount() <= 0);
-   }
+   //    updateWellGrid();
+   //    disableNextButton(wellGrid.getDecodedCellCount() <= 0);
+   // }
 
    /**
     * Used to specify the source of the image.

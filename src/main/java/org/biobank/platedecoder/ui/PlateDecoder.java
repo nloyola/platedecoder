@@ -88,13 +88,14 @@ public class PlateDecoder extends Application implements SceneChanger {
 
    @Override
    public <T extends SceneRoot> void changeScene(T sceneRoot) {
+      LOG.info("changeScene: {}", sceneRoot);
+
       Scene scene = stage.getScene();
       if (scene != null) {
          // theprevious scene's root has to be cleared so we dont get an exception when user
          // enters the scene again
          scene.setRoot(new Region());
       }
-      sceneRoot.onDisplay();
       scene = new Scene(sceneRoot, sceneWidth, sceneHeight);
       scene.widthProperty().addListener((observable, oldValue, newValue) -> {
             sceneWidth = newValue.doubleValue();

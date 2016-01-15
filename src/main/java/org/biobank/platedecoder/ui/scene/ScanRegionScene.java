@@ -54,11 +54,6 @@ public class ScanRegionScene extends SceneRoot implements ScanRegionHandler {
    }
 
    @Override
-   public void onDisplay() {
-      disableNextButton(true);
-   }
-
-   @Override
    protected Region createContents() {
       Node controls = createControlsPane();
       Node imagePane = createImagePane();
@@ -70,6 +65,7 @@ public class ScanRegionScene extends SceneRoot implements ScanRegionHandler {
 
       BorderPane.setMargin(controls, new Insets(5));
 
+      disableNextButton(true);
       return borderPane;
    }
 

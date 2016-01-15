@@ -30,11 +30,6 @@ public class SpecimenLink extends SceneRoot {
     }
 
     @Override
-    public void onDisplay() {
-        // do nothing
-    }
-
-    @Override
     protected Region createContents() {
         sp = new SplitPane();
         final VBox leftPane = new VBox(5);
@@ -162,4 +157,3 @@ public class SpecimenLink extends SceneRoot {
     }
 
 }
-

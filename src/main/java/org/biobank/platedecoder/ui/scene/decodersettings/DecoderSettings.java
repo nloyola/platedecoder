@@ -66,18 +66,13 @@ public class DecoderSettings extends ConfigScene {
       borderPane.setCenter(grid);
       borderPane.setBottom(createApplyAndRestoreButtons());
 
-      addListeners();
-
-      return borderPane;
-   }
-
-   @Override
-   public void onDisplay() {
-      super.onDisplay();
       modelValuesAssigned = false;
       setConfigChanged(false);
       setTitleAreaMessage("");
       assignModelValues();
+
+      addListeners();
+      return borderPane;
    }
 
    @Override

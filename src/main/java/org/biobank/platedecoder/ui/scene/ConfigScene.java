@@ -24,15 +24,10 @@ public abstract class ConfigScene extends SceneRoot {
 
    private Button applyBtn;
 
-   private boolean configChangesMade;
+   private boolean configChangesMade = false;
 
    public ConfigScene(String title) {
       super(title);
-   }
-
-   @Override
-   public void onDisplay() {
-      configChangesMade = false;
    }
 
    /**

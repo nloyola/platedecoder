@@ -102,13 +102,10 @@ public class FlatbedScannerSettings extends ConfigScene {
       contrastProperty.bindBidirectional(contrastSlider.valueProperty());
       contrastProperty.addListener(this::contrastSliderListener);
 
-      return borderPane;
-   }
-
-   @Override
-   public void onDisplay() {
       brightnessProperty.setValue(model.getFlatbedBrightness());
       contrastProperty.setValue(model.getFlatbedContrast());
+
+      return borderPane;
    }
 
    /**

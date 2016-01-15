@@ -52,6 +52,8 @@ public abstract class SceneRoot extends BorderPane {
 
    protected Optional<Runnable> nextButtonActionRunnableMaybe = Optional.empty();
 
+   private boolean nextButtonDisabled = false;
+
    /**
     * Creates a scene.
     *
@@ -76,16 +78,6 @@ public abstract class SceneRoot extends BorderPane {
     * @return This method should return the root UI element. This element is then added to the scene.
     */
    protected abstract Region createContents();
-
-   /**
-    * Called when the scene is displayed.
-    *
-    * <p>The scen could be displayed for the first time as a result of an action in another scene,
-    * or when the user presses the {@code Back} button in another scene.
-    *
-    * <p>This method is meant to refresh the UI elements.
-    */
-   public abstract void onDisplay();
 
    /**
     * Used to enable the {@code Back} button and bind a runnable to execute when the user presses
@@ -135,7 +127,10 @@ public abstract class SceneRoot extends BorderPane {
     * @param disable When TRUE the button is disabled.
     */
    protected void disableNextButton(boolean disable) {
-      nextBtn.setDisable(disable);
+      nextButtonDisabled = disable;
+      if (nextBtn != null) {
+         nextBtn.setDisable(disable);
+      }
    }
 
    /**
@@ -210,6 +205,8 @@ public abstract class SceneRoot extends BorderPane {
       nextBtn = createButton("Next", e -> nextButtonAction());
       nextBtn.managedProperty().bind(nextBtn.visibleProperty());
       nextBtn.setVisible(false);
+
+      nextBtn.setDisable(nextButtonDisabled);
 
       finishBtn = createButton("Finish");
       finishBtn.managedProperty().bind(finishBtn.visibleProperty());
