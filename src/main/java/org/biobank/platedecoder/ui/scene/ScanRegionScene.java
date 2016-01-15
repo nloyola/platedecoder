@@ -159,7 +159,9 @@ public class ScanRegionScene extends SceneRoot implements ScanRegionHandler {
    }
 
    private void scanAction(@SuppressWarnings("unused") ActionEvent e) {
-      ScanRegionTask worker = new ScanRegionTask();
+      ScanRegionTask worker = new ScanRegionTask(model.getFlatbedBrightness(),
+                                                 model.getFlatbedContrast(),
+                                                 model.getDecoderDebugLevel());
 
       ProgressDialog dlg = new ProgressDialog(worker);
       dlg.setTitle("Scanning flatbed");

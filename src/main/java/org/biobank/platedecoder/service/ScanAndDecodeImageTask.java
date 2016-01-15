@@ -100,7 +100,7 @@ public class ScanAndDecodeImageTask extends Task<ScanLibResult> {
       ScanLibResult result = new ScanLibResult(ScanLib.ResultCode.SC_FAIL, "exception");
       try {
          result = ScanLib.getInstance().scanImage(decodeDebugLevel,
-                                                  "",
+                                                  PlateDecoder.getDeviceName(),
                                                   dpi,
                                                   (int) brightness,
                                                   (int) contrast,

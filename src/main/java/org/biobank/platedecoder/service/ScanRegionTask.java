@@ -14,26 +14,43 @@ import javafx.concurrent.Task;
 public class ScanRegionTask extends Task<ScanLibResult> {
 
    //@SuppressWarnings("unused")
-    private static final Logger LOG = LoggerFactory.getLogger(ScanRegionTask.class);
+   private static final Logger LOG = LoggerFactory.getLogger(ScanRegionTask.class);
 
-    protected PlateModel model = PlateModel.getInstance();
+   protected PlateModel model = PlateModel.getInstance();
 
-    @Override
-    protected ScanLibResult call() throws Exception {
-        ScanLibResult result = new ScanLibResult(ScanLib.ResultCode.SC_FAIL, "exception");
-        long dpi = FlatbedDpi.valueOf(PlateDecoderDefaults.DEFAULT_FLATBED_DPI).getValue();
-        try {
-            result = ScanLib.getInstance().scanFlatbed(
-               1L,
-               PlateDecoder.getDeviceName(),
-               dpi,
-               0,
-               0,
-               PlateDecoderDefaults.FLATBED_IMAGE_NAME);
-        } catch (Exception ex) {
-            LOG.error(ex.getMessage());
-        }
-        return result;
-    }
+   private final long brightness;
+
+   private final long contrast;
+
+   private final long decodeDebugLevel;
+
+   public ScanRegionTask(long brightness,
+                         long contrast,
+                         long decodeDebugLevel) {
+      this.brightness       = brightness;
+      this.contrast         = contrast;
+      this.decodeDebugLevel = decodeDebugLevel;
+   }
+
+   @Override
+   protected ScanLibResult call() throws Exception {
+      ScanLibResult result = new ScanLibResult(ScanLib.ResultCode.SC_FAIL, "exception");
+      long dpi = FlatbedDpi.valueOf(PlateDecoderDefaults.DEFAULT_FLATBED_DPI).getValue();
+
+      LOG.info("debug level: {}", decodeDebugLevel);
+
+      try {
+         result = ScanLib.getInstance().scanFlatbed(
+            decodeDebugLevel,
+            PlateDecoder.getDeviceName(),
+            dpi,
+            (int) brightness,
+            (int) contrast,
+            PlateDecoderDefaults.FLATBED_IMAGE_NAME);
+      } catch (Exception ex) {
+         LOG.error(ex.getMessage());
+      }
+      return result;
+   }
 
 }
