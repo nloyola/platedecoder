@@ -1,7 +1,5 @@
 package org.biobank.platedecoder.service;
 
-import static org.biobank.dmscanlib.ScanLib.ResultCode.SC_SUCCESS;
-
 import java.util.Optional;
 import java.util.Set;
 
@@ -11,11 +9,9 @@ import org.biobank.dmscanlib.DecodeResult;
 import org.biobank.dmscanlib.ScanLib;
 import org.biobank.dmscanlib.ScanLibResult;
 import org.biobank.platedecoder.model.BarcodePosition;
-import org.biobank.platedecoder.model.PlateDecoderDefaults;
 import org.biobank.platedecoder.model.PlateDecoderPreferences;
 import org.biobank.platedecoder.model.PlateOrientation;
 import org.biobank.platedecoder.model.PlateType;
-import org.biobank.platedecoder.ui.PlateDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +22,8 @@ public class ScanAndDecodeImageTask extends Task<ScanLibResult> {
 
    // @SuppressWarnings("unused")
    private static final Logger LOG = LoggerFactory.getLogger(ScanAndDecodeImageTask.class);
+
+   private final String deviceName;
 
    private final Rectangle scanRect;
 
@@ -48,6 +46,7 @@ public class ScanAndDecodeImageTask extends Task<ScanLibResult> {
    private final DecodeOptions decodeOptions;
 
    public ScanAndDecodeImageTask(Rectangle        scanRect,
+                                 String           deviceName,
                                  long             dpi,
                                  PlateOrientation orientation,
                                  PlateType        plateType,
@@ -57,6 +56,7 @@ public class ScanAndDecodeImageTask extends Task<ScanLibResult> {
                                  long             decodeDebugLevel,
                                  DecodeOptions    decodeOptions,
                                  String           filename) {
+      this.deviceName       = deviceName;
       this.scanRect         = scanRect;
       this.dpi              = dpi;
       this.orientation      = orientation;
@@ -82,14 +82,7 @@ public class ScanAndDecodeImageTask extends Task<ScanLibResult> {
       return decode();
    }
 
-   protected ScanLibResult scanPlate() throws InterruptedException {
-      if (PlateDecoder.IS_LINUX) {
-         return scanPlateLinux();
-      }
-      return scanPlateWindows();
-   }
-
-   private ScanLibResult scanPlateWindows() {
+   protected ScanLibResult scanPlate() {
       Optional<Rectangle> rectMaybe = PlateDecoderPreferences.getInstance().getScanRegion();
 
       if (!rectMaybe.isPresent()) {
@@ -100,28 +93,19 @@ public class ScanAndDecodeImageTask extends Task<ScanLibResult> {
       ScanLibResult result = new ScanLibResult(ScanLib.ResultCode.SC_FAIL, "exception");
       try {
          result = ScanLib.getInstance().scanImage(decodeDebugLevel,
-                                                  PlateDecoder.getDeviceName(),
+                                                  deviceName,
                                                   dpi,
                                                   (int) brightness,
                                                   (int) contrast,
                                                   r.getX(),
                                                   r.getY(),
-                                                  r.getWidth(),
-                                                  r.getHeight(),
+                                                  r.getWidth() + r.getX(),
+                                                  r.getHeight() + r.getY(),
                                                   filename);
       } catch (Exception ex) {
          LOG.error(ex.getMessage());
       }
       return result;
-   }
-
-   private ScanLibResult scanPlateLinux() throws InterruptedException {
-      Thread.sleep(500);
-      if (!PlateDecoder.fileExists(PlateDecoderDefaults.FLATBED_PLATE_IMAGE_NAME)) {
-         throw new IllegalStateException(
-            "file not present: " + PlateDecoderDefaults.FLATBED_PLATE_IMAGE_NAME);
-      }
-      return new ScanLibResult(SC_SUCCESS, "");
    }
 
    protected DecodeResult decode() {

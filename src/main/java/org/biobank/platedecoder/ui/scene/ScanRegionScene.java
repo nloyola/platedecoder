@@ -6,7 +6,6 @@ import static org.biobank.platedecoder.ui.JavaFxHelper.errorDialog;
 import java.util.Optional;
 
 import org.biobank.dmscanlib.ScanLibResult;
-import org.biobank.platedecoder.model.FlatbedDpi;
 import org.biobank.platedecoder.model.PlateDecoderDefaults;
 import org.biobank.platedecoder.model.PlateDecoderPreferences;
 import org.biobank.platedecoder.service.ScanRegionTask;
@@ -132,7 +131,7 @@ public class ScanRegionScene extends SceneRoot implements ScanRegionHandler {
       Rectangle r;
 
       if (scanRegion == null) {
-         long dpi = FlatbedDpi.valueOf(PlateDecoderDefaults.DEFAULT_FLATBED_DPI).getValue();
+         long dpi = PlateDecoderDefaults.DEFAULT_FLATBED_DPI;
          Optional<Rectangle> rectMaybe = PlateDecoderPreferences.getInstance().getScanRegion();
          if (rectMaybe.isPresent()) {
             r = inchesToPixels(rectMaybe.get(), dpi);
@@ -154,7 +153,8 @@ public class ScanRegionScene extends SceneRoot implements ScanRegionHandler {
    }
 
    private void scanAction(@SuppressWarnings("unused") ActionEvent e) {
-      ScanRegionTask worker = new ScanRegionTask(model.getFlatbedBrightness(),
+      ScanRegionTask worker = new ScanRegionTask(model.getDeviceName(),
+                                                 model.getFlatbedBrightness(),
                                                  model.getFlatbedContrast(),
                                                  model.getDecoderDebugLevel());
 
@@ -193,7 +193,7 @@ public class ScanRegionScene extends SceneRoot implements ScanRegionHandler {
 
    @Override
    protected void nextButtonAction() {
-      long dpi = FlatbedDpi.valueOf(PlateDecoderDefaults.DEFAULT_FLATBED_DPI).getValue();
+      long dpi = PlateDecoderDefaults.DEFAULT_FLATBED_DPI;
       Rectangle r = pixelsToInches(scanRegion, dpi);
       PlateDecoderPreferences.getInstance().setScanRegion(r);
       super.nextButtonAction();

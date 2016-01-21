@@ -67,6 +67,8 @@ public class InitialScene extends SceneRoot {
       grid.add(modifyFlatbedConfiguration, 0, 3);
       grid.add(modifyDecodingConfiguration, 0, 4);
       grid.setAlignment(Pos.TOP_CENTER);
+      withPrevParamsButton.setVisible(allowScanAndDecodeWithPrevious());
+
       return grid;
    }
 
@@ -103,6 +105,7 @@ public class InitialScene extends SceneRoot {
 
       ScanAndDecodeImageTask worker =
          new ScanAndDecodeImageTask(scanRect,
+                                    model.getDeviceName(),
                                     model.getFlatbedDpi().getValue(),
                                     model.getPlateOrientation(),
                                     model.getPlateType(),
@@ -144,5 +147,13 @@ public class InitialScene extends SceneRoot {
       withPrevParamsButton.setSelected(false);
       modifyFlatbedConfiguration.setSelected(false);
       modifyDecodingConfiguration.setSelected(false);
+   }
+
+   private boolean allowScanAndDecodeWithPrevious() {
+      Optional<Rectangle> region = PlateDecoderPreferences.getInstance().getScanRegion();
+      if (region != null) {
+         return region.isPresent();
+      }
+      return false;
    }
 };

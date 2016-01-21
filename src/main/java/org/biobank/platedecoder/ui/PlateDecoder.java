@@ -12,6 +12,7 @@ import org.biobank.dmscanlib.ScanLib;
 import org.biobank.dmscanlib.ScanLibResult;
 import org.biobank.platedecoder.model.ImageSourceFileSystem;
 import org.biobank.platedecoder.model.PlateDecoderPreferences;
+import org.biobank.platedecoder.model.PlateModel;
 import org.biobank.platedecoder.ui.fsm.SceneFsmFactory;
 import org.biobank.platedecoder.ui.scene.DecodeImageScene;
 import org.biobank.platedecoder.ui.scene.DecodedTubes;
@@ -42,8 +43,6 @@ public class PlateDecoder extends Application implements SceneChanger {
 
    public static final boolean IS_DEBUG_MODE = (System.getProperty("debug") != null);
 
-   private static final String DEVICE_NAME;
-
    private Stage stage;
 
    private double sceneWidth;
@@ -62,9 +61,7 @@ public class PlateDecoder extends Application implements SceneChanger {
          if (deviceNames.isEmpty()) {
             throw new IllegalStateException("scanning library reports ZERO devices");
          }
-         DEVICE_NAME = deviceNames.iterator().next();
-      } else {
-         DEVICE_NAME = "";
+         PlateModel.getInstance().setDeviceName(deviceNames.iterator().next());
       }
    }
 
@@ -235,13 +232,6 @@ public class PlateDecoder extends Application implements SceneChanger {
       buf.append(File.separator);
       buf.append(filename);
       return buf.toString();
-    }
-
-    /**
-     * @return the deviceName
-     */
-    public static String getDeviceName() {
-        return DEVICE_NAME;
     }
 
 }

@@ -51,6 +51,9 @@ public class PlateModel {
     */
    public static final long CONTRAST_MAXIMUM = 1000;
 
+   // the name of the scanning device as returned by the scanning library
+   private String deviceName;
+
    // Where the plate's information is stored.
    private Plate plate;
 
@@ -168,6 +171,26 @@ public class PlateModel {
          });
 
       createNewPlate();
+   }
+
+   /**
+    * The name of the flatbed scanning device to be used as selected by the user.
+    *
+    * <p>This name is returned by {@link org.biobank.dmscanlib.ScanLib.getDeviceNames getDeviceNames}.
+    *
+    * @return The flatbed scanner's device name to use.
+    */
+   public String getDeviceName() {
+      return deviceName;
+   }
+
+   /**
+    * Used to select the flatbed scanner device name the user wishes to use.
+    *
+    * @param deviceName the name of the device to be used.
+    */
+   public void setDeviceName(String deviceName) {
+      this.deviceName = deviceName;
    }
 
    /**

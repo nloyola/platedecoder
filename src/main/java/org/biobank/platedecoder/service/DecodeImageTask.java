@@ -10,6 +10,7 @@ import org.biobank.platedecoder.ui.wellgrid.WellGrid;
 public class DecodeImageTask extends ScanAndDecodeImageTask {
 
    public DecodeImageTask(WellGrid         wellGrid,
+                          String           deviceName,
                           long             dpi,
                           PlateOrientation orientation,
                           PlateType        plateType,
@@ -21,6 +22,7 @@ public class DecodeImageTask extends ScanAndDecodeImageTask {
                           String           filename) {
 
       super(wellGrid,
+            deviceName,
             dpi,
             orientation,
             plateType,

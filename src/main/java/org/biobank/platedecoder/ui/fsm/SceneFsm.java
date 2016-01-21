@@ -266,6 +266,7 @@ class SceneFsm extends Fsm<StateId, ChoicepointId, Event> {
             Optional<Rectangle> rectMaybe =
                PlateDecoderPreferences.getInstance().getScanRegion();
             if (rectMaybe.isPresent()) {
+               imageSource = ImageSourceFlatbedScanner.getInstance();
                feedEvent(Event.NEXT_SELECTED);
             } else {
                feedEvent(Event.SCAN_REGION_DEFINE);

@@ -106,12 +106,12 @@ public class JavaFxHelper {
    /**
     * Displays an error dialog.
     *
+    * @param infoMessage the string to display in the body of the dialog box.
+    *
     * @param titleBar the string to display in the dialog box's title bar.
     *
     * @param headerMessage the string to display in the title are of the dialog box. When this value
     *                      is null, the dialog will not have a title area.
-    *
-    * @param infoMessage the string to display in the body of the dialog box.
     *
     */
    public static void errorDialog(String infoMessage,

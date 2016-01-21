@@ -2,10 +2,8 @@ package org.biobank.platedecoder.service;
 
 import org.biobank.dmscanlib.ScanLib;
 import org.biobank.dmscanlib.ScanLibResult;
-import org.biobank.platedecoder.model.FlatbedDpi;
 import org.biobank.platedecoder.model.PlateDecoderDefaults;
 import org.biobank.platedecoder.model.PlateModel;
-import org.biobank.platedecoder.ui.PlateDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,15 +16,19 @@ public class ScanRegionTask extends Task<ScanLibResult> {
 
    protected PlateModel model = PlateModel.getInstance();
 
+   private final String deviceName;
+
    private final long brightness;
 
    private final long contrast;
 
    private final long decodeDebugLevel;
 
-   public ScanRegionTask(long brightness,
+   public ScanRegionTask(String deviceName,
+                         long brightness,
                          long contrast,
                          long decodeDebugLevel) {
+      this.deviceName       = deviceName;
       this.brightness       = brightness;
       this.contrast         = contrast;
       this.decodeDebugLevel = decodeDebugLevel;
@@ -35,11 +37,11 @@ public class ScanRegionTask extends Task<ScanLibResult> {
    @Override
    protected ScanLibResult call() throws Exception {
       ScanLibResult result = new ScanLibResult(ScanLib.ResultCode.SC_FAIL, "exception");
-      long dpi = FlatbedDpi.valueOf(PlateDecoderDefaults.DEFAULT_FLATBED_DPI).getValue();
+      long dpi = PlateDecoderDefaults.DEFAULT_FLATBED_DPI;
 
       try {
          result = ScanLib.getInstance().scanFlatbed(decodeDebugLevel,
-                                                    PlateDecoder.getDeviceName(),
+                                                    deviceName,
                                                     dpi,
                                                     (int) brightness,
                                                     (int) contrast,

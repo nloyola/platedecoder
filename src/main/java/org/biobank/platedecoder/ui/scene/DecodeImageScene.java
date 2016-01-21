@@ -92,28 +92,6 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
          });
    }
 
-   // @Override
-   // public void onDisplay() {
-   //    // NOTE: could be called with model.getPlate() already populated with decode information
-   //    model.getPlate().getWells().forEach(w -> {
-   //          wellGrid.setWellCellInventoryId(w.getLabel(), w.getInventoryId());
-   //       });
-
-   //    Image image = imageView.getImage();
-   //    double scale = (image == null) ? 1.0
-   //       : imageView.getLayoutBounds().getWidth() / image.getWidth();
-   //    wellGrid.setScale(scale);
-
-   //    if ((wellGrid.getWidth() > image.getWidth())
-   //        || (wellGrid.getHeight() > image.getHeight())) {
-   //       wellGrid.setWidth(image.getWidth());
-   //       wellGrid.setHeight(image.getHeight());
-   //    }
-
-   //    updateWellGrid();
-   //    disableNextButton(wellGrid.getDecodedCellCount() <= 0);
-   // }
-
    /**
     * Used to specify the source of the image.
     *
@@ -126,6 +104,7 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
       Image image = new Image(imageSource.getImageFileUrl());
       imageView.setImage(image);
       imageView.setCache(true);
+      updateDecodedWellCount(0);
    }
 
    @Override
@@ -185,10 +164,6 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
 
    @Override
    protected void nextButtonAction() {
-      if (wellGrid.getDecodedCellCount() <= 0) {
-         throw new IllegalStateException("missing decoded wells");
-      }
-
       // copy data to model
       Plate plate = model.getPlate();
       wellGrid.getDecodedCells().forEach(
@@ -291,6 +266,7 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
                                                       model.getDecoderCorrections(),
                                                       DecodeOptions.DEFAULT_SHRINK);
       DecodeImageTask worker = new DecodeImageTask(wellGrid,
+                                                   model.getDeviceName(),
                                                    model.getFlatbedDpi().getValue(),
                                                    model.getPlateOrientation(),
                                                    model.getPlateType(),

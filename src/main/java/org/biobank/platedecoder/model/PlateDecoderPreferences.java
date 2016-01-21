@@ -28,6 +28,8 @@ public class PlateDecoderPreferences {
 
    private static final String PREFS_APP_WINDOW_HEIGHT = "PREFS_APP_WINDOW_HEIGHT";
 
+   private static final String PREFS_SCANNER_DEVICE_NAME = "PREFS_SCANNER_DEVICE_NAME";
+
    private static final String PREFS_SCAN_REGION_X = "PREFS_SCAN_REGION_X";
 
    private static final String PREFS_SCAN_REGION_Y = "PREFS_SCAN_REGION_Y_";
@@ -107,6 +109,26 @@ public class PlateDecoderPreferences {
    public void setAppWindowSize(double width, double height) {
       prefs.putDouble(PREFS_APP_WINDOW_WIDTH,  width);
       prefs.putDouble(PREFS_APP_WINDOW_HEIGHT, height);
+   }
+
+   /**
+    * The device name for the flatbed scanner previously used by the user.
+    *
+    * <p>The value is blank if a flatbed scanner has never been used.
+    *
+    * @return The last used flatbed scanner, or blank string if none ever used.
+    */
+   public String getScannerDeviceName() {
+      return prefs.get(PREFS_SCANNER_DEVICE_NAME, "");
+   }
+
+   /**
+    * Saves the name of the flatbed scanner in the preferences.
+    *
+    * @param deviceName the name of the flatbed scanner as it was returned by the operating system.
+    */
+   public void setScannerDeviceName(String deviceName) {
+      prefs.put(PREFS_SCANNER_DEVICE_NAME, deviceName);
    }
 
    /**
