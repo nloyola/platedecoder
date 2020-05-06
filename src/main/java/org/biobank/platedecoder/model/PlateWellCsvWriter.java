@@ -9,7 +9,12 @@ import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.supercsv.io.CsvBeanWriter;
 import org.supercsv.prefs.CsvPreference;
 
+// import org.slf4j.Logger;
+// import org.slf4j.LoggerFactory;
+
 public class PlateWellCsvWriter {
+
+  //private static final Logger LOG = LoggerFactory.getLogger(PlateWellCsvWriter.class);
 
     public static void write(String filename, final Collection<PlateWell> plateWells)
         throws Exception {

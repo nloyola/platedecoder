@@ -5,8 +5,8 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-      CellRectangleTest.class,
-         DecodeResultTest.class,
-         DmScanLibTest.class
-})
+        CellRectangleTest.class,
+            DecodeResultTest.class,
+            DmScanLibTest.class
+            })
 public class ScanLibSuite {}

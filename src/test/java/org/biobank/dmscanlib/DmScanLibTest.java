@@ -56,13 +56,14 @@ public class DmScanLibTest {
          if (result.getResultCode() != ScanLibResult.Result.SUCCESS) {
             throw new IllegalStateException("could not get scanning library device names");
          }
-         Set<String> deviceNames = result.getDeviceNames();
-         if (deviceNames.isEmpty()) {
-            throw new IllegalStateException("scanning library reports ZERO devices");
-         }
+         // Set<String> deviceNames = result.getDeviceNames();
+         // if (deviceNames.isEmpty()) {
+         //    throw new IllegalStateException("scanning library reports ZERO devices");
+         // }
 
          // select the fist device by default
-         DEVICE_NAME = deviceNames.iterator().next();
+         //DEVICE_NAME = deviceNames.iterator().next();
+         DEVICE_NAME = "";
       } else {
          DEVICE_NAME = "";
       }

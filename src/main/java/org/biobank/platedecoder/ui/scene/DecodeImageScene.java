@@ -9,6 +9,8 @@ import java.net.URL;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 import org.biobank.dmscanlib.DecodeOptions;
 import org.biobank.dmscanlib.DecodeResult;
@@ -281,9 +283,9 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
       dlg.setHeaderText("Decoding image");
 
       worker.setOnSucceeded(event -> {
-            DecodeResult result = (DecodeResult) worker.getValue();
+              DecodeResult result = (DecodeResult) worker.getValue();
 
-            if (result.getResultCode() == ScanLibResult.Result.SUCCESS) {
+              if (result.getResultCode() == ScanLibResult.Result.SUCCESS) {
                Set<DecodedWell> decodedWells = result.getDecodedWells();
 
                if (wellGrid.getDecodedCellCount() > 0) {
@@ -308,12 +310,15 @@ public class DecodeImageScene extends SceneRoot implements WellGridHandler {
                updateWellGrid();
                disableNextButton(false);
             } else {
-               LOG.error("decode failed: {}", result.getResultCode());
+                  LOG.error("decode failed: {}", result.getResultCode());
             }
          });
 
       worker.setOnFailed(event -> {
-            LOG.error("The task failed: {}", event);
+              StringWriter sw = new StringWriter();
+              PrintWriter pw = new PrintWriter(sw);
+              worker.getException().printStackTrace(pw);
+              LOG.error("The task failed: {}\n{}", worker.getException().getMessage(), sw.toString());
          });
 
       Thread th = new Thread(worker);
