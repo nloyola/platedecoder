@@ -145,69 +145,33 @@
         </configuration>
       </plugin>
 
-      <!-- https://www.baeldung.com/executable-jar-with-maven -->
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-assembly-plugin</artifactId>
+        <groupId>io.github.fvarrui</groupId>
+        <artifactId>javapackager</artifactId>
+        <version>1.0.3</version>
         <executions>
           <execution>
             <phase>package</phase>
             <goals>
-              <goal>single</goal>
+              <goal>package</goal>
             </goals>
             <configuration>
-              <archive>
-                <manifestFile>src/main/resources/META-INF/MANIFEST.MF</manifestFile>
-              </archive>
-              <descriptorRefs>
-                <descriptorRef>jar-with-dependencies</descriptorRef>
-              </descriptorRefs>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
-      <!-- https://howtodoinjava.com/maven/create-windows-exe-file-for-java-application/ -->
-      <plugin>
-        <groupId>com.akathist.maven.plugins.launch4j</groupId>
-        <artifactId>launch4j-maven-plugin</artifactId>
-        <version>1.5.1</version>
-        <executions>
-          <execution>
-            <id>l4j-clui</id>
-            <phase>package</phase>
-            <goals>
-              <goal>launch4j</goal>
-            </goals>
-            <configuration>
-              <headerType>gui</headerType>
-              <jar>${project.build.directory}/${project.artifactId}-${project.version}-jar-with-dependencies.jar</jar>
-              <outfile>${project.build.directory}/PlateDecoder.exe</outfile>
-              <downloadUrl>http://biobank.ca/download</downloadUrl>
-              <classPath>
-                <mainClass>org.biobank.platedecoder.ui.PlateDecoder</mainClass>
-                <addDependencies>false</addDependencies>
-                <preCp>anything</preCp>
-              </classPath>
-              <!-- icon>biobank32.png</icon -->
-              <jre>
-                <path>./win32/java</path>
-                <opts>
-                  <opt>-Djava.library.path=lib</opt>
-                </opts>
-              </jre>
-              <versionInfo>
-                <fileVersion>1.0.0.0</fileVersion>
-                <txtFileVersion>${project.version}</txtFileVersion>
-                <fileDescription>${project.name}</fileDescription>
-                <copyright>2020 biobank.ca</copyright>
-                <productVersion>1.0.0.0</productVersion>
-                <txtProductVersion>1.0.0.0</txtProductVersion>
-                <productName>${project.name}</productName>
-                <companyName>CBSR</companyName>
-                <internalName>CBSR</internalName>
-                <originalFilename>PlateDecoder.exe</originalFilename>
-              </versionInfo>
+              <mainClass>org.biobank.platedecoder.ui.PlateDecoder</mainClass>
+              <jrePath>/usr/lib/jvm/java-8-oracle/jre</jrePath>
+              <vmArgs>-Djava.library.path=lib</vmArgs>
+              <bundleJre>true</bundleJre>
+              <generateInstaller>false</generateInstaller>
+              <administratorRequired>false</administratorRequired>
+              <platform>auto</platform>
+              <additionalResources>
+                <additionalResource>${project.build.directory}/lib</additionalResource>
+              </additionalResources>
+              <!--
+                  <linuxConfig>...</linuxConfig>
+                  <macConfig>...</macConfig>
+                  <winConfig>...</winConfig>
+                  [...]
+              -->
             </configuration>
           </execution>
         </executions>
@@ -218,20 +182,20 @@
 
   <dependencies>
     <!--
-    <dependency>
-      <groupId>scanlib</groupId>
-      <artifactId>libdmscanlib64</artifactId>
-      <version>3.0.0-ubuntu20.04</version>
-      <type>so</type>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>scanlib</groupId>
-      <artifactId>libdmscanlib64</artifactId>
-      <version>3.0.0-ubuntu20.04</version>
-      <scope>system</scope>
-      <systemPath>${basedir}/lib/libdmscanlib64.so</systemPath>
-    </dependency>
+        <dependency>
+        <groupId>scanlib</groupId>
+        <artifactId>libdmscanlib64</artifactId>
+        <version>3.0.0-ubuntu20.04</version>
+        <type>so</type>
+        <scope>compile</scope>
+        </dependency>
+        <dependency>
+        <groupId>scanlib</groupId>
+        <artifactId>libdmscanlib64</artifactId>
+        <version>3.0.0-ubuntu20.04</version>
+        <scope>system</scope>
+        <systemPath>${basedir}/lib/libdmscanlib64.so</systemPath>
+        </dependency>
     -->
     <dependency>
       <groupId>javafx</groupId>
@@ -248,7 +212,7 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <version>1.7.1</version>
+      <version>1.7.30</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -260,37 +224,37 @@
     <dependency>
       <groupId>net.sf.supercsv</groupId>
       <artifactId>super-csv</artifactId>
-      <version>2.3.1</version>
+      <version>2.4.0</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
-      <version>3.4</version>
+      <version>3.10</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>commons-codec</groupId>
       <artifactId>commons-codec</artifactId>
-      <version>1.10</version>
+      <version>1.14</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>javax.json</groupId>
       <artifactId>javax.json-api</artifactId>
-      <version>1.0</version>
+      <version>1.1.4</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>com.ning</groupId>
       <artifactId>async-http-client</artifactId>
-      <version>1.9.31</version>
+      <version>1.9.40</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.jr</groupId>
       <artifactId>jackson-jr-all</artifactId>
-      <version>2.6.2</version>
+      <version>2.11.0</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -302,13 +266,13 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.12</version>
+      <version>4.13</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>de.saxsys</groupId>
       <artifactId>jfx-testrunner</artifactId>
-      <version>1.1</version>
+      <version>1.2</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
