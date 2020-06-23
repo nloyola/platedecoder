@@ -20,6 +20,33 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
+  <profiles>
+    <profile>
+      <id>platform-linux</id>
+      <activation>
+        <os>
+          <family>unix</family>
+          <arch>amd64</arch>
+        </os>
+      </activation>
+      <properties>
+        <jrePath>/usr/lib/jvm/java-8-oracle/jre</jrePath>
+      </properties>
+    </profile>
+    <profile>
+      <id>platform-windows</id>
+      <activation>
+        <os>
+          <family>windows</family>
+          <arch>x86</arch>
+        </os>
+      </activation>
+      <properties>
+        <jrePath>C:/Java/jre</jrePath>
+      </properties>
+    </profile>
+  </profiles>
+
   <build>
 
     <plugins>
@@ -157,7 +184,6 @@
             </goals>
             <configuration>
               <mainClass>org.biobank.platedecoder.ui.PlateDecoder</mainClass>
-              <jrePath>/usr/lib/jvm/java-8-oracle/jre</jrePath>
               <vmArgs>-Djava.library.path=lib</vmArgs>
               <bundleJre>true</bundleJre>
               <generateInstaller>false</generateInstaller>
@@ -166,8 +192,9 @@
               <additionalResources>
                 <additionalResource>${project.build.directory}/lib</additionalResource>
               </additionalResources>
+              <linuxConfig>
+              </linuxConfig>
               <!--
-                  <linuxConfig>...</linuxConfig>
                   <macConfig>...</macConfig>
                   <winConfig>...</winConfig>
                   [...]
