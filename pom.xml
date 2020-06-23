@@ -97,7 +97,7 @@
                 <artifactItem>
                   <groupId>scanlib</groupId>
                   <artifactId>dmscanlib</artifactId>
-                  <version>3.0.0-win32</version>
+                  <version>3.0.1-win32</version>
                   <type>dll</type>
                   <overWrite>true</overWrite>
                   <outputDirectory>${project.build.directory}/lib</outputDirectory>
@@ -183,7 +183,7 @@
               <goal>package</goal>
             </goals>
             <configuration>
-              <mainClass>org.biobank.platedecoder.ui.PlateDecoder</mainClass>
+		    <mainClass>org.biobank.platedecoder.ui.PlateDecoder</mainClass>
               <vmArgs>-Djava.library.path=lib</vmArgs>
               <bundleJre>true</bundleJre>
               <generateInstaller>false</generateInstaller>
@@ -194,11 +194,10 @@
               </additionalResources>
               <linuxConfig>
               </linuxConfig>
-              <!--
-                  <macConfig>...</macConfig>
-                  <winConfig>...</winConfig>
-                  [...]
-              -->
+	      <winConfig>
+		    <!-- headerType>gui</headerType -->
+		    <headerType>console</headerType>
+	      </winConfig>
             </configuration>
           </execution>
         </executions>
