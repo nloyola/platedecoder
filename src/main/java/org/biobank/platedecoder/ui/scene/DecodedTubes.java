@@ -102,8 +102,8 @@ public class DecodedTubes extends SceneRoot {
     List<PlateWell> sortedList = new ArrayList<>(model.getPlate().getWellsSorted());
     ObservableList<PlateWell> plateWells = FXCollections.observableArrayList(sortedList);
 
-    LOG.info("sortedLlist on table size: {}", sortedList.size());
-    LOG.info("plateWells on table size: {}", plateWells.size());
+    LOG.debug("sortedLlist on table size: {}", sortedList.size());
+    LOG.debug("plateWells on table size: {}", plateWells.size());
 
     table.setItems(plateWells);
     table.getSortOrder().add(labelColumn);

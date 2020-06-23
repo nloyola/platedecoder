@@ -54,7 +54,7 @@ public class PlateDecoder extends Application implements SceneChanger {
 
   @Override
   public void start(Stage stage) throws Exception {
-
+    libPath();
     this.stage = stage;
     stage.setTitle("Plate decoder");
 
@@ -67,11 +67,11 @@ public class PlateDecoder extends Application implements SceneChanger {
     stage.show();
 
     // for (Map.Entry<String, String> param : getParameters().getNamed().entrySet()) {
-    //   LOG.info("param: {} -> {}", param.getKey(), param.getValue());
+    //   LOG.debug("param: {} -> {}", param.getKey(), param.getValue());
     // }
 
     // for (String param : getParameters().getUnnamed()) {
-    //   LOG.info("unnamed param: {} -> {}", param);
+    //   LOG.debug("unnamed param: {} -> {}", param);
     // }
 
     if (!getParameters().getUnnamed().contains("--skip-sane-init")) {
@@ -79,9 +79,14 @@ public class PlateDecoder extends Application implements SceneChanger {
     }
   }
 
+  public void libPath() {
+    String javaLibPath = System.getProperty("java.library.path");
+    LOG.debug("java.library.path: {}", javaLibPath);
+  }
+
   @Override
   public <T extends SceneRoot> void changeScene(T sceneRoot) {
-    LOG.info("changeScene: {}", sceneRoot);
+    LOG.debug("changeScene: {}", sceneRoot);
 
     Scene scene = stage.getScene();
     if (scene != null) {
@@ -231,9 +236,9 @@ public class PlateDecoder extends Application implements SceneChanger {
   }
 
   private void saneInit() {
-    LOG.info("startup");
+    LOG.debug("startup");
     ScanLib scanLib = ScanLib.getInstance();
-    LOG.info("got scanLib instance");
+    LOG.debug("got scanLib instance");
 
     if (!ScanLib.runningMsWindows()) {
       DeviceNamesResult result = scanLib.getDeviceNames();
@@ -242,7 +247,7 @@ public class PlateDecoder extends Application implements SceneChanger {
         throw new IllegalStateException("could not get scanning library device names");
       }
       Set<String> deviceNames = result.getDeviceNames();
-      LOG.info("got scanLib device names: {}", deviceNames);
+      LOG.debug("got scanLib device names: {}", deviceNames);
 
       // if (deviceNames.isEmpty()) {
       //    throw new IllegalStateException("scanning library reports ZERO devices");
